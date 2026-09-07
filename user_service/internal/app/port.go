@@ -34,17 +34,6 @@ type DriverProfileRepository interface {
 	UpdateDriverProfile(ctx context.Context, param *entity.UpdateDriverProfileParam) (*entity.DriverProfile, error)
 }
 
-// ComplianceRepository là bề mặt dữ liệu của nghiệp vụ duyệt hồ sơ. Nó CỐ TÌNH
-// hẹp: chỉ đọc user để kiểm vai trò, đọc/ghi trạng thái KYC, và đếm hàng chờ.
-// Ngày tách compliance thành service riêng, đây chính là danh sách RPC cần có.
-type ComplianceRepository interface {
-	GetUserByID(ctx context.Context, id uuid.UUID) (*entity.User, error)
-	GetDriverProfile(ctx context.Context, userID uuid.UUID) (*entity.DriverProfile, error)
-	UpdateDriverKYC(ctx context.Context, param *entity.UpdateDriverKYCParam) (*entity.DriverProfile, error)
-	ListPendingKYC(ctx context.Context, page, pageSize int) ([]entity.DriverProfile, int64, error)
-	CountPendingKYC(ctx context.Context) (int64, error)
-}
-
 type ShipperProfileRepository interface {
 	CreateShipperProfile(ctx context.Context, userID uuid.UUID, sp *entity.ShipperProfile) (*entity.ShipperProfile, error)
 	GetShipperProfile(ctx context.Context, userID uuid.UUID) (*entity.ShipperProfile, error)
@@ -72,7 +61,6 @@ type DeviceRepository interface {
 type UserRepo interface {
 	UserRepository
 	DriverProfileRepository
-	ComplianceRepository
 	ShipperProfileRepository
 	AddressRepository
 	DeviceRepository

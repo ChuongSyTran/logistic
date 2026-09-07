@@ -10,8 +10,6 @@ import (
 )
 
 type UserEngine interface {
-	ComplianceUseCase
-
 	RegisterUser(ctx context.Context, param *entity.RegisterUserParam) (*entity.RegisterUserResult, error)
 	GetUser(ctx context.Context, id uuid.UUID) (*entity.GetUserResult, error)
 	UpdateUser(ctx context.Context, param *entity.UpdateUserParam) (*entity.User, error)
@@ -37,15 +35,11 @@ type UserEngine interface {
 }
 
 type userEngineImpl struct {
-	// Nhúng use case duyệt hồ sơ thay vì tự cài: UserEngine vẫn giữ nguyên bề mặt
-	// cho gateway, nhưng logic KYC đã nằm ở compliance.go và chỉ phụ thuộc
-	// ComplianceRepository.
-	ComplianceUseCase
 	repo UserRepo
 }
 
-func NewUserEngine(repo UserRepo, compliance ComplianceUseCase) UserEngine {
-	return &userEngineImpl{repo: repo, ComplianceUseCase: compliance}
+func NewUserEngine(repo UserRepo) UserEngine {
+	return &userEngineImpl{repo: repo}
 }
 
 func (e *userEngineImpl) RegisterUser(ctx context.Context, param *entity.RegisterUserParam) (*entity.RegisterUserResult, error) {
@@ -403,10 +397,6 @@ func (e *userEngineImpl) AdminGetUserStats(ctx context.Context) (*entity.UserSta
 	if err != nil {
 		return nil, err
 	}
-	pendingKyc, err := e.CountPendingKYC(ctx)
-	if err != nil {
-		return nil, err
-	}
 
 	return &entity.UserStats{
 		TotalUsers:    total,
@@ -414,7 +404,7 @@ func (e *userEngineImpl) AdminGetUserStats(ctx context.Context) (*entity.UserSta
 		TotalShippers: shippers,
 		ActiveUsers:   active,
 		BannedUsers:   banned,
-		PendingKyc:    pendingKyc,
+		PendingKyc:    0,
 	}, nil
 }
 

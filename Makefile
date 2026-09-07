@@ -111,7 +111,7 @@ auth-keys-show:
 # Modules / Build Verification
 # ==============================================================================
 
-GO_SERVICES = auth_service gateway_service matching_service media_service notification_service user_service vehicle_service wallet_service
+GO_SERVICES = auth_service gateway_service matching_service media_service notification_service user_service vehicle_service wallet_service kyc_service
 
 .PHONY: verify-modules tidy-modules docker-build
 
@@ -158,7 +158,7 @@ docker-build:
 # cờ --feature riêng, khai trong <service>/ent/generate.go (matching dùng
 # sql/execquery,intercept; wallet dùng sql/modifier cho SELECT ... FOR UPDATE).
 # Regen chúng bằng `go generate ./ent` trong thư mục service, KHÔNG phải ent-all.
-ENT_SERVICES = notification_service user_service vehicle_service
+ENT_SERVICES = notification_service user_service vehicle_service kyc_service
 MAPPER_SERVICES = matching_service notification_service user_service vehicle_service wallet_service
 
 ENT_VERSION = v0.14.6

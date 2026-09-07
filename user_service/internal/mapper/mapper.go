@@ -76,9 +76,6 @@ type AppMapper interface {
 
 	PbUpdateShipperProfileToParam(req *pb.UpdateShipperProfileRequest) (entity.UpdateShipperProfileParam, error)
 
-	// goverter:ignore ReviewerID
-	PbUpdateKycToParam(req *pb.UpdateDriverKYCRequest) (entity.UpdateDriverKYCParam, error)
-
 	PbCreateAddressToParam(req *pb.CreateAddressRequest) (entity.CreateAddressParam, error)
 
 	PbUpdateAddressToParam(req *pb.UpdateAddressRequest) (entity.UpdateAddressParam, error)
@@ -90,8 +87,6 @@ type AppMapper interface {
 	PbAdminListUsersToFilter(req *pb.AdminListUsersRequest) entity.ListUsersFilter
 
 	PbAdminUpdateStatusToParam(req *pb.AdminUpdateUserStatusRequest) (entity.UpdateUserStatusParam, error)
-
-	PbAdminReviewKycToParam(req *pb.AdminReviewKYCRequest) (entity.ReviewKYCParam, error)
 }
 
 func IdentityTime(t time.Time) time.Time { return t }

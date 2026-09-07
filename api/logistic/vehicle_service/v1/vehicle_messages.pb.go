@@ -732,6 +732,8 @@ func (x *RegisterVehicleResponse) GetVehicle() *Vehicle {
 // token rồi gắn vào — không phải giá trị client tự khai. vehicle_service so nó với
 // chủ xe và từ chối nếu lệch. Bỏ trống (nil) nghĩa là gọi từ luồng quản trị, bỏ
 // qua kiểm tra; xem DeleteVehicleRequest đã dùng đúng quy ước này từ trước.
+// driver_id dưới đây là danh tính người gọi do gateway lấy từ token, không phải
+// giá trị client khai. vehicle_service so với chủ xe; bỏ trống = luồng quản trị.
 type GetVehicleRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            []byte                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`

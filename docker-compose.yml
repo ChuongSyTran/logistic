@@ -911,6 +911,44 @@ services:
     networks:
       - logistic_net
 
+  # ==========================================================================
+  # KYC SERVICE — duyệt hồ sơ tài xế, căn cước, bằng lái
+  # ==========================================================================
+  kyc-db:
+    image: docker.io/library/postgres:16-alpine
+    container_name: kyc-db
+    ports:
+      - "5439:5432"
+    environment:
+      POSTGRES_USER: ${KYC_DB_USER}
+      POSTGRES_PASSWORD: ${KYC_DB_PASSWORD}
+      POSTGRES_DB: ${KYC_DB_NAME}
+    volumes:
+      - kyc-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U ${KYC_DB_USER} -d ${KYC_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - logistic_net
+
+  kyc-service:
+    build:
+      context: .
+      dockerfile: kyc_service/Dockerfile
+    image: ghcr.io/transenpai/logistic/kyc-service:${IMAGE_TAG:-latest}
+    container_name: kyc-service
+    env_file:
+      - .env
+    depends_on:
+      kyc-db:
+        condition: service_healthy
+    volumes:
+      - kyc-data:/app/data
+    networks:
+      - logistic_net
+
 volumes:
   nats-data:
   redis-data:
@@ -941,3 +979,5 @@ volumes:
   vehicle-db-master-data:
   vehicle-db-slave-data:
   wallet-db-data:
+  kyc-data:
+  kyc-db-data:

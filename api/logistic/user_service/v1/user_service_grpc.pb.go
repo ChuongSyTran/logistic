@@ -26,7 +26,6 @@ const (
 	UserService_UpdateDriverProfile_FullMethodName   = "/logistic.user_service.v1.UserService/UpdateDriverProfile"
 	UserService_GetShipperProfile_FullMethodName     = "/logistic.user_service.v1.UserService/GetShipperProfile"
 	UserService_UpdateShipperProfile_FullMethodName  = "/logistic.user_service.v1.UserService/UpdateShipperProfile"
-	UserService_UpdateDriverKYC_FullMethodName       = "/logistic.user_service.v1.UserService/UpdateDriverKYC"
 	UserService_CreateAddress_FullMethodName         = "/logistic.user_service.v1.UserService/CreateAddress"
 	UserService_ListAddresses_FullMethodName         = "/logistic.user_service.v1.UserService/ListAddresses"
 	UserService_UpdateAddress_FullMethodName         = "/logistic.user_service.v1.UserService/UpdateAddress"
@@ -36,8 +35,6 @@ const (
 	UserService_DeleteDevice_FullMethodName          = "/logistic.user_service.v1.UserService/DeleteDevice"
 	UserService_AdminListUsers_FullMethodName        = "/logistic.user_service.v1.UserService/AdminListUsers"
 	UserService_AdminUpdateUserStatus_FullMethodName = "/logistic.user_service.v1.UserService/AdminUpdateUserStatus"
-	UserService_AdminListPendingKYC_FullMethodName   = "/logistic.user_service.v1.UserService/AdminListPendingKYC"
-	UserService_AdminReviewKYC_FullMethodName        = "/logistic.user_service.v1.UserService/AdminReviewKYC"
 	UserService_AdminGetUserStats_FullMethodName     = "/logistic.user_service.v1.UserService/AdminGetUserStats"
 	UserService_AdminDeleteUser_FullMethodName       = "/logistic.user_service.v1.UserService/AdminDeleteUser"
 )
@@ -62,7 +59,6 @@ type UserServiceClient interface {
 	UpdateDriverProfile(ctx context.Context, in *UpdateDriverProfileRequest, opts ...grpc.CallOption) (*UpdateDriverProfileResponse, error)
 	GetShipperProfile(ctx context.Context, in *GetShipperProfileRequest, opts ...grpc.CallOption) (*GetShipperProfileResponse, error)
 	UpdateShipperProfile(ctx context.Context, in *UpdateShipperProfileRequest, opts ...grpc.CallOption) (*UpdateShipperProfileResponse, error)
-	UpdateDriverKYC(ctx context.Context, in *UpdateDriverKYCRequest, opts ...grpc.CallOption) (*UpdateDriverKYCResponse, error)
 	CreateAddress(ctx context.Context, in *CreateAddressRequest, opts ...grpc.CallOption) (*CreateAddressResponse, error)
 	ListAddresses(ctx context.Context, in *ListAddressesRequest, opts ...grpc.CallOption) (*ListAddressesResponse, error)
 	UpdateAddress(ctx context.Context, in *UpdateAddressRequest, opts ...grpc.CallOption) (*UpdateAddressResponse, error)
@@ -72,8 +68,6 @@ type UserServiceClient interface {
 	DeleteDevice(ctx context.Context, in *DeleteDeviceRequest, opts ...grpc.CallOption) (*DeleteDeviceResponse, error)
 	AdminListUsers(ctx context.Context, in *AdminListUsersRequest, opts ...grpc.CallOption) (*AdminListUsersResponse, error)
 	AdminUpdateUserStatus(ctx context.Context, in *AdminUpdateUserStatusRequest, opts ...grpc.CallOption) (*AdminUpdateUserStatusResponse, error)
-	AdminListPendingKYC(ctx context.Context, in *AdminListPendingKYCRequest, opts ...grpc.CallOption) (*AdminListPendingKYCResponse, error)
-	AdminReviewKYC(ctx context.Context, in *AdminReviewKYCRequest, opts ...grpc.CallOption) (*AdminReviewKYCResponse, error)
 	AdminGetUserStats(ctx context.Context, in *AdminGetUserStatsRequest, opts ...grpc.CallOption) (*AdminGetUserStatsResponse, error)
 	AdminDeleteUser(ctx context.Context, in *AdminDeleteUserRequest, opts ...grpc.CallOption) (*AdminDeleteUserResponse, error)
 }
@@ -150,16 +144,6 @@ func (c *userServiceClient) UpdateShipperProfile(ctx context.Context, in *Update
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(UpdateShipperProfileResponse)
 	err := c.cc.Invoke(ctx, UserService_UpdateShipperProfile_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *userServiceClient) UpdateDriverKYC(ctx context.Context, in *UpdateDriverKYCRequest, opts ...grpc.CallOption) (*UpdateDriverKYCResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(UpdateDriverKYCResponse)
-	err := c.cc.Invoke(ctx, UserService_UpdateDriverKYC_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -256,26 +240,6 @@ func (c *userServiceClient) AdminUpdateUserStatus(ctx context.Context, in *Admin
 	return out, nil
 }
 
-func (c *userServiceClient) AdminListPendingKYC(ctx context.Context, in *AdminListPendingKYCRequest, opts ...grpc.CallOption) (*AdminListPendingKYCResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(AdminListPendingKYCResponse)
-	err := c.cc.Invoke(ctx, UserService_AdminListPendingKYC_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *userServiceClient) AdminReviewKYC(ctx context.Context, in *AdminReviewKYCRequest, opts ...grpc.CallOption) (*AdminReviewKYCResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(AdminReviewKYCResponse)
-	err := c.cc.Invoke(ctx, UserService_AdminReviewKYC_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *userServiceClient) AdminGetUserStats(ctx context.Context, in *AdminGetUserStatsRequest, opts ...grpc.CallOption) (*AdminGetUserStatsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(AdminGetUserStatsResponse)
@@ -316,7 +280,6 @@ type UserServiceServer interface {
 	UpdateDriverProfile(context.Context, *UpdateDriverProfileRequest) (*UpdateDriverProfileResponse, error)
 	GetShipperProfile(context.Context, *GetShipperProfileRequest) (*GetShipperProfileResponse, error)
 	UpdateShipperProfile(context.Context, *UpdateShipperProfileRequest) (*UpdateShipperProfileResponse, error)
-	UpdateDriverKYC(context.Context, *UpdateDriverKYCRequest) (*UpdateDriverKYCResponse, error)
 	CreateAddress(context.Context, *CreateAddressRequest) (*CreateAddressResponse, error)
 	ListAddresses(context.Context, *ListAddressesRequest) (*ListAddressesResponse, error)
 	UpdateAddress(context.Context, *UpdateAddressRequest) (*UpdateAddressResponse, error)
@@ -326,8 +289,6 @@ type UserServiceServer interface {
 	DeleteDevice(context.Context, *DeleteDeviceRequest) (*DeleteDeviceResponse, error)
 	AdminListUsers(context.Context, *AdminListUsersRequest) (*AdminListUsersResponse, error)
 	AdminUpdateUserStatus(context.Context, *AdminUpdateUserStatusRequest) (*AdminUpdateUserStatusResponse, error)
-	AdminListPendingKYC(context.Context, *AdminListPendingKYCRequest) (*AdminListPendingKYCResponse, error)
-	AdminReviewKYC(context.Context, *AdminReviewKYCRequest) (*AdminReviewKYCResponse, error)
 	AdminGetUserStats(context.Context, *AdminGetUserStatsRequest) (*AdminGetUserStatsResponse, error)
 	AdminDeleteUser(context.Context, *AdminDeleteUserRequest) (*AdminDeleteUserResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
@@ -361,9 +322,6 @@ func (UnimplementedUserServiceServer) GetShipperProfile(context.Context, *GetShi
 func (UnimplementedUserServiceServer) UpdateShipperProfile(context.Context, *UpdateShipperProfileRequest) (*UpdateShipperProfileResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdateShipperProfile not implemented")
 }
-func (UnimplementedUserServiceServer) UpdateDriverKYC(context.Context, *UpdateDriverKYCRequest) (*UpdateDriverKYCResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method UpdateDriverKYC not implemented")
-}
 func (UnimplementedUserServiceServer) CreateAddress(context.Context, *CreateAddressRequest) (*CreateAddressResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateAddress not implemented")
 }
@@ -390,12 +348,6 @@ func (UnimplementedUserServiceServer) AdminListUsers(context.Context, *AdminList
 }
 func (UnimplementedUserServiceServer) AdminUpdateUserStatus(context.Context, *AdminUpdateUserStatusRequest) (*AdminUpdateUserStatusResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method AdminUpdateUserStatus not implemented")
-}
-func (UnimplementedUserServiceServer) AdminListPendingKYC(context.Context, *AdminListPendingKYCRequest) (*AdminListPendingKYCResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method AdminListPendingKYC not implemented")
-}
-func (UnimplementedUserServiceServer) AdminReviewKYC(context.Context, *AdminReviewKYCRequest) (*AdminReviewKYCResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method AdminReviewKYC not implemented")
 }
 func (UnimplementedUserServiceServer) AdminGetUserStats(context.Context, *AdminGetUserStatsRequest) (*AdminGetUserStatsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method AdminGetUserStats not implemented")
@@ -546,24 +498,6 @@ func _UserService_UpdateShipperProfile_Handler(srv interface{}, ctx context.Cont
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserServiceServer).UpdateShipperProfile(ctx, req.(*UpdateShipperProfileRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _UserService_UpdateDriverKYC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateDriverKYCRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserServiceServer).UpdateDriverKYC(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: UserService_UpdateDriverKYC_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).UpdateDriverKYC(ctx, req.(*UpdateDriverKYCRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -730,42 +664,6 @@ func _UserService_AdminUpdateUserStatus_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_AdminListPendingKYC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AdminListPendingKYCRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserServiceServer).AdminListPendingKYC(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: UserService_AdminListPendingKYC_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).AdminListPendingKYC(ctx, req.(*AdminListPendingKYCRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _UserService_AdminReviewKYC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AdminReviewKYCRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserServiceServer).AdminReviewKYC(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: UserService_AdminReviewKYC_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).AdminReviewKYC(ctx, req.(*AdminReviewKYCRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _UserService_AdminGetUserStats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AdminGetUserStatsRequest)
 	if err := dec(in); err != nil {
@@ -838,10 +736,6 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _UserService_UpdateShipperProfile_Handler,
 		},
 		{
-			MethodName: "UpdateDriverKYC",
-			Handler:    _UserService_UpdateDriverKYC_Handler,
-		},
-		{
 			MethodName: "CreateAddress",
 			Handler:    _UserService_CreateAddress_Handler,
 		},
@@ -876,14 +770,6 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AdminUpdateUserStatus",
 			Handler:    _UserService_AdminUpdateUserStatus_Handler,
-		},
-		{
-			MethodName: "AdminListPendingKYC",
-			Handler:    _UserService_AdminListPendingKYC_Handler,
-		},
-		{
-			MethodName: "AdminReviewKYC",
-			Handler:    _UserService_AdminReviewKYC_Handler,
 		},
 		{
 			MethodName: "AdminGetUserStats",

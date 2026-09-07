@@ -681,14 +681,8 @@ type RegisterUserRequest struct {
 	Password string                 `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty"`
 	Role     string                 `protobuf:"bytes,4,opt,name=role,proto3" json:"role,omitempty"` // driver | shipper
 	FullName string                 `protobuf:"bytes,5,opt,name=full_name,json=fullName,proto3" json:"full_name,omitempty"`
-	// id là danh tính auth_service đã cấp, do gateway gắn vào sau khi đăng ký
-	// thành công. Có id nghĩa là "danh tính đã có rồi, chỉ dựng hồ sơ nghiệp vụ":
-	// user_service dùng đúng id đó thay vì tự sinh, và KHÔNG lưu mật khẩu —
-	// auth_service mới là nơi giữ thông tin đăng nhập.
-	//
-	// Bỏ trống là luồng đăng ký độc lập cũ: user_service tự sinh id. Luồng đó tạo
-	// ra một danh tính thứ hai không khớp với subject trong token, nên mọi
-	// /api/v1/users/* sau đó đều trả 404 hoặc 403.
+	// Danh tính auth_service đã cấp, gateway gắn vào. Có id: chỉ dựng hồ sơ, không
+	// lưu mật khẩu. Bỏ trống: luồng đăng ký độc lập, user_service tự sinh id.
 	Id            []byte `protobuf:"bytes,6,opt,name=id,proto3" json:"id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache

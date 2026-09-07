@@ -348,66 +348,6 @@ func (r *userRepoImpl) UpdateDriverProfile(ctx context.Context, param *entity.Up
 	return &e, nil
 }
 
-func (r *userRepoImpl) UpdateDriverKYC(ctx context.Context, param *entity.UpdateDriverKYCParam) (*entity.DriverProfile, error) {
-	dao, err := r.client.DriverProfile.Query().Where(driverprofile.UserIDEQ(param.UserID)).Only(ctx)
-	if err != nil {
-		return nil, wrapError(err, entity.ErrDriverProfileNotFound)
-	}
-
-	builder := dao.Update().
-		SetKycStatus(driverprofile.KycStatus(param.KycStatus)).
-		SetKycNote(param.Note).
-		SetKycReviewedAt(time.Now())
-
-	if param.ReviewerID != uuid.Nil {
-		builder = builder.SetKycReviewedBy(param.ReviewerID)
-	}
-
-	updated, err := builder.Save(ctx)
-	if err != nil {
-		return nil, wrapError(err, entity.ErrDriverProfileNotFound)
-	}
-
-	if r.cache != nil {
-		_ = r.cache.Delete(ctx, r.keyDriver(param.UserID))
-	}
-	e := r.mapper.EntDriverProfileToEntityDriverProfile(updated)
-	return &e, nil
-}
-
-func (r *userRepoImpl) ListPendingKYC(ctx context.Context, page, pageSize int) ([]entity.DriverProfile, int64, error) {
-	_, pageSize, offset := entity.NormalizePaging(page, pageSize)
-
-	q := r.client.DriverProfile.Query().
-		Where(driverprofile.KycStatusEQ(driverprofile.KycStatusPending))
-
-	total, err := q.Clone().Count(ctx)
-	if err != nil {
-		return nil, 0, wrapError(err, entity.ErrDriverProfileNotFound)
-	}
-
-	daos, err := q.
-		Order(ent.Asc(driverprofile.FieldCreatedAt)).
-		Offset(offset).
-		Limit(pageSize).
-		All(ctx)
-	if err != nil {
-		return nil, 0, wrapError(err, entity.ErrDriverProfileNotFound)
-	}
-
-	return r.mapper.EntDriverProfileListToEntityList(daos), int64(total), nil
-}
-
-func (r *userRepoImpl) CountPendingKYC(ctx context.Context) (int64, error) {
-	n, err := r.client.DriverProfile.Query().
-		Where(driverprofile.KycStatusEQ(driverprofile.KycStatusPending)).
-		Count(ctx)
-	if err != nil {
-		return 0, wrapError(err, entity.ErrDriverProfileNotFound)
-	}
-	return int64(n), nil
-}
-
 func (r *userRepoImpl) CreateShipperProfile(ctx context.Context, userID uuid.UUID, sp *entity.ShipperProfile) (*entity.ShipperProfile, error) {
 	dao, err := r.client.ShipperProfile.Create().
 		SetUserID(userID).

@@ -41,6 +41,14 @@ func (e *Error) Error() string {
 
 func (e *Error) Unwrap() error { return e.cause }
 
+func (e *Error) Is(target error) bool {
+	t, ok := target.(*Error)
+	if !ok {
+		return false
+	}
+	return e.Code != "" && e.Code == t.Code
+}
+
 func (e *Error) WithCause(err error) *Error {
 	clone := *e
 	clone.cause = err

@@ -281,48 +281,6 @@ func (c *UserController) UpdateShipperProfile(ctx *gin.Context) {
 	response.OKMessage(ctx, gin.H{"shipper_profile": toShipperProfileDTO(resp.ShipperProfile)}, resp.Message)
 }
 
-type UpdateDriverKYCReq struct {
-	KycStatus string `json:"kyc_status" binding:"required,oneof=pending approved rejected"`
-	Note      string `json:"note"`
-}
-
-// UpdateDriverKYC godoc
-// @Summary      Nộp hồ sơ KYC
-// @Description  Tài xế nộp/cập nhật hồ sơ KYC của chính mình. Việc DUYỆT nằm ở /admin/kyc và cần vai trò admin.
-// @Tags         User
-// @Accept       json
-// @Produce      json
-// @Param        user_id path string true "User ID"
-// @Success      200 {object} response.Envelope
-// @Router       /api/v1/users/{user_id}/kyc [put]
-func (c *UserController) UpdateDriverKYC(ctx *gin.Context) {
-	userID, ok := resolveOwnID(ctx, "user_id")
-	if !ok {
-		return
-	}
-
-	if !requireSelfOrAdmin(ctx, userID) {
-		return
-	}
-
-	var req UpdateDriverKYCReq
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(ctx, "VALIDATION_FAILED", err.Error())
-		return
-	}
-
-	resp, err := c.userClient.UpdateDriverKYC(ctx.Request.Context(), &pb.UpdateDriverKYCRequest{
-		UserId:    userID,
-		KycStatus: req.KycStatus,
-		Note:      req.Note,
-	})
-	if err != nil {
-		response.Error(ctx, err)
-		return
-	}
-	response.OKMessage(ctx, gin.H{"driver_profile": toDriverProfileDTO(resp.DriverProfile)}, resp.Message)
-}
-
 type AddressReq struct {
 	Label        string  `json:"label"`
 	ContactName  string  `json:"contact_name"`
@@ -631,65 +589,6 @@ func (c *UserController) AdminUpdateUserStatus(ctx *gin.Context) {
 		return
 	}
 	response.OKMessage(ctx, gin.H{"user": toUserDTO(resp.User)}, resp.Message)
-}
-
-// AdminListPendingKYC godoc
-// @Summary      [Admin] Hàng đợi duyệt KYC
-// @Tags         Admin-User
-// @Produce      json
-// @Success      200 {object} response.Envelope
-// @Router       /api/v1/admin/kyc/pending [get]
-func (c *UserController) AdminListPendingKYC(ctx *gin.Context) {
-	resp, err := c.userClient.AdminListPendingKYC(ctx.Request.Context(), &pb.AdminListPendingKYCRequest{
-		Page:     queryInt(ctx, "page"),
-		PageSize: queryInt(ctx, "page_size"),
-	})
-	if err != nil {
-		response.Error(ctx, err)
-		return
-	}
-	response.OK(ctx, gin.H{
-		"driver_profiles": toDriverProfileDTOs(resp.DriverProfiles),
-		"pagination":      toUserPaginationDTO(resp.Pagination),
-	})
-}
-
-type AdminReviewKYCReq struct {
-	Approved bool   `json:"approved"`
-	Note     string `json:"note"`
-}
-
-// AdminReviewKYC godoc
-// @Summary      [Admin] Duyệt/từ chối KYC
-// @Tags         Admin-User
-// @Accept       json
-// @Produce      json
-// @Param        user_id path string true "User ID"
-// @Success      200 {object} response.Envelope
-// @Router       /api/v1/admin/kyc/{user_id}/review [put]
-func (c *UserController) AdminReviewKYC(ctx *gin.Context) {
-	userID, ok := pathID(ctx, "user_id")
-	if !ok {
-		return
-	}
-
-	var req AdminReviewKYCReq
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(ctx, "VALIDATION_FAILED", err.Error())
-		return
-	}
-
-	resp, err := c.userClient.AdminReviewKYC(ctx.Request.Context(), &pb.AdminReviewKYCRequest{
-		UserId:     userID,
-		Approved:   req.Approved,
-		Note:       req.Note,
-		ReviewerId: selfID(ctx),
-	})
-	if err != nil {
-		response.Error(ctx, err)
-		return
-	}
-	response.OKMessage(ctx, gin.H{"driver_profile": toDriverProfileDTO(resp.DriverProfile)}, resp.Message)
 }
 
 // AdminGetUserStats godoc

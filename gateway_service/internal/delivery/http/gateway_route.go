@@ -13,6 +13,7 @@ import (
 	pbnotification "github.com/logistic/api/logistic/notification_service/v1"
 	pbuser "github.com/logistic/api/logistic/user_service/v1"
 	pbvehicle "github.com/logistic/api/logistic/vehicle_service/v1"
+	pbkyc "github.com/logistic/api/logistic/kyc_service/v1"
 	"github.com/logistic/pkg/authn"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 
@@ -30,6 +31,7 @@ type Clients struct {
 	User         pbuser.UserServiceClient
 	Vehicle      pbvehicle.VehicleServiceClient
 	Notification pbnotification.NotificationServiceClient
+	Kyc          pbkyc.KycServiceClient
 }
 
 func RegisterGatewayRoutes(
@@ -51,7 +53,8 @@ func RegisterGatewayRoutes(
 	mediaController := controller.NewMediaController(clients.Media)
 	matchingController := controller.NewMatchingController(clients.Matching, clients.Vehicle)
 	userController := controller.NewUserController(clients.User)
-	vehicleController := controller.NewVehicleController(clients.Vehicle, clients.User)
+	kycController := controller.NewKycController(clients.Kyc)
+	vehicleController := controller.NewVehicleController(clients.Vehicle, clients.User, clients.Kyc)
 	notifController := controller.NewNotificationController(clients.Notification)
 
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -95,7 +98,8 @@ func RegisterGatewayRoutes(
 		users.GET("/:user_id/shipper-profile", userController.GetShipperProfile)
 		users.PUT("/:user_id/shipper-profile", userController.UpdateShipperProfile)
 
-		users.PUT("/:user_id/kyc", userController.UpdateDriverKYC)
+		users.PUT("/:user_id/kyc", kycController.SubmitKYC)
+		users.GET("/:user_id/kyc", kycController.GetKYC)
 
 		users.POST("/:user_id/addresses", userController.CreateAddress)
 		users.GET("/:user_id/addresses", userController.ListAddresses)
@@ -181,8 +185,9 @@ func RegisterGatewayRoutes(
 
 		adminKyc := admin.Group("/kyc")
 		{
-			adminKyc.GET("/pending", userController.AdminListPendingKYC)
-			adminKyc.PUT("/:user_id/review", userController.AdminReviewKYC)
+			adminKyc.GET("/pending", kycController.ListPendingKYC)
+			adminKyc.PUT("/:user_id/review", kycController.ReviewKYC)
+			adminKyc.GET("/count-pending", kycController.CountPendingKYC)
 		}
 
 		adminVehicles := admin.Group("/vehicles")

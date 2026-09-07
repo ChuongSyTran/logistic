@@ -9,38 +9,41 @@ import (
 	"github.com/gin-gonic/gin"
 	pbuser "github.com/logistic/api/logistic/user_service/v1"
 	pb "github.com/logistic/api/logistic/vehicle_service/v1"
+	pbkyc "github.com/logistic/api/logistic/kyc_service/v1"
 )
 
 type VehicleController struct {
 	userClient    pbuser.UserServiceClient
 	vehicleClient pb.VehicleServiceClient
+	kycClient     pbkyc.KycServiceClient
 }
 
 func NewVehicleController(
 	vehicleClient pb.VehicleServiceClient,
 	userClient pbuser.UserServiceClient,
+	kycClient pbkyc.KycServiceClient,
 ) *VehicleController {
-	return &VehicleController{vehicleClient: vehicleClient, userClient: userClient}
+	return &VehicleController{vehicleClient: vehicleClient, userClient: userClient, kycClient: kycClient}
 }
 
 const kycApproved = "approved"
 
 // kycApprovedFor chặn tài xế chưa qua KYC lên online. Hồ sơ KYC nằm ở
-// user_service còn trạng thái online ở vehicle_service, nên gateway là chỗ duy
+// kyc_service còn trạng thái online ở vehicle_service, nên gateway là chỗ duy
 // nhất nhìn được cả hai. Không chặn thì cửa duyệt KYC không có tác dụng gì.
 func (c *VehicleController) kycApprovedFor(ctx *gin.Context, driverID []byte) bool {
-	if c.userClient == nil {
+	if c.kycClient == nil {
 		return true
 	}
 
-	resp, err := c.userClient.GetDriverProfile(ctx.Request.Context(), &pbuser.GetDriverProfileRequest{
+	resp, err := c.kycClient.GetKYC(ctx.Request.Context(), &pbkyc.GetKYCRequest{
 		UserId: driverID,
 	})
 	if err != nil {
 		response.Error(ctx, err)
 		return false
 	}
-	if resp.GetDriverProfile().GetKycStatus() != kycApproved {
+	if resp.GetKyc().GetStatus() != kycApproved {
 		response.FailedPrecondition(ctx, "KYC_NOT_APPROVED",
 			"hồ sơ KYC chưa được duyệt, chưa thể nhận đơn")
 		return false

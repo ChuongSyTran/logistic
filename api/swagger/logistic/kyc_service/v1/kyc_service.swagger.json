@@ -1,0 +1,379 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "logistic/kyc_service/v1/kyc_service.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "KycService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/admin/kyc/count-pending": {
+      "get": {
+        "operationId": "KycService_CountPendingKYC",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CountPendingKYCResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "KycService"
+        ]
+      }
+    },
+    "/v1/admin/kyc/pending": {
+      "get": {
+        "operationId": "KycService_ListPendingKYC",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListPendingKYCResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "KycService"
+        ]
+      }
+    },
+    "/v1/admin/kyc/{userId}/review": {
+      "put": {
+        "operationId": "KycService_ReviewKYC",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ReviewKYCResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/KycServiceReviewKYCBody"
+            }
+          }
+        ],
+        "tags": [
+          "KycService"
+        ]
+      }
+    },
+    "/v1/kyc/submit": {
+      "post": {
+        "operationId": "KycService_SubmitKYC",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1SubmitKYCResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1SubmitKYCRequest"
+            }
+          }
+        ],
+        "tags": [
+          "KycService"
+        ]
+      }
+    },
+    "/v1/kyc/{userId}": {
+      "get": {
+        "operationId": "KycService_GetKYC",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetKYCResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          }
+        ],
+        "tags": [
+          "KycService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "KycServiceReviewKYCBody": {
+      "type": "object",
+      "properties": {
+        "approved": {
+          "type": "boolean"
+        },
+        "note": {
+          "type": "string"
+        },
+        "reviewerId": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1CountPendingKYCResponse": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "v1GetKYCResponse": {
+      "type": "object",
+      "properties": {
+        "kyc": {
+          "$ref": "#/definitions/v1KycDocument"
+        }
+      }
+    },
+    "v1KycDocument": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "userId": {
+          "type": "string",
+          "format": "byte"
+        },
+        "idCardNumber": {
+          "type": "string"
+        },
+        "licenseNumber": {
+          "type": "string"
+        },
+        "idCardFrontUrl": {
+          "type": "string"
+        },
+        "idCardBackUrl": {
+          "type": "string"
+        },
+        "licenseFrontUrl": {
+          "type": "string"
+        },
+        "licenseBackUrl": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "title": "pending, approved, rejected"
+        },
+        "note": {
+          "type": "string"
+        },
+        "reviewerId": {
+          "type": "string",
+          "format": "byte"
+        },
+        "reviewedAt": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string"
+        }
+      }
+    },
+    "v1KycPagination": {
+      "type": "object",
+      "properties": {
+        "page": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "pageSize": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "totalItems": {
+          "type": "string",
+          "format": "int64"
+        },
+        "totalPages": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "v1ListPendingKYCResponse": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1KycDocument"
+          }
+        },
+        "pagination": {
+          "$ref": "#/definitions/v1KycPagination"
+        }
+      }
+    },
+    "v1ReviewKYCResponse": {
+      "type": "object",
+      "properties": {
+        "kyc": {
+          "$ref": "#/definitions/v1KycDocument"
+        }
+      }
+    },
+    "v1SubmitKYCRequest": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "format": "byte"
+        },
+        "idCardNumber": {
+          "type": "string"
+        },
+        "licenseNumber": {
+          "type": "string"
+        },
+        "idCardFrontUrl": {
+          "type": "string"
+        },
+        "idCardBackUrl": {
+          "type": "string"
+        },
+        "licenseFrontUrl": {
+          "type": "string"
+        },
+        "licenseBackUrl": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    },
+    "v1SubmitKYCResponse": {
+      "type": "object",
+      "properties": {
+        "kyc": {
+          "$ref": "#/definitions/v1KycDocument"
+        }
+      }
+    }
+  }
+}
