@@ -2,9 +2,9 @@ package di
 
 import (
 	"fmt"
+	"media_service/internal/adapter/grpcserver"
+	"media_service/internal/adapter/storage/cloudinary"
 	"media_service/internal/conf"
-	"media_service/internal/controller"
-	"media_service/internal/storage/cloudinary"
 
 	cld "github.com/cloudinary/cloudinary-go/v2"
 	pb "github.com/logistic/api/logistic/media_service/v1"
@@ -18,8 +18,8 @@ func Injection(grpcServer *grpc.Server, cfg *conf.Config) error {
 	}
 
 	cloudStorage := cloudinary.NewCloudinaryStorage(cldClient)
-	mediaController := controller.NewMediaController(cloudStorage)
-	pb.RegisterMediaServiceServer(grpcServer, mediaController)
+	mediaServer := grpcserver.NewMediaServer(cloudStorage)
+	pb.RegisterMediaServiceServer(grpcServer, mediaServer)
 
 	return nil
 }

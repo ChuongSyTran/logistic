@@ -1,25 +1,30 @@
-package controller
+package grpcserver
 
 import (
 	"bytes"
 	"context"
-	"media_service/internal/storage"
+
+	"media_service/internal/app"
 
 	pb "github.com/logistic/api/logistic/media_service/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-type MediaController struct {
+type MediaServer struct {
 	pb.UnimplementedMediaServiceServer
-	storage storage.FileStorage
+	storage app.FileStoragePort
 }
 
-func NewMediaController(storage storage.FileStorage) *MediaController {
-	return &MediaController{storage: storage}
+func NewMediaServer(storage app.FileStoragePort) *MediaServer {
+	return &MediaServer{storage: storage}
 }
 
-func (c *MediaController) UploadFile(ctx context.Context, req *pb.UploadFileRequest) (*pb.UploadFileResponse, error) {
+// Aliases for backwards compatibility
+type MediaController = MediaServer
+var NewMediaController = NewMediaServer
+
+func (c *MediaServer) UploadFile(ctx context.Context, req *pb.UploadFileRequest) (*pb.UploadFileResponse, error) {
 	if len(req.FileContent) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "file content is empty")
 	}
@@ -38,7 +43,7 @@ func (c *MediaController) UploadFile(ctx context.Context, req *pb.UploadFileRequ
 	}, nil
 }
 
-func (c *MediaController) DeleteFile(ctx context.Context, req *pb.DeleteFileRequest) (*pb.DeleteFileResponse, error) {
+func (c *MediaServer) DeleteFile(ctx context.Context, req *pb.DeleteFileRequest) (*pb.DeleteFileResponse, error) {
 	if req.PublicId == "" {
 		return nil, status.Error(codes.InvalidArgument, "public_id is required")
 	}
