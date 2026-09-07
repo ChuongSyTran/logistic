@@ -4,13 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"auth_service/internal/biz"
+	"auth_service/internal/adapter/grpcserver"
+	"auth_service/internal/adapter/persistence"
+	"auth_service/internal/app"
 	"auth_service/internal/conf"
-	"auth_service/internal/controller"
 	"auth_service/internal/mapper"
-	"auth_service/internal/repo"
-
-	entclient "auth_service/internal/common/ent_client"
 
 	pb "github.com/logistic/api/logistic/auth_service/v1"
 	"github.com/logistic/pkg/authn"
@@ -21,7 +19,7 @@ import (
 )
 
 func Injection(grpcServer *grpc.Server, cfg *conf.Config) error {
-	clientDb, err := entclient.NewConnection(cfg.Database)
+	clientDb, err := persistence.NewConnection(cfg.Database)
 	if err != nil {
 		return err
 	}
@@ -53,13 +51,13 @@ func Injection(grpcServer *grpc.Server, cfg *conf.Config) error {
 	}
 
 	authMapper := mapper.NewAuthMapper()
-	authRepo := repo.NewAuthRepo(clientDb, authMapper)
-	sessionRepo := repo.NewSessionRepo(clientDb)
-	authService := biz.NewAuthService(authRepo, sessionRepo, signer, verifier, oauthConfig)
+	authRepo := persistence.NewAuthRepo(clientDb, authMapper)
+	sessionRepo := persistence.NewSessionRepo(clientDb)
+	authService := app.NewAuthService(authRepo, sessionRepo, signer, verifier, oauthConfig)
 
 	bootstrapAdmin(context.Background(), authService, cfg.Bootstrap)
 
-	pb.RegisterAuthServiceServer(grpcServer, controller.NewAuthController(authService, authMapper, signer))
+	pb.RegisterAuthServiceServer(grpcServer, grpcserver.NewAuthServer(authService, authMapper, signer))
 
 	return nil
 }

@@ -1,9 +1,8 @@
-package biz
+package app
 
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"time"
 
@@ -26,11 +25,11 @@ type AuthService interface {
 }
 
 var (
-	ErrEmailAlreadyExists  = errors.New("biz: email already registered")
-	ErrInvalidCredentials  = errors.New("biz: invalid email or password")
-	ErrTokenGenerationFail = errors.New("biz: failed to generate auth token")
-	ErrInvalidToken        = errors.New("biz: invalid token")
-	ErrSessionRevoked      = errors.New("biz: phiên đăng nhập đã bị thu hồi")
+	ErrEmailAlreadyExists  = entity.ErrEmailAlreadyExists
+	ErrInvalidCredentials  = entity.ErrInvalidCredentials
+	ErrTokenGenerationFail = entity.ErrTokenGenerationFail
+	ErrInvalidToken        = entity.ErrInvalidToken
+	ErrSessionRevoked      = entity.ErrSessionRevoked
 )
 
 type authServiceImpl struct {

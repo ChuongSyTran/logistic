@@ -7,13 +7,17 @@ import (
 	"io"
 	"time"
 
-	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
+	"media_service/internal/app"
+
 	"github.com/cloudinary/cloudinary-go/v2"
+	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 )
 
 type CloudinaryStorage struct {
 	client *cloudinary.Cloudinary
 }
+
+var _ app.FileStoragePort = (*CloudinaryStorage)(nil)
 
 func NewCloudinaryStorage(client *cloudinary.Cloudinary) *CloudinaryStorage {
 	return &CloudinaryStorage{client: client}
