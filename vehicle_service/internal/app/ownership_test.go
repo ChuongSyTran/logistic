@@ -1,11 +1,10 @@
-package biz
+package app
 
 import (
 	"context"
 	"errors"
 	"testing"
 
-	cerr "vehicle_service/internal/common/errors"
 	"vehicle_service/internal/entity"
 
 	"github.com/google/uuid"
@@ -159,7 +158,7 @@ func TestNguoiLaKhongThaoTacDuocTrenXeNguoiKhac(t *testing.T) {
 			repo := newStub()
 			err := chay(NewVehicleEngine(repo), nguoiLa)
 
-			if !errors.Is(err, cerr.ErrVehicleNotOwned) {
+			if !errors.Is(err, entity.ErrVehicleNotOwned) {
 				t.Fatalf("phải bị từ chối với ErrVehicleNotOwned, nhận: %v", err)
 			}
 			if repo.wrote {

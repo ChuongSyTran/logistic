@@ -1,9 +1,8 @@
-package biz
+package app
 
 import (
 	"context"
 
-	cerr "vehicle_service/internal/common/errors"
 	"vehicle_service/internal/entity"
 
 	"github.com/google/uuid"
@@ -46,17 +45,17 @@ func NewVehicleEngine(repo VehicleRepo) VehicleEngine {
 
 func (e *vehicleEngineImpl) RegisterVehicle(ctx context.Context, param *entity.RegisterVehicleParam) (*entity.Vehicle, error) {
 	if param.DriverID == uuid.Nil {
-		return nil, cerr.ErrInvalidDriverID
+		return nil, entity.ErrInvalidDriverID
 	}
 	if param.LicensePlate == "" {
-		return nil, cerr.ErrPlateRequired
+		return nil, entity.ErrPlateRequired
 	}
 	if !entity.IsValidVehicleType(param.VehicleType) {
-		return nil, cerr.ErrInvalidType.WithDetail("vehicle_type", param.VehicleType)
+		return nil, entity.ErrInvalidType.WithDetail("vehicle_type", param.VehicleType)
 	}
 
 	if param.CapacityWeightKg <= 0 || param.CapacityVolumeCbm <= 0 {
-		return nil, cerr.ErrInvalidCapacity
+		return nil, entity.ErrInvalidCapacity
 	}
 	return e.repo.CreateVehicle(ctx, param)
 }
@@ -64,14 +63,14 @@ func (e *vehicleEngineImpl) RegisterVehicle(ctx context.Context, param *entity.R
 // Mọi thao tác của tài xế phải qua đây. driverID rỗng = luồng quản trị, bỏ kiểm tra.
 func (e *vehicleEngineImpl) ownedVehicle(ctx context.Context, vehicleID, driverID uuid.UUID) (*entity.Vehicle, error) {
 	if vehicleID == uuid.Nil {
-		return nil, cerr.ErrInvalidVehicleID
+		return nil, entity.ErrInvalidVehicleID
 	}
 	v, err := e.repo.GetVehicleByID(ctx, vehicleID)
 	if err != nil {
 		return nil, err
 	}
 	if driverID != uuid.Nil && v.DriverID != driverID {
-		return nil, cerr.ErrVehicleNotOwned
+		return nil, entity.ErrVehicleNotOwned
 	}
 	return v, nil
 }
@@ -82,10 +81,10 @@ func (e *vehicleEngineImpl) GetVehicle(ctx context.Context, id, driverID uuid.UU
 
 func (e *vehicleEngineImpl) ListVehicles(ctx context.Context, param *entity.ListVehiclesParam) (*entity.ListVehiclesResult, error) {
 	if param.Status != "" && !entity.IsValidVehicleStatus(param.Status) {
-		return nil, cerr.ErrInvalidStatus.WithDetail("status", param.Status)
+		return nil, entity.ErrInvalidStatus.WithDetail("status", param.Status)
 	}
 	if param.VehicleType != "" && !entity.IsValidVehicleType(param.VehicleType) {
-		return nil, cerr.ErrInvalidType.WithDetail("vehicle_type", param.VehicleType)
+		return nil, entity.ErrInvalidType.WithDetail("vehicle_type", param.VehicleType)
 	}
 
 	page, pageSize, _ := entity.NormalizePaging(param.Page, param.PageSize)
@@ -101,10 +100,10 @@ func (e *vehicleEngineImpl) ListVehicles(ctx context.Context, param *entity.List
 
 func (e *vehicleEngineImpl) UpdateVehicle(ctx context.Context, param *entity.UpdateVehicleParam) (*entity.Vehicle, error) {
 	if param.ID == uuid.Nil {
-		return nil, cerr.ErrInvalidVehicleID
+		return nil, entity.ErrInvalidVehicleID
 	}
 	if param.VehicleType != "" && !entity.IsValidVehicleType(param.VehicleType) {
-		return nil, cerr.ErrInvalidType.WithDetail("vehicle_type", param.VehicleType)
+		return nil, entity.ErrInvalidType.WithDetail("vehicle_type", param.VehicleType)
 	}
 	if _, err := e.ownedVehicle(ctx, param.ID, param.DriverID); err != nil {
 		return nil, err
@@ -121,7 +120,7 @@ func (e *vehicleEngineImpl) DeleteVehicle(ctx context.Context, id, driverID uuid
 
 func (e *vehicleEngineImpl) UpdateVehicleStatus(ctx context.Context, id, driverID uuid.UUID, status string) (*entity.Vehicle, error) {
 	if !entity.IsValidVehicleStatus(status) {
-		return nil, cerr.ErrInvalidStatus.WithDetail("status", status)
+		return nil, entity.ErrInvalidStatus.WithDetail("status", status)
 	}
 	if _, err := e.ownedVehicle(ctx, id, driverID); err != nil {
 		return nil, err
@@ -131,13 +130,13 @@ func (e *vehicleEngineImpl) UpdateVehicleStatus(ctx context.Context, id, driverI
 
 func (e *vehicleEngineImpl) UploadDocument(ctx context.Context, param *entity.UploadDocumentParam) (*entity.VehicleDocument, error) {
 	if param.VehicleID == uuid.Nil {
-		return nil, cerr.ErrInvalidVehicleID
+		return nil, entity.ErrInvalidVehicleID
 	}
 	if !entity.IsValidDocumentType(param.DocumentType) {
-		return nil, cerr.ErrInvalidDocType.WithDetail("document_type", param.DocumentType)
+		return nil, entity.ErrInvalidDocType.WithDetail("document_type", param.DocumentType)
 	}
 	if param.FileURL == "" {
-		return nil, cerr.ErrFileURLRequired
+		return nil, entity.ErrFileURLRequired
 	}
 	if _, err := e.ownedVehicle(ctx, param.VehicleID, param.DriverID); err != nil {
 		return nil, err
@@ -147,7 +146,7 @@ func (e *vehicleEngineImpl) UploadDocument(ctx context.Context, param *entity.Up
 
 func (e *vehicleEngineImpl) ListDocuments(ctx context.Context, param *entity.ListDocumentsParam) ([]entity.VehicleDocument, error) {
 	if param.ReviewStatus != "" && !entity.IsValidReviewStatus(param.ReviewStatus) {
-		return nil, cerr.ErrInvalidReviewStat.WithDetail("review_status", param.ReviewStatus)
+		return nil, entity.ErrInvalidReviewStat.WithDetail("review_status", param.ReviewStatus)
 	}
 	if _, err := e.ownedVehicle(ctx, param.VehicleID, param.DriverID); err != nil {
 		return nil, err
@@ -157,7 +156,7 @@ func (e *vehicleEngineImpl) ListDocuments(ctx context.Context, param *entity.Lis
 
 func (e *vehicleEngineImpl) DeleteDocument(ctx context.Context, id, driverID uuid.UUID) error {
 	if id == uuid.Nil {
-		return cerr.ErrInvalidDocumentID
+		return entity.ErrInvalidDocumentID
 	}
 	doc, err := e.repo.GetDocument(ctx, id)
 	if err != nil {
@@ -172,10 +171,10 @@ func (e *vehicleEngineImpl) DeleteDocument(ctx context.Context, id, driverID uui
 
 func (e *vehicleEngineImpl) ReportLocation(ctx context.Context, param *entity.ReportLocationParam) (*entity.VehicleLocation, error) {
 	if param.VehicleID == uuid.Nil {
-		return nil, cerr.ErrInvalidVehicleID
+		return nil, entity.ErrInvalidVehicleID
 	}
 	if !entity.IsValidCoordinate(param.Latitude, param.Longitude) {
-		return nil, cerr.ErrInvalidCoordinate.
+		return nil, entity.ErrInvalidCoordinate.
 			WithDetail("latitude", formatFloat(param.Latitude)).
 			WithDetail("longitude", formatFloat(param.Longitude))
 	}
@@ -202,10 +201,10 @@ func (e *vehicleEngineImpl) GetLocation(ctx context.Context, vehicleID, driverID
 
 func (e *vehicleEngineImpl) SetAvailability(ctx context.Context, param *entity.SetAvailabilityParam) (*entity.DriverAvailability, error) {
 	if param.DriverID == uuid.Nil {
-		return nil, cerr.ErrInvalidDriverID
+		return nil, entity.ErrInvalidDriverID
 	}
 	if param.VehicleID == uuid.Nil {
-		return nil, cerr.ErrInvalidVehicleID
+		return nil, entity.ErrInvalidVehicleID
 	}
 
 	v, err := e.ownedVehicle(ctx, param.VehicleID, param.DriverID)
@@ -215,13 +214,13 @@ func (e *vehicleEngineImpl) SetAvailability(ctx context.Context, param *entity.S
 
 	if param.IsOnline {
 		if v.VerificationStatus != entity.VerificationVerified {
-			return nil, cerr.ErrVehicleNotVerified.WithDetail("verification_status", v.VerificationStatus)
+			return nil, entity.ErrVehicleNotVerified.WithDetail("verification_status", v.VerificationStatus)
 		}
 		if v.Status == entity.VehicleStatusMaintenance {
-			return nil, cerr.ErrVehicleInMaintenance
+			return nil, entity.ErrVehicleInMaintenance
 		}
 		if !entity.IsValidCoordinate(param.CurrentLat, param.CurrentLng) {
-			return nil, cerr.ErrInvalidCoordinate
+			return nil, entity.ErrInvalidCoordinate
 		}
 
 		if param.AvailableWeightKg <= 0 {
@@ -245,17 +244,17 @@ func (e *vehicleEngineImpl) SetAvailability(ctx context.Context, param *entity.S
 
 func (e *vehicleEngineImpl) GetAvailability(ctx context.Context, driverID uuid.UUID) (*entity.DriverAvailability, error) {
 	if driverID == uuid.Nil {
-		return nil, cerr.ErrInvalidDriverID
+		return nil, entity.ErrInvalidDriverID
 	}
 	return e.repo.GetAvailability(ctx, driverID)
 }
 
 func (e *vehicleEngineImpl) SearchNearby(ctx context.Context, param *entity.SearchNearbyParam) ([]entity.NearbyVehicle, error) {
 	if !entity.IsValidCoordinate(param.Latitude, param.Longitude) {
-		return nil, cerr.ErrInvalidCoordinate
+		return nil, entity.ErrInvalidCoordinate
 	}
 	if param.VehicleType != "" && !entity.IsValidVehicleType(param.VehicleType) {
-		return nil, cerr.ErrInvalidType.WithDetail("vehicle_type", param.VehicleType)
+		return nil, entity.ErrInvalidType.WithDetail("vehicle_type", param.VehicleType)
 	}
 	param.Normalize()
 	return e.repo.SearchNearby(ctx, param)
@@ -263,13 +262,13 @@ func (e *vehicleEngineImpl) SearchNearby(ctx context.Context, param *entity.Sear
 
 func (e *vehicleEngineImpl) AdminListVehicles(ctx context.Context, param *entity.AdminListVehiclesParam) (*entity.ListVehiclesResult, error) {
 	if param.Status != "" && !entity.IsValidVehicleStatus(param.Status) {
-		return nil, cerr.ErrInvalidStatus.WithDetail("status", param.Status)
+		return nil, entity.ErrInvalidStatus.WithDetail("status", param.Status)
 	}
 	if param.VerificationStatus != "" && !entity.IsValidVerificationStatus(param.VerificationStatus) {
-		return nil, cerr.ErrInvalidReviewStat.WithDetail("verification_status", param.VerificationStatus)
+		return nil, entity.ErrInvalidReviewStat.WithDetail("verification_status", param.VerificationStatus)
 	}
 	if param.VehicleType != "" && !entity.IsValidVehicleType(param.VehicleType) {
-		return nil, cerr.ErrInvalidType.WithDetail("vehicle_type", param.VehicleType)
+		return nil, entity.ErrInvalidType.WithDetail("vehicle_type", param.VehicleType)
 	}
 
 	page, pageSize, _ := entity.NormalizePaging(param.Page, param.PageSize)
@@ -285,7 +284,7 @@ func (e *vehicleEngineImpl) AdminListVehicles(ctx context.Context, param *entity
 
 func (e *vehicleEngineImpl) AdminVerifyVehicle(ctx context.Context, param *entity.VerifyVehicleParam) (*entity.Vehicle, error) {
 	if param.ID == uuid.Nil {
-		return nil, cerr.ErrInvalidVehicleID
+		return nil, entity.ErrInvalidVehicleID
 	}
 	if _, err := e.repo.GetVehicleByID(ctx, param.ID); err != nil {
 		return nil, err
@@ -312,7 +311,7 @@ func (e *vehicleEngineImpl) AdminListPendingDocuments(ctx context.Context, page,
 
 func (e *vehicleEngineImpl) AdminReviewDocument(ctx context.Context, param *entity.ReviewDocumentParam) (*entity.VehicleDocument, error) {
 	if param.ID == uuid.Nil {
-		return nil, cerr.ErrInvalidDocumentID
+		return nil, entity.ErrInvalidDocumentID
 	}
 
 	current, err := e.repo.GetDocument(ctx, param.ID)
@@ -320,7 +319,7 @@ func (e *vehicleEngineImpl) AdminReviewDocument(ctx context.Context, param *enti
 		return nil, err
 	}
 	if current.ReviewStatus != entity.ReviewPending {
-		return nil, cerr.ErrDocAlreadyReviewed.WithDetail("current_status", current.ReviewStatus)
+		return nil, entity.ErrDocAlreadyReviewed.WithDetail("current_status", current.ReviewStatus)
 	}
 
 	status := entity.ReviewRejected
