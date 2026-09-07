@@ -1,4 +1,4 @@
-package repo
+package persistence
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 
 	"auth_service/ent"
 	"auth_service/ent/refreshtoken"
-	"auth_service/internal/biz"
+	"auth_service/internal/app"
 	"auth_service/internal/entity"
 
 	"github.com/google/uuid"
@@ -17,7 +17,7 @@ type sessionRepoImpl struct {
 	client *ent.Client
 }
 
-func NewSessionRepo(client *ent.Client) biz.SessionRepo {
+func NewSessionRepo(client *ent.Client) app.SessionRepository {
 	return &sessionRepoImpl{client: client}
 }
 
@@ -37,7 +37,7 @@ func (r *sessionRepoImpl) Get(ctx context.Context, id uuid.UUID) (*entity.Refres
 	row, err := r.client.RefreshToken.Get(ctx, id)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("repo session get: %w", biz.ErrSessionRevoked)
+			return nil, fmt.Errorf("repo session get: %w", entity.ErrSessionRevoked)
 		}
 		return nil, fmt.Errorf("repo session get: %w", err)
 	}
@@ -64,7 +64,7 @@ func (r *sessionRepoImpl) MarkUsed(ctx context.Context, id uuid.UUID) error {
 		return fmt.Errorf("repo session markUsed: %w", err)
 	}
 	if affected == 0 {
-		return biz.ErrSessionRevoked
+		return entity.ErrSessionRevoked
 	}
 	return nil
 }

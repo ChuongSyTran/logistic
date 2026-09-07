@@ -1,4 +1,4 @@
-package repo
+package persistence
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 
 	"auth_service/ent"
 	"auth_service/ent/users"
-	"auth_service/internal/biz"
+	"auth_service/internal/app"
 	"auth_service/internal/entity"
 	"auth_service/internal/mapper"
 
@@ -19,7 +19,7 @@ type authRepoImpl struct {
 	mapper mapper.AuthMapper
 }
 
-func NewAuthRepo(client *ent.Client, mapper mapper.AuthMapper) biz.AuthRepo {
+func NewAuthRepo(client *ent.Client, mapper mapper.AuthMapper) app.AuthRepository {
 	return &authRepoImpl{
 		client: client,
 		mapper: mapper,
@@ -34,7 +34,7 @@ func (r *authRepoImpl) FindByEmail(ctx context.Context, email string) (*entity.U
 
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, "", fmt.Errorf("repo findByEmail: %w", biz.ErrInvalidCredentials)
+			return nil, "", fmt.Errorf("repo findByEmail: %w", entity.ErrInvalidCredentials)
 		}
 		return nil, "", fmt.Errorf("repo findByEmail: unexpected db error: %w", err)
 	}
@@ -52,7 +52,7 @@ func (r *authRepoImpl) FindByID(ctx context.Context, id uuid.UUID) (*entity.User
 	u, err := r.client.Users.Get(ctx, id)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("repo findByID: %w", biz.ErrInvalidCredentials)
+			return nil, fmt.Errorf("repo findByID: %w", entity.ErrInvalidCredentials)
 		}
 		return nil, fmt.Errorf("repo findByID: unexpected db error: %w", err)
 	}
@@ -88,7 +88,7 @@ func (r *authRepoImpl) Save(ctx context.Context, user entity.UserRegister, hashe
 	u, err := createBuilder.Save(ctx)
 	if err != nil {
 		if ent.IsConstraintError(err) {
-			return nil, fmt.Errorf("repo save: %w", biz.ErrEmailAlreadyExists)
+			return nil, fmt.Errorf("repo save: %w", entity.ErrEmailAlreadyExists)
 		}
 		return nil, fmt.Errorf("repo save: unexpected db error: %w", err)
 	}

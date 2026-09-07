@@ -1,4 +1,4 @@
-package entclient
+package persistence
 
 import (
 	"auth_service/internal/conf"

@@ -1,4 +1,4 @@
-package controller
+package grpcserver
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"errors"
 	"math/big"
 
-	"auth_service/internal/biz"
+	"auth_service/internal/app"
 	"auth_service/internal/entity"
 	"auth_service/internal/mapper"
 
@@ -17,22 +17,25 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type authController struct {
+type authServer struct {
 	pb.UnimplementedAuthServiceServer
-	authBiz biz.AuthService
+	authBiz app.AuthService
 	mapper  mapper.AuthMapper
 	signer  *authn.Signer
 }
 
-func NewAuthController(authBiz biz.AuthService, m mapper.AuthMapper, signer *authn.Signer) pb.AuthServiceServer {
-	return &authController{
+func NewAuthServer(authBiz app.AuthService, m mapper.AuthMapper, signer *authn.Signer) pb.AuthServiceServer {
+	return &authServer{
 		authBiz: authBiz,
 		mapper:  m,
 		signer:  signer,
 	}
 }
 
-func (h *authController) Register(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterResponse, error) {
+// Alias for backwards compatibility
+var NewAuthController = NewAuthServer
+
+func (h *authServer) Register(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "request is nil")
 	}
@@ -45,7 +48,7 @@ func (h *authController) Register(ctx context.Context, req *pb.RegisterRequest) 
 		Role:     req.Role,
 	})
 	if err != nil {
-		if errors.Is(err, biz.ErrEmailAlreadyExists) {
+		if errors.Is(err, entity.ErrEmailAlreadyExists) {
 			return nil, status.Error(codes.AlreadyExists, "email đã được đăng ký")
 		}
 
@@ -57,7 +60,7 @@ func (h *authController) Register(ctx context.Context, req *pb.RegisterRequest) 
 	}, nil
 }
 
-func (h *authController) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResponse, error) {
+func (h *authServer) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "request is nil")
 	}
@@ -67,7 +70,7 @@ func (h *authController) Login(ctx context.Context, req *pb.LoginRequest) (*pb.L
 		Password: req.Password,
 	})
 	if err != nil {
-		if errors.Is(err, biz.ErrInvalidCredentials) {
+		if errors.Is(err, entity.ErrInvalidCredentials) {
 			return nil, status.Error(codes.Unauthenticated, "sai email hoặc mật khẩu")
 		}
 		return nil, status.Error(codes.Internal, "không đăng nhập được")
@@ -79,7 +82,7 @@ func (h *authController) Login(ctx context.Context, req *pb.LoginRequest) (*pb.L
 	}, nil
 }
 
-func (h *authController) GetGoogleLoginURL(ctx context.Context, req *pb.GetGoogleLoginURLRequest) (*pb.GetGoogleLoginURLResponse, error) {
+func (h *authServer) GetGoogleLoginURL(ctx context.Context, req *pb.GetGoogleLoginURLRequest) (*pb.GetGoogleLoginURLResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "request is nil")
 	}
@@ -89,7 +92,7 @@ func (h *authController) GetGoogleLoginURL(ctx context.Context, req *pb.GetGoogl
 	}, nil
 }
 
-func (h *authController) GoogleCallback(ctx context.Context, req *pb.GoogleCallbackRequest) (*pb.GoogleCallbackResponse, error) {
+func (h *authServer) GoogleCallback(ctx context.Context, req *pb.GoogleCallbackRequest) (*pb.GoogleCallbackResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "request is nil")
 	}
@@ -105,7 +108,7 @@ func (h *authController) GoogleCallback(ctx context.Context, req *pb.GoogleCallb
 	}, nil
 }
 
-func (h *authController) VerifyToken(ctx context.Context, req *pb.VerifyTokenRequest) (*pb.VerifyTokenResponse, error) {
+func (h *authServer) VerifyToken(ctx context.Context, req *pb.VerifyTokenRequest) (*pb.VerifyTokenResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "request is nil")
 	}
@@ -120,7 +123,7 @@ func (h *authController) VerifyToken(ctx context.Context, req *pb.VerifyTokenReq
 	}, nil
 }
 
-func (h *authController) RefreshToken(ctx context.Context, req *pb.RefreshTokenRequest) (*pb.RefreshTokenResponse, error) {
+func (h *authServer) RefreshToken(ctx context.Context, req *pb.RefreshTokenRequest) (*pb.RefreshTokenResponse, error) {
 	if req == nil || req.RefreshToken == "" {
 		return nil, status.Error(codes.InvalidArgument, "thiếu refresh token")
 	}
@@ -128,10 +131,10 @@ func (h *authController) RefreshToken(ctx context.Context, req *pb.RefreshTokenR
 	pair, err := h.authBiz.RefreshToken(ctx, req.RefreshToken)
 	if err != nil {
 		switch {
-		case errors.Is(err, biz.ErrSessionRevoked):
+		case errors.Is(err, entity.ErrSessionRevoked):
 
 			return nil, status.Error(codes.PermissionDenied, "phiên đã bị thu hồi, cần đăng nhập lại")
-		case errors.Is(err, biz.ErrInvalidToken):
+		case errors.Is(err, entity.ErrInvalidToken):
 			return nil, status.Error(codes.Unauthenticated, "refresh token không hợp lệ")
 		default:
 			return nil, status.Error(codes.Internal, "không làm mới được phiên")
@@ -143,7 +146,7 @@ func (h *authController) RefreshToken(ctx context.Context, req *pb.RefreshTokenR
 	}, nil
 }
 
-func (h *authController) Logout(ctx context.Context, req *pb.LogoutRequest) (*pb.LogoutResponse, error) {
+func (h *authServer) Logout(ctx context.Context, req *pb.LogoutRequest) (*pb.LogoutResponse, error) {
 	if req == nil || req.RefreshToken == "" {
 		return nil, status.Error(codes.InvalidArgument, "thiếu refresh token")
 	}
@@ -154,7 +157,7 @@ func (h *authController) Logout(ctx context.Context, req *pb.LogoutRequest) (*pb
 	return &pb.LogoutResponse{Success: true}, nil
 }
 
-func (h *authController) GetPublicKeys(ctx context.Context, req *pb.GetPublicKeysRequest) (*pb.GetPublicKeysResponse, error) {
+func (h *authServer) GetPublicKeys(ctx context.Context, req *pb.GetPublicKeysRequest) (*pb.GetPublicKeysResponse, error) {
 	pub := h.signer.PublicKey()
 
 	return &pb.GetPublicKeysResponse{
