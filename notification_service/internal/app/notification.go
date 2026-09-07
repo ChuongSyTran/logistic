@@ -1,4 +1,4 @@
-package biz
+package app
 
 import (
 	"context"
@@ -7,38 +7,16 @@ import (
 	"log"
 	"time"
 
-	cerr "notification_service/internal/common/errors"
 	"notification_service/internal/entity"
 
 	"github.com/google/uuid"
 )
 
-type NotificationEngine interface {
-	List(ctx context.Context, param *entity.ListNotificationsParam) (*entity.ListNotificationsResult, error)
-	Get(ctx context.Context, id, userID uuid.UUID) (*entity.Notification, error)
-	MarkAsRead(ctx context.Context, id, userID uuid.UUID) (int64, error)
-	MarkAllAsRead(ctx context.Context, userID uuid.UUID) (int64, error)
-	Delete(ctx context.Context, id, userID uuid.UUID) error
-	GetUnreadCount(ctx context.Context, userID uuid.UUID) (int64, error)
-	GetPreference(ctx context.Context, userID uuid.UUID) (*entity.NotificationPreference, error)
-	UpdatePreference(ctx context.Context, param *entity.UpdatePreferenceParam) (*entity.NotificationPreference, error)
-
-	DispatchEvent(ctx context.Context, eventID, routingKey, source string, params []entity.CreateNotificationParam) (int64, error)
-	AdminSend(ctx context.Context, param *entity.SendNotificationParam) (*entity.SendNotificationResult, error)
-
-	AdminList(ctx context.Context, param *entity.AdminListNotificationsParam) (*entity.ListNotificationsResult, error)
-	AdminListTemplates(ctx context.Context, param *entity.ListTemplatesParam) ([]entity.NotificationTemplate, error)
-	AdminCreateTemplate(ctx context.Context, param *entity.CreateTemplateParam) (*entity.NotificationTemplate, error)
-	AdminUpdateTemplate(ctx context.Context, param *entity.UpdateTemplateParam) (*entity.NotificationTemplate, error)
-	AdminDeleteTemplate(ctx context.Context, id uuid.UUID) error
-	AdminGetStats(ctx context.Context) (*entity.NotificationStats, error)
-
-	RenderFromTemplate(ctx context.Context, code, channel, locale string, vars map[string]string) (string, string, bool)
-}
-
 type notificationEngineImpl struct {
 	repo NotificationRepo
 }
+
+var _ NotificationEngine = (*notificationEngineImpl)(nil)
 
 func NewNotificationEngine(repo NotificationRepo) NotificationEngine {
 	return &notificationEngineImpl{repo: repo}
@@ -46,7 +24,7 @@ func NewNotificationEngine(repo NotificationRepo) NotificationEngine {
 
 func (e *notificationEngineImpl) List(ctx context.Context, param *entity.ListNotificationsParam) (*entity.ListNotificationsResult, error) {
 	if param.UserID == uuid.Nil {
-		return nil, cerr.ErrInvalidUserID
+		return nil, entity.ErrInvalidUserID
 	}
 
 	page, pageSize, _ := entity.NormalizePaging(param.Page, param.PageSize)
@@ -69,7 +47,7 @@ func (e *notificationEngineImpl) List(ctx context.Context, param *entity.ListNot
 
 func (e *notificationEngineImpl) Get(ctx context.Context, id, userID uuid.UUID) (*entity.Notification, error) {
 	if id == uuid.Nil {
-		return nil, cerr.ErrInvalidNotifID
+		return nil, entity.ErrInvalidNotifID
 	}
 
 	n, err := e.repo.GetByID(ctx, id)
@@ -78,7 +56,7 @@ func (e *notificationEngineImpl) Get(ctx context.Context, id, userID uuid.UUID) 
 	}
 
 	if userID != uuid.Nil && n.UserID != userID {
-		return nil, cerr.ErrNotificationNotOwned
+		return nil, entity.ErrNotificationNotOwned
 	}
 	return n, nil
 }
@@ -99,7 +77,7 @@ func (e *notificationEngineImpl) MarkAsRead(ctx context.Context, id, userID uuid
 
 func (e *notificationEngineImpl) MarkAllAsRead(ctx context.Context, userID uuid.UUID) (int64, error) {
 	if userID == uuid.Nil {
-		return 0, cerr.ErrInvalidUserID
+		return 0, entity.ErrInvalidUserID
 	}
 	return e.repo.MarkAllAsRead(ctx, userID)
 }
@@ -113,21 +91,21 @@ func (e *notificationEngineImpl) Delete(ctx context.Context, id, userID uuid.UUI
 
 func (e *notificationEngineImpl) GetUnreadCount(ctx context.Context, userID uuid.UUID) (int64, error) {
 	if userID == uuid.Nil {
-		return 0, cerr.ErrInvalidUserID
+		return 0, entity.ErrInvalidUserID
 	}
 	return e.repo.CountUnread(ctx, userID)
 }
 
 func (e *notificationEngineImpl) GetPreference(ctx context.Context, userID uuid.UUID) (*entity.NotificationPreference, error) {
 	if userID == uuid.Nil {
-		return nil, cerr.ErrInvalidUserID
+		return nil, entity.ErrInvalidUserID
 	}
 	return e.repo.GetOrCreatePreference(ctx, userID)
 }
 
 func (e *notificationEngineImpl) UpdatePreference(ctx context.Context, param *entity.UpdatePreferenceParam) (*entity.NotificationPreference, error) {
 	if param.UserID == uuid.Nil {
-		return nil, cerr.ErrInvalidUserID
+		return nil, entity.ErrInvalidUserID
 	}
 	return e.repo.UpdatePreference(ctx, param)
 }
@@ -138,7 +116,7 @@ func (e *notificationEngineImpl) DispatchEvent(
 	params []entity.CreateNotificationParam,
 ) (int64, error) {
 	if eventID == "" {
-		return 0, cerr.ErrInvalidNotifID.WithMessage("event_id là bắt buộc để chống xử lý trùng")
+		return 0, entity.ErrInvalidNotifID.WithMessage("event_id là bắt buộc để chống xử lý trùng")
 	}
 	if len(params) == 0 {
 		return 0, nil
@@ -158,7 +136,7 @@ func (e *notificationEngineImpl) DispatchEvent(
 
 		pref, err := e.repo.GetOrCreatePreference(ctx, p.UserID)
 		if err != nil {
-			log.Printf("[biz] không đọc được cài đặt của %s (%v) — vẫn gửi theo mặc định", p.UserID, err)
+			log.Printf("[app] không đọc được cài đặt của %s (%v) — vẫn gửi theo mặc định", p.UserID, err)
 			allowed = append(allowed, p)
 			continue
 		}
@@ -183,16 +161,16 @@ func (e *notificationEngineImpl) DispatchEvent(
 
 func (e *notificationEngineImpl) AdminSend(ctx context.Context, param *entity.SendNotificationParam) (*entity.SendNotificationResult, error) {
 	if param.Title == "" {
-		return nil, cerr.ErrTitleRequired
+		return nil, entity.ErrTitleRequired
 	}
 	if param.Body == "" {
-		return nil, cerr.ErrBodyRequired
+		return nil, entity.ErrBodyRequired
 	}
 	if len(param.UserIDs) == 0 && param.BroadcastRole == "" {
-		return nil, cerr.ErrNoRecipient
+		return nil, entity.ErrNoRecipient
 	}
 	if param.BroadcastRole != "" && !entity.IsValidRole(param.BroadcastRole) {
-		return nil, cerr.ErrInvalidRole.WithDetail("broadcast_role", param.BroadcastRole)
+		return nil, entity.ErrInvalidRole.WithDetail("broadcast_role", param.BroadcastRole)
 	}
 
 	channel := param.Channel
@@ -200,7 +178,7 @@ func (e *notificationEngineImpl) AdminSend(ctx context.Context, param *entity.Se
 		channel = entity.ChannelInApp
 	}
 	if !entity.IsValidChannel(channel) {
-		return nil, cerr.ErrInvalidChannel.WithDetail("channel", channel)
+		return nil, entity.ErrInvalidChannel.WithDetail("channel", channel)
 	}
 
 	notiType := param.Type
@@ -230,7 +208,7 @@ func (e *notificationEngineImpl) AdminSend(ctx context.Context, param *entity.Se
 	}
 
 	if len(params) == 0 {
-		return nil, cerr.ErrNoRecipient.WithMessage(
+		return nil, entity.ErrNoRecipient.WithMessage(
 			"broadcast theo vai trò chưa được hỗ trợ — hãy truyền danh sách user_ids cụ thể")
 	}
 
@@ -247,7 +225,7 @@ func (e *notificationEngineImpl) AdminSend(ctx context.Context, param *entity.Se
 
 func (e *notificationEngineImpl) AdminList(ctx context.Context, param *entity.AdminListNotificationsParam) (*entity.ListNotificationsResult, error) {
 	if param.Status != "" && !entity.IsValidStatus(param.Status) {
-		return nil, cerr.ErrInvalidStatus.WithDetail("status", param.Status)
+		return nil, entity.ErrInvalidStatus.WithDetail("status", param.Status)
 	}
 
 	page, pageSize, _ := entity.NormalizePaging(param.Page, param.PageSize)
@@ -264,37 +242,37 @@ func (e *notificationEngineImpl) AdminList(ctx context.Context, param *entity.Ad
 
 func (e *notificationEngineImpl) AdminListTemplates(ctx context.Context, param *entity.ListTemplatesParam) ([]entity.NotificationTemplate, error) {
 	if param.Channel != "" && !entity.IsValidChannel(param.Channel) {
-		return nil, cerr.ErrInvalidChannel.WithDetail("channel", param.Channel)
+		return nil, entity.ErrInvalidChannel.WithDetail("channel", param.Channel)
 	}
 	return e.repo.ListTemplates(ctx, param)
 }
 
 func (e *notificationEngineImpl) AdminCreateTemplate(ctx context.Context, param *entity.CreateTemplateParam) (*entity.NotificationTemplate, error) {
 	if param.Code == "" {
-		return nil, cerr.ErrCodeRequired
+		return nil, entity.ErrCodeRequired
 	}
 	if param.TitleTemplate == "" {
-		return nil, cerr.ErrTitleRequired
+		return nil, entity.ErrTitleRequired
 	}
 	if param.BodyTemplate == "" {
-		return nil, cerr.ErrBodyRequired
+		return nil, entity.ErrBodyRequired
 	}
 	if param.Channel != "" && !entity.IsValidChannel(param.Channel) {
-		return nil, cerr.ErrInvalidChannel.WithDetail("channel", param.Channel)
+		return nil, entity.ErrInvalidChannel.WithDetail("channel", param.Channel)
 	}
 	return e.repo.CreateTemplate(ctx, param)
 }
 
 func (e *notificationEngineImpl) AdminUpdateTemplate(ctx context.Context, param *entity.UpdateTemplateParam) (*entity.NotificationTemplate, error) {
 	if param.ID == uuid.Nil {
-		return nil, cerr.ErrInvalidTemplateID
+		return nil, entity.ErrInvalidTemplateID
 	}
 	return e.repo.UpdateTemplate(ctx, param)
 }
 
 func (e *notificationEngineImpl) AdminDeleteTemplate(ctx context.Context, id uuid.UUID) error {
 	if id == uuid.Nil {
-		return cerr.ErrInvalidTemplateID
+		return entity.ErrInvalidTemplateID
 	}
 	return e.repo.DeleteTemplate(ctx, id)
 }
@@ -350,7 +328,7 @@ func (e *notificationEngineImpl) RenderFromTemplate(ctx context.Context, code, c
 func MarshalData(v any) string {
 	blob, err := json.Marshal(v)
 	if err != nil {
-		log.Printf("[biz] marshal notification data thất bại: %v", err)
+		log.Printf("[app] marshal notification data thất bại: %v", err)
 		return ""
 	}
 	return string(blob)

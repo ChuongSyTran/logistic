@@ -1,4 +1,4 @@
-package errors
+package entity
 
 import "github.com/logistic/pkg/apperr"
 
@@ -19,6 +19,7 @@ var (
 	ErrPreferenceNotFound   = apperr.NotFound("PREFERENCE_NOT_FOUND", "không tìm thấy cài đặt thông báo")
 
 	ErrTemplateCodeExists = apperr.AlreadyExists("TEMPLATE_CODE_EXISTS", "mã template đã tồn tại cho kênh và ngôn ngữ này")
+	ErrDuplicateEvent     = apperr.AlreadyExists("EVENT_ALREADY_PROCESSED", "sự kiện này đã được xử lý")
 
 	ErrNotificationNotOwned = apperr.PermissionDenied("NOTIFICATION_NOT_OWNED", "thông báo không thuộc về người dùng này")
 

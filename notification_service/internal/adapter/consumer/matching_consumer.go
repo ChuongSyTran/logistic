@@ -8,9 +8,8 @@ import (
 	"log"
 	"strconv"
 
-	"notification_service/internal/biz"
+	"notification_service/internal/app"
 	"notification_service/internal/entity"
-	"notification_service/internal/repo"
 
 	"github.com/google/uuid"
 	"github.com/logistic/pkg/apperr"
@@ -19,10 +18,10 @@ import (
 )
 
 type MatchingConsumer struct {
-	engine biz.NotificationEngine
+	engine app.NotificationEngine
 }
 
-func NewMatchingConsumer(engine biz.NotificationEngine) *MatchingConsumer {
+func NewMatchingConsumer(engine app.NotificationEngine) *MatchingConsumer {
 	return &MatchingConsumer{engine: engine}
 }
 
@@ -55,7 +54,7 @@ func (c *MatchingConsumer) Handle(ctx context.Context, d mq.Delivery) error {
 
 	count, err := c.engine.DispatchEvent(ctx, eventID, d.RoutingKey, env.Source, params)
 	if err != nil {
-		if errors.Is(err, repo.ErrDuplicateEvent) || isDuplicate(err) {
+		if errors.Is(err, entity.ErrDuplicateEvent) || isDuplicate(err) {
 			log.Printf("[consumer] event %s đã xử lý trước đó — bỏ qua", eventID)
 			return nil
 		}
@@ -127,7 +126,7 @@ func (c *MatchingConsumer) onDriverCandidatesFound(ctx context.Context, env *eve
 			Body:          text.body,
 			RefType:       entity.RefTypeBid,
 			RefID:         payload.BidID,
-			Data: biz.MarshalData(map[string]string{
+			Data: app.MarshalData(map[string]string{
 				"bid_id":      payload.BidID,
 				"ask_id":      cand.AskID,
 				"vehicle_id":  cand.VehicleID,
@@ -146,7 +145,7 @@ func (c *MatchingConsumer) onMatchFound(ctx context.Context, env *events.Envelop
 		return nil, err
 	}
 
-	data := biz.MarshalData(map[string]string{
+	data := app.MarshalData(map[string]string{
 		"contract_id": payload.ContractID,
 		"bid_id":      payload.BidID,
 		"ask_id":      payload.AskID,
@@ -241,7 +240,7 @@ func (c *MatchingConsumer) onOfferReceived(ctx context.Context, env *events.Enve
 		Body:          text.body,
 		RefType:       entity.RefTypeBid,
 		RefID:         payload.BidID,
-		Data: biz.MarshalData(map[string]string{
+		Data: app.MarshalData(map[string]string{
 			"bid_id": payload.BidID,
 			"ask_id": payload.AskID,
 			"screen": "OfferList",
@@ -282,7 +281,7 @@ func (c *MatchingConsumer) onOfferRejected(ctx context.Context, env *events.Enve
 		Body:          text.body,
 		RefType:       entity.RefTypeBid,
 		RefID:         payload.BidID,
-		Data: biz.MarshalData(map[string]string{
+		Data: app.MarshalData(map[string]string{
 			"bid_id": payload.BidID,
 			"ask_id": payload.AskID,
 			"screen": "MyOffers",
@@ -319,7 +318,7 @@ func (c *MatchingConsumer) onCargoSuggested(ctx context.Context, env *events.Env
 		Body:          text.body,
 		RefType:       entity.RefTypeAsk,
 		RefID:         payload.AskID,
-		Data: biz.MarshalData(map[string]any{
+		Data: app.MarshalData(map[string]any{
 			"ask_id":  payload.AskID,
 			"bid_ids": payload.BidIDs,
 			"screen":  "SuggestedCargo",

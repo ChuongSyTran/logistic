@@ -7,12 +7,12 @@ import (
 	"strings"
 
 	"notification_service/ent"
-	"notification_service/internal/biz"
+	"notification_service/internal/adapter/consumer"
+	"notification_service/internal/adapter/grpcserver"
+	"notification_service/internal/adapter/persistence"
+	"notification_service/internal/app"
 	"notification_service/internal/conf"
-	"notification_service/internal/consumer"
-	"notification_service/internal/controller"
 	"notification_service/internal/mapper/generated"
-	"notification_service/internal/repo"
 
 	pb "github.com/logistic/api/logistic/notification_service/v1"
 	"github.com/logistic/pkg/cache"
@@ -103,11 +103,11 @@ func Injection(grpcServer *grpc.Server, cfg *conf.Config) (*Container, error) {
 	}
 
 	appMapper := &generated.AppMapperImpl{}
-	notifRepo := repo.NewNotificationRepo(entClient, container.Cache, appMapper)
-	notifEngine := biz.NewNotificationEngine(notifRepo)
-	notifController := controller.NewNotificationController(notifEngine, appMapper)
+	notifRepo := persistence.NewNotificationRepo(entClient, container.Cache, appMapper)
+	notifEngine := app.NewNotificationEngine(notifRepo)
+	notifServer := grpcserver.NewNotificationServer(notifEngine, appMapper)
 
-	pb.RegisterNotificationServiceServer(grpcServer, notifController)
+	pb.RegisterNotificationServiceServer(grpcServer, notifServer)
 
 	if cfg.RabbitMQ.Enabled {
 		if err := setupConsumer(container, cfg, notifEngine); err != nil {
@@ -121,7 +121,7 @@ func Injection(grpcServer *grpc.Server, cfg *conf.Config) (*Container, error) {
 	return container, nil
 }
 
-func setupConsumer(container *Container, cfg *conf.Config, engine biz.NotificationEngine) error {
+func setupConsumer(container *Container, cfg *conf.Config, engine app.NotificationEngine) error {
 	conn, err := mq.Connect(mq.Config{
 		Host:     cfg.RabbitMQ.Host,
 		Port:     cfg.RabbitMQ.Port,
