@@ -75,8 +75,7 @@ func Injection(grpcServer *grpc.Server, cfg *conf.Config) (*Container, error) {
 
 	appMapper := &generated.AppMapperImpl{}
 	userRepo := persistence.NewUserRepo(entClient, redisClient, appMapper)
-	compliance := app.NewCompliance(userRepo)
-	userEngine := app.NewUserEngine(userRepo, compliance)
+	userEngine := app.NewUserEngine(userRepo)
 	userController := grpcserver.NewUserServer(userEngine, appMapper)
 
 	pb.RegisterUserServiceServer(grpcServer, userController)

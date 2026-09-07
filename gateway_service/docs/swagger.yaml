@@ -82,6 +82,36 @@ definitions:
     - phone
     - role
     type: object
+  internal_controller.ReviewKYCReq:
+    properties:
+      approved:
+        type: boolean
+      note:
+        type: string
+    type: object
+  internal_controller.SubmitKYCReq:
+    properties:
+      id_card_back_url:
+        type: string
+      id_card_front_url:
+        type: string
+      id_card_number:
+        type: string
+      license_back_url:
+        type: string
+      license_front_url:
+        type: string
+      license_number:
+        type: string
+      note:
+        type: string
+      status:
+        enum:
+        - pending
+        - approved
+        - rejected
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -139,12 +169,19 @@ paths:
     put:
       consumes:
       - application/json
+      description: Admin phê duyệt hoặc từ chối hồ sơ KYC
       parameters:
       - description: User ID
         in: path
         name: user_id
         required: true
         type: string
+      - description: Thông tin duyệt KYC
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_controller.ReviewKYCReq'
       produces:
       - application/json
       responses:
@@ -154,9 +191,31 @@ paths:
             $ref: '#/definitions/gateway_service_internal_response.Envelope'
       summary: '[Admin] Duyệt/từ chối KYC'
       tags:
-      - Admin-User
+      - Admin-KYC
+  /api/v1/admin/kyc/count-pending:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: '[Admin] Đếm số lượng hồ sơ KYC đang chờ duyệt'
+      tags:
+      - Admin-KYC
   /api/v1/admin/kyc/pending:
     get:
+      description: Danh sách các hồ sơ KYC đang chờ duyệt
+      parameters:
+      - description: Số trang
+        in: query
+        name: page
+        type: integer
+      - description: Kích thước trang
+        in: query
+        name: page_size
+        type: integer
       produces:
       - application/json
       responses:
@@ -166,7 +225,7 @@ paths:
             $ref: '#/definitions/gateway_service_internal_response.Envelope'
       summary: '[Admin] Hàng đợi duyệt KYC'
       tags:
-      - Admin-User
+      - Admin-KYC
   /api/v1/admin/notification-templates:
     get:
       produces:
@@ -976,11 +1035,9 @@ paths:
       tags:
       - User
   /api/v1/users/{user_id}/kyc:
-    put:
-      consumes:
-      - application/json
-      description: Tài xế nộp/cập nhật hồ sơ KYC của chính mình. Việc DUYỆT nằm ở
-        /admin/kyc và cần vai trò admin.
+    get:
+      description: Tài xế xem hồ sơ KYC của chính mình hoặc admin xem hồ sơ KYC của
+        user.
       parameters:
       - description: User ID
         in: path
@@ -994,9 +1051,35 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/gateway_service_internal_response.Envelope'
-      summary: Nộp hồ sơ KYC
+      summary: Xem hồ sơ KYC
       tags:
-      - User
+      - KYC
+    put:
+      consumes:
+      - application/json
+      description: Tài xế nộp/cập nhật hồ sơ KYC của chính mình.
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      - description: Thông tin hồ sơ KYC
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_controller.SubmitKYCReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Nộp/cập nhật hồ sơ KYC
+      tags:
+      - KYC
   /api/v1/users/{user_id}/notification-preferences:
     get:
       parameters:

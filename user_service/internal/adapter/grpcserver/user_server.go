@@ -152,23 +152,6 @@ func (c *userController) UpdateShipperProfile(ctx context.Context, req *pb.Updat
 	}, nil
 }
 
-func (c *userController) UpdateDriverKYC(ctx context.Context, req *pb.UpdateDriverKYCRequest) (*pb.UpdateDriverKYCResponse, error) {
-	param, err := c.mapper.PbUpdateKycToParam(req)
-	if err != nil {
-		return nil, entity.ErrInvalidUserID.WithCause(err)
-	}
-
-	dp, err := c.engine.UpdateDriverKYC(ctx, &param)
-	if err != nil {
-		return nil, err
-	}
-
-	return &pb.UpdateDriverKYCResponse{
-		Message:       "Cập nhật trạng thái KYC thành công",
-		DriverProfile: c.mapper.EntityDriverProfileToPb(*dp),
-	}, nil
-}
-
 func (c *userController) CreateAddress(ctx context.Context, req *pb.CreateAddressRequest) (*pb.CreateAddressResponse, error) {
 	param, err := c.mapper.PbCreateAddressToParam(req)
 	if err != nil {
@@ -318,40 +301,6 @@ func (c *userController) AdminUpdateUserStatus(ctx context.Context, req *pb.Admi
 	return &pb.AdminUpdateUserStatusResponse{
 		User:    c.mapper.EntityUserToPbUser(*u),
 		Message: "Cập nhật trạng thái tài khoản thành công",
-	}, nil
-}
-
-func (c *userController) AdminListPendingKYC(ctx context.Context, req *pb.AdminListPendingKYCRequest) (*pb.AdminListPendingKYCResponse, error) {
-	res, err := c.engine.AdminListPendingKYC(ctx, int(req.Page), int(req.PageSize))
-	if err != nil {
-		return nil, err
-	}
-
-	return &pb.AdminListPendingKYCResponse{
-		DriverProfiles: c.mapper.EntityDriverProfileListToPbList(res.DriverProfiles),
-		Pagination:     c.mapper.EntityPaginationToPb(res.Pagination),
-	}, nil
-}
-
-func (c *userController) AdminReviewKYC(ctx context.Context, req *pb.AdminReviewKYCRequest) (*pb.AdminReviewKYCResponse, error) {
-	param, err := c.mapper.PbAdminReviewKycToParam(req)
-	if err != nil {
-		return nil, entity.ErrInvalidUserID.WithCause(err)
-	}
-
-	dp, err := c.engine.AdminReviewKYC(ctx, &param)
-	if err != nil {
-		return nil, err
-	}
-
-	message := "Đã từ chối hồ sơ KYC"
-	if req.Approved {
-		message = "Đã duyệt hồ sơ KYC"
-	}
-
-	return &pb.AdminReviewKYCResponse{
-		DriverProfile: c.mapper.EntityDriverProfileToPb(*dp),
-		Message:       message,
 	}, nil
 }
 

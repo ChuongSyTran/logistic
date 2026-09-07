@@ -264,24 +264,6 @@ func (c *AppMapperImpl) PbAdminListUsersToFilter(source *v1.AdminListUsersReques
 	}
 	return entityListUsersFilter
 }
-func (c *AppMapperImpl) PbAdminReviewKycToParam(source *v1.AdminReviewKYCRequest) (entity.ReviewKYCParam, error) {
-	var entityReviewKYCParam entity.ReviewKYCParam
-	if source != nil {
-		uuidUUID, err := mapper.BytesToUUID((*source).UserId)
-		if err != nil {
-			return entityReviewKYCParam, err
-		}
-		entityReviewKYCParam.UserID = uuidUUID
-		entityReviewKYCParam.Approved = (*source).Approved
-		entityReviewKYCParam.Note = (*source).Note
-		uuidUUID2, err := mapper.BytesToUUID((*source).ReviewerId)
-		if err != nil {
-			return entityReviewKYCParam, err
-		}
-		entityReviewKYCParam.ReviewerID = uuidUUID2
-	}
-	return entityReviewKYCParam, nil
-}
 func (c *AppMapperImpl) PbAdminUpdateStatusToParam(source *v1.AdminUpdateUserStatusRequest) (entity.UpdateUserStatusParam, error) {
 	var entityUpdateUserStatusParam entity.UpdateUserStatusParam
 	if source != nil {
@@ -395,19 +377,6 @@ func (c *AppMapperImpl) PbUpdateDriverProfileToParam(source *v1.UpdateDriverProf
 		entityUpdateDriverProfileParam.IDCard = (*source).IdCard
 	}
 	return entityUpdateDriverProfileParam, nil
-}
-func (c *AppMapperImpl) PbUpdateKycToParam(source *v1.UpdateDriverKYCRequest) (entity.UpdateDriverKYCParam, error) {
-	var entityUpdateDriverKYCParam entity.UpdateDriverKYCParam
-	if source != nil {
-		uuidUUID, err := mapper.BytesToUUID((*source).UserId)
-		if err != nil {
-			return entityUpdateDriverKYCParam, err
-		}
-		entityUpdateDriverKYCParam.UserID = uuidUUID
-		entityUpdateDriverKYCParam.KycStatus = (*source).KycStatus
-		entityUpdateDriverKYCParam.Note = (*source).Note
-	}
-	return entityUpdateDriverKYCParam, nil
 }
 func (c *AppMapperImpl) PbUpdateShipperProfileToParam(source *v1.UpdateShipperProfileRequest) (entity.UpdateShipperProfileParam, error) {
 	var entityUpdateShipperProfileParam entity.UpdateShipperProfileParam

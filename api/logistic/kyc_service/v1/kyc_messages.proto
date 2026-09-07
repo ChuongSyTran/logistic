@@ -1,0 +1,79 @@
+syntax = "proto3";
+package logistic.kyc_service.v1;
+
+option go_package = "github.com/logistic/api/logistic/kyc_service/v1;kycv1";
+
+message KycDocument {
+  string id = 1;
+  bytes user_id = 2;
+  string id_card_number = 3;
+  string license_number = 4;
+  string id_card_front_url = 5;
+  string id_card_back_url = 6;
+  string license_front_url = 7;
+  string license_back_url = 8;
+  string status = 9; // pending, approved, rejected
+  string note = 10;
+  bytes reviewer_id = 11;
+  string reviewed_at = 12;
+  string created_at = 13;
+  string updated_at = 14;
+}
+
+message KycPagination {
+  int32 page = 1;
+  int32 page_size = 2;
+  int64 total_items = 3;
+  int32 total_pages = 4;
+}
+
+message SubmitKYCRequest {
+  bytes user_id = 1;
+  string id_card_number = 2;
+  string license_number = 3;
+  string id_card_front_url = 4;
+  string id_card_back_url = 5;
+  string license_front_url = 6;
+  string license_back_url = 7;
+  string status = 8;
+  string note = 9;
+}
+
+message SubmitKYCResponse {
+  KycDocument kyc = 1;
+}
+
+message GetKYCRequest {
+  bytes user_id = 1;
+}
+
+message GetKYCResponse {
+  KycDocument kyc = 1;
+}
+
+message ListPendingKYCRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+}
+
+message ListPendingKYCResponse {
+  repeated KycDocument items = 1;
+  KycPagination pagination = 2;
+}
+
+message ReviewKYCRequest {
+  bytes user_id = 1;
+  bool approved = 2;
+  string note = 3;
+  bytes reviewer_id = 4;
+}
+
+message ReviewKYCResponse {
+  KycDocument kyc = 1;
+}
+
+message CountPendingKYCRequest {}
+
+message CountPendingKYCResponse {
+  int64 count = 1;
+}

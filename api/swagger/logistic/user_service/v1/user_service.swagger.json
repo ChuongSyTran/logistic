@@ -92,83 +92,6 @@
         ]
       }
     },
-    "/v1/admin/kyc/pending": {
-      "get": {
-        "operationId": "UserService_AdminListPendingKYC",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1AdminListPendingKYCResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          }
-        ],
-        "tags": [
-          "UserService"
-        ]
-      }
-    },
-    "/v1/admin/kyc/{userId}/review": {
-      "put": {
-        "operationId": "UserService_AdminReviewKYC",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1AdminReviewKYCResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "userId",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "format": "byte"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/UserServiceAdminReviewKYCBody"
-            }
-          }
-        ],
-        "tags": [
-          "UserService"
-        ]
-      }
-    },
     "/v1/admin/users": {
       "get": {
         "operationId": "UserService_AdminListUsers",
@@ -683,45 +606,6 @@
         ]
       }
     },
-    "/v1/users/{userId}/kyc": {
-      "put": {
-        "operationId": "UserService_UpdateDriverKYC",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1UpdateDriverKYCResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "userId",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "format": "byte"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/UserServiceUpdateDriverKYCBody"
-            }
-          }
-        ],
-        "tags": [
-          "UserService"
-        ]
-      }
-    },
     "/v1/users/{userId}/shipper-profile": {
       "get": {
         "operationId": "UserService_GetShipperProfile",
@@ -792,21 +676,6 @@
     }
   },
   "definitions": {
-    "UserServiceAdminReviewKYCBody": {
-      "type": "object",
-      "properties": {
-        "approved": {
-          "type": "boolean"
-        },
-        "note": {
-          "type": "string"
-        },
-        "reviewerId": {
-          "type": "string",
-          "format": "byte"
-        }
-      }
-    },
     "UserServiceAdminUpdateUserStatusBody": {
       "type": "object",
       "properties": {
@@ -914,18 +783,6 @@
         },
         "isDefault": {
           "type": "boolean"
-        }
-      }
-    },
-    "UserServiceUpdateDriverKYCBody": {
-      "type": "object",
-      "properties": {
-        "kycStatus": {
-          "type": "string",
-          "title": "approved | rejected | pending"
-        },
-        "note": {
-          "type": "string"
         }
       }
     },
@@ -1092,21 +949,6 @@
         }
       }
     },
-    "v1AdminListPendingKYCResponse": {
-      "type": "object",
-      "properties": {
-        "driverProfiles": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/v1DriverProfile"
-          }
-        },
-        "pagination": {
-          "$ref": "#/definitions/v1Pagination"
-        }
-      }
-    },
     "v1AdminListUsersResponse": {
       "type": "object",
       "properties": {
@@ -1119,17 +961,6 @@
         },
         "pagination": {
           "$ref": "#/definitions/v1Pagination"
-        }
-      }
-    },
-    "v1AdminReviewKYCResponse": {
-      "type": "object",
-      "properties": {
-        "driverProfile": {
-          "$ref": "#/definitions/v1DriverProfile"
-        },
-        "message": {
-          "type": "string"
         }
       }
     },
@@ -1326,7 +1157,7 @@
         "id": {
           "type": "string",
           "format": "byte",
-          "description": "id là danh tính auth_service đã cấp, do gateway gắn vào sau khi đăng ký\nthành công. Có id nghĩa là \"danh tính đã có rồi, chỉ dựng hồ sơ nghiệp vụ\":\nuser_service dùng đúng id đó thay vì tự sinh, và KHÔNG lưu mật khẩu —\nauth_service mới là nơi giữ thông tin đăng nhập.\n\nBỏ trống là luồng đăng ký độc lập cũ: user_service tự sinh id. Luồng đó tạo\nra một danh tính thứ hai không khớp với subject trong token, nên mọi\n/api/v1/users/* sau đó đều trả 404 hoặc 403."
+          "description": "Danh tính auth_service đã cấp, gateway gắn vào. Có id: chỉ dựng hồ sơ, không\nlưu mật khẩu. Bỏ trống: luồng đăng ký độc lập, user_service tự sinh id."
         }
       }
     },
@@ -1387,17 +1218,6 @@
         },
         "message": {
           "type": "string"
-        }
-      }
-    },
-    "v1UpdateDriverKYCResponse": {
-      "type": "object",
-      "properties": {
-        "message": {
-          "type": "string"
-        },
-        "driverProfile": {
-          "$ref": "#/definitions/v1DriverProfile"
         }
       }
     },

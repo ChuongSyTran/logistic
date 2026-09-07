@@ -72,15 +72,49 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/kyc/pending": {
+        "/api/v1/admin/kyc/count-pending": {
             "get": {
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Admin-User"
+                    "Admin-KYC"
+                ],
+                "summary": "[Admin] Đếm số lượng hồ sơ KYC đang chờ duyệt",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/gateway_service_internal_response.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/kyc/pending": {
+            "get": {
+                "description": "Danh sách các hồ sơ KYC đang chờ duyệt",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-KYC"
                 ],
                 "summary": "[Admin] Hàng đợi duyệt KYC",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Số trang",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Kích thước trang",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -93,6 +127,7 @@ const docTemplate = `{
         },
         "/api/v1/admin/kyc/{user_id}/review": {
             "put": {
+                "description": "Admin phê duyệt hoặc từ chối hồ sơ KYC",
                 "consumes": [
                     "application/json"
                 ],
@@ -100,7 +135,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Admin-User"
+                    "Admin-KYC"
                 ],
                 "summary": "[Admin] Duyệt/từ chối KYC",
                 "parameters": [
@@ -110,6 +145,15 @@ const docTemplate = `{
                         "name": "user_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Thông tin duyệt KYC",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller.ReviewKYCReq"
+                        }
                     }
                 ],
                 "responses": {
@@ -1387,18 +1431,15 @@ const docTemplate = `{
             }
         },
         "/api/v1/users/{user_id}/kyc": {
-            "put": {
-                "description": "Tài xế nộp/cập nhật hồ sơ KYC của chính mình. Việc DUYỆT nằm ở /admin/kyc và cần vai trò admin.",
-                "consumes": [
-                    "application/json"
-                ],
+            "get": {
+                "description": "Tài xế xem hồ sơ KYC của chính mình hoặc admin xem hồ sơ KYC của user.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "KYC"
                 ],
-                "summary": "Nộp hồ sơ KYC",
+                "summary": "Xem hồ sơ KYC",
                 "parameters": [
                     {
                         "type": "string",
@@ -1406,6 +1447,45 @@ const docTemplate = `{
                         "name": "user_id",
                         "in": "path",
                         "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/gateway_service_internal_response.Envelope"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Tài xế nộp/cập nhật hồ sơ KYC của chính mình.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "KYC"
+                ],
+                "summary": "Nộp/cập nhật hồ sơ KYC",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Thông tin hồ sơ KYC",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller.SubmitKYCReq"
+                        }
                     }
                 ],
                 "responses": {
@@ -2057,6 +2137,51 @@ const docTemplate = `{
                     "enum": [
                         "driver",
                         "shipper"
+                    ]
+                }
+            }
+        },
+        "internal_controller.ReviewKYCReq": {
+            "type": "object",
+            "properties": {
+                "approved": {
+                    "type": "boolean"
+                },
+                "note": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_controller.SubmitKYCReq": {
+            "type": "object",
+            "properties": {
+                "id_card_back_url": {
+                    "type": "string"
+                },
+                "id_card_front_url": {
+                    "type": "string"
+                },
+                "id_card_number": {
+                    "type": "string"
+                },
+                "license_back_url": {
+                    "type": "string"
+                },
+                "license_front_url": {
+                    "type": "string"
+                },
+                "license_number": {
+                    "type": "string"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "pending",
+                        "approved",
+                        "rejected"
                     ]
                 }
             }

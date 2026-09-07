@@ -55,13 +55,6 @@ service UserService {
     };
   }
 
-  rpc UpdateDriverKYC(UpdateDriverKYCRequest) returns (UpdateDriverKYCResponse) {
-    option (google.api.http) = {
-      put: "/v1/users/{user_id}/kyc"
-      body: "*"
-    };
-  }
-
   rpc CreateAddress(CreateAddressRequest) returns (CreateAddressResponse) {
     option (google.api.http) = {
       post: "/v1/users/{user_id}/addresses"
@@ -108,17 +101,6 @@ service UserService {
   rpc AdminUpdateUserStatus(AdminUpdateUserStatusRequest) returns (AdminUpdateUserStatusResponse) {
     option (google.api.http) = {
       put: "/v1/admin/users/{id}/status"
-      body: "*"
-    };
-  }
-
-  rpc AdminListPendingKYC(AdminListPendingKYCRequest) returns (AdminListPendingKYCResponse) {
-    option (google.api.http) = {get: "/v1/admin/kyc/pending"};
-  }
-
-  rpc AdminReviewKYC(AdminReviewKYCRequest) returns (AdminReviewKYCResponse) {
-    option (google.api.http) = {
-      put: "/v1/admin/kyc/{user_id}/review"
       body: "*"
     };
   }

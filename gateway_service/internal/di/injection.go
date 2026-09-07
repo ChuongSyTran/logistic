@@ -14,6 +14,7 @@ import (
 	pbnotification "github.com/logistic/api/logistic/notification_service/v1"
 	pbuser "github.com/logistic/api/logistic/user_service/v1"
 	pbvehicle "github.com/logistic/api/logistic/vehicle_service/v1"
+	pbkyc "github.com/logistic/api/logistic/kyc_service/v1"
 	"github.com/logistic/pkg/authn"
 
 	"github.com/gin-gonic/gin"
@@ -85,6 +86,7 @@ func Injection(ginEngine *gin.Engine, cfg *conf.Config) (*Container, error) {
 		{"user_service", cfg.Upstreams.User},
 		{"vehicle_service", cfg.Upstreams.Vehicle},
 		{"notification_service", cfg.Upstreams.Notification},
+		{"kyc_service", cfg.Upstreams.Kyc},
 	}
 
 	conns := make([]*grpc.ClientConn, 0, len(targets))
@@ -105,6 +107,7 @@ func Injection(ginEngine *gin.Engine, cfg *conf.Config) (*Container, error) {
 		User:         pbuser.NewUserServiceClient(conns[3]),
 		Vehicle:      pbvehicle.NewVehicleServiceClient(conns[4]),
 		Notification: pbnotification.NewNotificationServiceClient(conns[5]),
+		Kyc:          pbkyc.NewKycServiceClient(conns[6]),
 	}, authenticator, cfg)
 
 	return container, nil

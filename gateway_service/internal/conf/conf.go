@@ -36,6 +36,7 @@ type UpstreamConfig struct {
 	User         string `env:"GATEWAY_USER_GRPC_ADDR" env-default:"user-service:9004"`
 	Vehicle      string `env:"GATEWAY_VEHICLE_GRPC_ADDR" env-default:"vehicle-service:9005"`
 	Notification string `env:"GATEWAY_NOTIFICATION_GRPC_ADDR" env-default:"notification-service:9006"`
+	Kyc          string `env:"GATEWAY_KYC_GRPC_ADDR" env-default:"kyc-service:9009"`
 
 	CallTimeout time.Duration `env:"GATEWAY_GRPC_TIMEOUT" env-default:"5s"`
 

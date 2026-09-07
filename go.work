@@ -51,4 +51,5 @@ use (
 	./user_service
 	./vehicle_service
 	./wallet_service
+	./kyc_service
 )
