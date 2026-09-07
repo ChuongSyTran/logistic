@@ -7,50 +7,51 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"github.com/google/uuid"
 )
 
 // ID filters vertices based on their ID field.
-func ID(id int) predicate.Users {
+func ID(id uuid.UUID) predicate.Users {
 	return predicate.Users(sql.FieldEQ(FieldID, id))
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id int) predicate.Users {
+func IDEQ(id uuid.UUID) predicate.Users {
 	return predicate.Users(sql.FieldEQ(FieldID, id))
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id int) predicate.Users {
+func IDNEQ(id uuid.UUID) predicate.Users {
 	return predicate.Users(sql.FieldNEQ(FieldID, id))
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...int) predicate.Users {
+func IDIn(ids ...uuid.UUID) predicate.Users {
 	return predicate.Users(sql.FieldIn(FieldID, ids...))
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...int) predicate.Users {
+func IDNotIn(ids ...uuid.UUID) predicate.Users {
 	return predicate.Users(sql.FieldNotIn(FieldID, ids...))
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id int) predicate.Users {
+func IDGT(id uuid.UUID) predicate.Users {
 	return predicate.Users(sql.FieldGT(FieldID, id))
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id int) predicate.Users {
+func IDGTE(id uuid.UUID) predicate.Users {
 	return predicate.Users(sql.FieldGTE(FieldID, id))
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id int) predicate.Users {
+func IDLT(id uuid.UUID) predicate.Users {
 	return predicate.Users(sql.FieldLT(FieldID, id))
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id int) predicate.Users {
+func IDLTE(id uuid.UUID) predicate.Users {
 	return predicate.Users(sql.FieldLTE(FieldID, id))
 }
 
@@ -587,6 +588,26 @@ func GoogleIDEqualFold(v string) predicate.Users {
 // GoogleIDContainsFold applies the ContainsFold predicate on the "google_id" field.
 func GoogleIDContainsFold(v string) predicate.Users {
 	return predicate.Users(sql.FieldContainsFold(FieldGoogleID, v))
+}
+
+// RoleEQ applies the EQ predicate on the "role" field.
+func RoleEQ(v Role) predicate.Users {
+	return predicate.Users(sql.FieldEQ(FieldRole, v))
+}
+
+// RoleNEQ applies the NEQ predicate on the "role" field.
+func RoleNEQ(v Role) predicate.Users {
+	return predicate.Users(sql.FieldNEQ(FieldRole, v))
+}
+
+// RoleIn applies the In predicate on the "role" field.
+func RoleIn(vs ...Role) predicate.Users {
+	return predicate.Users(sql.FieldIn(FieldRole, vs...))
+}
+
+// RoleNotIn applies the NotIn predicate on the "role" field.
+func RoleNotIn(vs ...Role) predicate.Users {
+	return predicate.Users(sql.FieldNotIn(FieldRole, vs...))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

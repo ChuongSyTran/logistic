@@ -30,22 +30,43 @@ concurrency:
   group: deploy-app-${{ github.ref }}
   cancel-in-progress: false
 
-jobs:
-  deploy-app:
-    name: 'Deploy Application'
-    # Github cấp phát một máy ảo Ubuntu chạy 1 lần rồi hủy
-    runs-on: ubuntu-latest
-    steps:
-    # -------------------------------------------------------------
-    # BƯỚC 1: Kéo mã nguồn từ Github về máy ảo Ubuntu này
-    # -------------------------------------------------------------
-    - name: Checkout Source Code
-      uses: actions/checkout@v3
+# Quyền cho GITHUB_TOKEN:
+#   contents: read  -> checkout code
+#   packages: write -> push image lên GHCR (ghcr.io). Không cần tạo PAT riêng.
+permissions:
+  contents: read
+  packages: write
 
-    # -------------------------------------------------------------
-    # BƯỚC 2: "Nội soi" xem Dev vừa sửa code ở thư mục nào
+env:
+  # Tiền tố registry. GHCR bắt buộc CHỮ THƯỜNG toàn bộ, nên hardcode lowercase
+  # (github.repository trả về "TranSenpai/logistic" có chữ hoa => không dùng trực tiếp được).
+  # Giá trị này phải khớp y hệt key image: trong docker-compose.yml.
+  REGISTRY_PREFIX: ghcr.io/transenpai/logistic
+
+jobs:
+  # ===========================================================================
+  # JOB 1: DETECT — "Nội soi" xem Dev vừa sửa code ở thư mục nào
+  # ---------------------------------------------------------------------------
+  # Tách riêng thành 1 job để CẢ job build lẫn job deploy đều dùng chung được
+  # kết quả, khỏi phải chạy paths-filter hai lần.
+  # ===========================================================================
+  detect:
+    name: 'Detect Changes'
+    runs-on: ubuntu-latest
+    outputs:
+      # Mảng JSON tên thư mục service cần build image, để đổ vào strategy.matrix
+      build_matrix: ${{ steps.plan.outputs.build_matrix }}
+      # Có service nào cần build không (nếu không thì skip hẳn job build)
+      has_builds: ${{ steps.plan.outputs.has_builds }}
+      # Danh sách tên service trong compose cần restart (cách nhau bởi dấu cách)
+      services_to_restart: ${{ steps.plan.outputs.services_to_restart }}
+      # Có reconcile toàn bộ stack theo compose file không
+      full_reconcile: ${{ steps.plan.outputs.full_reconcile }}
+    steps:
+    - name: Checkout Source Code
+      uses: actions/checkout@v4
+
     # Tool 'dorny/paths-filter' trả về kết quả True/False cho từng mục
-    # -------------------------------------------------------------
     - name: Check Changed Files
       uses: dorny/paths-filter@v3
       id: filter
@@ -59,27 +80,219 @@ jobs:
             - 'matching_service/**'
           media:
             - 'media_service/**'
+          notification:
+            - 'notification_service/**'
           user:
             - 'user_service/**'
           vehicle:
             - 'vehicle_service/**'
-          # Code dùng chung (pkg, api) — chỉ được import bởi 6 service Go,
-          # nên đổi ở đây ép restart cả 6.
+          wallet:
+            - 'wallet_service/**'
+          # Code dùng chung (pkg, api) — được 7 service Go import qua directive
+          # `replace` trong go.mod, nên đổi ở đây phải BUILD LẠI cả 8 image.
+          # Thêm Dockerfile/.dockerignore vì chúng ảnh hưởng trực tiếp tới image.
           shared_code:
             - 'pkg/**'
             - 'api/**'
+            - '.dockerignore'
             - '.env.example'
             - '.github/workflows/application.yml'
           # docker-compose.yml đổi có thể ảnh hưởng BẤT KỲ service nào trong file,
           # kể cả service không phải Go (elasticsearch, kibana, db...) — không đoán
-          # danh sách cố định, để compose tự đối chiếu toàn bộ (xem BƯỚC 7).
+          # danh sách cố định, để compose tự đối chiếu toàn bộ.
           compose:
             - 'docker-compose.yml'
 
+    # -------------------------------------------------------------------------
+    # Chốt kế hoạch: build image nào, restart service nào
+    # -------------------------------------------------------------------------
+    - name: Plan Build & Deploy
+      id: plan
+      run: |
+        set -euo pipefail
+
+        BUILD_DIRS=""          # tên THƯ MỤC (user_service) -> dùng để build
+        SERVICES=""            # tên trong COMPOSE (user-service) -> dùng để restart
+        FULL_RECONCILE="false"
+
+        # Tất cả 7 service Go, dùng khi cần build/restart toàn bộ
+        ALL_DIRS="auth_service gateway_service matching_service media_service notification_service user_service vehicle_service wallet_service"
+        ALL_SVCS="auth-service gateway-service matching-service media-service notification-service user-service vehicle-service wallet-service"
+
+        if [[ "${{ github.event_name }}" == 'workflow_dispatch' && "${{ inputs.service }}" != 'auto' ]]; then
+          # Trigger tay: dùng đúng giá trị người chạy chọn, bỏ qua paths-filter.
+          if [[ "${{ inputs.service }}" == 'all' ]]; then
+            FULL_RECONCILE="true"
+            BUILD_DIRS="$ALL_DIRS"
+          else
+            SERVICES="${{ inputs.service }}"
+            # Chỉ build lại nếu tên đó đúng là 1 service Go của mình.
+            # Gõ tay "elasticsearch"/"kibana" thì không có image nào để build,
+            # chỉ cần restart container theo compose là đủ.
+            DIR_GUESS="$(echo "${{ inputs.service }}" | tr '-' '_')"
+            if [[ " $ALL_DIRS " == *" $DIR_GUESS "* ]]; then
+              BUILD_DIRS="$DIR_GUESS"
+            fi
+          fi
+        elif [[ "${{ steps.filter.outputs.compose }}" == 'true' ]]; then
+          # docker-compose.yml đổi: để podman-compose tự đối chiếu toàn bộ file,
+          # thay vì đoán thủ công service nào bị ảnh hưởng.
+          FULL_RECONCILE="true"
+          # Compose đổi thì thường chỉ là port/env/volume => không nhất thiết build lại.
+          # Nhưng nếu commit đó ĐỒNG THỜI đụng vào code thì vẫn phải build image mới.
+          if [[ "${{ steps.filter.outputs.shared_code }}" == 'true' ]]; then
+            BUILD_DIRS="$ALL_DIRS"
+          else
+            if [[ "${{ steps.filter.outputs.auth }}"     == 'true' ]]; then BUILD_DIRS="$BUILD_DIRS auth_service";     fi
+            if [[ "${{ steps.filter.outputs.gateway }}"  == 'true' ]]; then BUILD_DIRS="$BUILD_DIRS gateway_service";  fi
+            if [[ "${{ steps.filter.outputs.matching }}" == 'true' ]]; then BUILD_DIRS="$BUILD_DIRS matching_service"; fi
+            if [[ "${{ steps.filter.outputs.media }}"    == 'true' ]]; then BUILD_DIRS="$BUILD_DIRS media_service";    fi
+            if [[ "${{ steps.filter.outputs.notification }}" == 'true' ]]; then BUILD_DIRS="$BUILD_DIRS notification_service"; fi
+            if [[ "${{ steps.filter.outputs.user }}"     == 'true' ]]; then BUILD_DIRS="$BUILD_DIRS user_service";     fi
+            if [[ "${{ steps.filter.outputs.vehicle }}"  == 'true' ]]; then BUILD_DIRS="$BUILD_DIRS vehicle_service";  fi
+            if [[ "${{ steps.filter.outputs.wallet }}"   == 'true' ]]; then BUILD_DIRS="$BUILD_DIRS wallet_service";  fi
+          fi
+        elif [[ "${{ steps.filter.outputs.shared_code }}" == 'true' ]]; then
+          # Code dùng chung (pkg/api) đổi: build lại + restart cả 8 service Go.
+          BUILD_DIRS="$ALL_DIRS"
+          SERVICES="$ALL_SVCS"
+        else
+          # Trái lại, soi từng nhánh, nhánh nào đổi thì nối vào cả 2 danh sách
+          if [[ "${{ steps.filter.outputs.auth }}"     == 'true' ]]; then BUILD_DIRS="$BUILD_DIRS auth_service";     SERVICES="$SERVICES auth-service";     fi
+          if [[ "${{ steps.filter.outputs.gateway }}"  == 'true' ]]; then BUILD_DIRS="$BUILD_DIRS gateway_service";  SERVICES="$SERVICES gateway-service";  fi
+          if [[ "${{ steps.filter.outputs.matching }}" == 'true' ]]; then BUILD_DIRS="$BUILD_DIRS matching_service"; SERVICES="$SERVICES matching-service"; fi
+          if [[ "${{ steps.filter.outputs.media }}"    == 'true' ]]; then BUILD_DIRS="$BUILD_DIRS media_service";    SERVICES="$SERVICES media-service";    fi
+          if [[ "${{ steps.filter.outputs.notification }}" == 'true' ]]; then BUILD_DIRS="$BUILD_DIRS notification_service"; SERVICES="$SERVICES notification-service"; fi
+          if [[ "${{ steps.filter.outputs.user }}"     == 'true' ]]; then BUILD_DIRS="$BUILD_DIRS user_service";     SERVICES="$SERVICES user-service";     fi
+          if [[ "${{ steps.filter.outputs.vehicle }}"  == 'true' ]]; then BUILD_DIRS="$BUILD_DIRS vehicle_service";  SERVICES="$SERVICES vehicle-service";  fi
+          if [[ "${{ steps.filter.outputs.wallet }}"   == 'true' ]]; then BUILD_DIRS="$BUILD_DIRS wallet_service";  SERVICES="$SERVICES wallet-service";  fi
+        fi
+
+        # Gọt khoảng trắng thừa
+        BUILD_DIRS="$(echo $BUILD_DIRS | xargs || true)"
+        SERVICES="$(echo $SERVICES | xargs || true)"
+
+        # Đổi "a b c" -> ["a","b","c"] cho strategy.matrix nuốt được
+        if [[ -z "$BUILD_DIRS" ]]; then
+          MATRIX='[]'
+          HAS_BUILDS='false'
+        else
+          MATRIX="$(printf '%s' "$BUILD_DIRS" | tr ' ' '\n' | sort -u \
+                    | awk 'BEGIN{printf "["} {printf "%s\"%s\"", (NR>1 ? "," : ""), $0} END{printf "]"}')"
+          HAS_BUILDS='true'
+        fi
+
+        echo "build_matrix=$MATRIX"                 >> "$GITHUB_OUTPUT"
+        echo "has_builds=$HAS_BUILDS"               >> "$GITHUB_OUTPUT"
+        echo "services_to_restart=$SERVICES"        >> "$GITHUB_OUTPUT"
+        echo "full_reconcile=$FULL_RECONCILE"       >> "$GITHUB_OUTPUT"
+
+        echo "::notice::Build images: ${MATRIX} | Restart: '${SERVICES}' | Full reconcile: ${FULL_RECONCILE}"
+
+  # ===========================================================================
+  # JOB 2: BUILD & PUSH — Runner đóng gói image, đẩy lên GHCR
+  # ---------------------------------------------------------------------------
+  # Toàn bộ việc biên dịch Go nằm TRONG Dockerfile (stage 1) và chạy TRÊN RUNNER
+  # của GitHub (4 vCPU / 16GB, miễn phí). EC2 t3.large đang gánh Kafka×6 +
+  # Elasticsearch×2 + MySQL×2 + Postgres×4 nên tuyệt đối không bắt nó compile.
+  # EC2 chỉ pull image đã build sẵn => cũng không cần đưa source code lên EC2.
+  # ===========================================================================
+  build-push:
+    name: 'Build & Push (${{ matrix.service }})'
+    needs: detect
+    if: needs.detect.outputs.has_builds == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      # Một service lỗi thì vẫn để các service khác build xong, dễ nhìn log hơn
+      fail-fast: false
+      matrix:
+        service: ${{ fromJSON(needs.detect.outputs.build_matrix) }}
+    steps:
+    - name: Checkout Source Code
+      uses: actions/checkout@v4
+
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: '${{ matrix.service }}/go.mod'
+        cache-dependency-path: '${{ matrix.service }}/go.sum'
+
+    # -------------------------------------------------------------------------
+    # CHỐT CHẶN go.work: bảo đảm module đứng MỘT MÌNH vẫn build được
+    # -------------------------------------------------------------------------
+    # Đây là cái bẫy mà sách "Learning Go" (2nd ed., ch.10) cảnh báo: go.work
+    # khiến mọi thứ chạy ngon ở máy local, vì workspace gộp chung module graph
+    # và ghi hash vào go.work.sum. Nhưng trong Docker ta build với GOWORK=off,
+    # lúc đó Go chỉ đọc go.mod + go.sum RIÊNG của module — nếu go.sum thiếu hash
+    # thì build vỡ với lỗi "missing go.sum entry".
+    # Chạy trước ở đây để fail sớm trong ~20s kèm thông báo rõ ràng, thay vì
+    # fail sau vài phút giữa lúc docker build.
+    - name: Verify module builds standalone (GOWORK=off)
+      run: |
+        set -euo pipefail
+        cd "${{ matrix.service }}"
+        # -mod=readonly (mặc định) => Go KHÔNG được tự sửa go.mod/go.sum để chữa cháy,
+        # thiếu gì là báo lỗi ngay. Đúng thứ ta muốn kiểm tra.
+        GOWORK=off GOFLAGS=-mod=readonly CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+          go build -o /dev/null ./cmd
+        echo "OK: ${{ matrix.service }} tự build được, không cần go.work."
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to GHCR
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    # Tên image trong compose dùng dấu gạch NGANG (user-service), còn thư mục
+    # dùng gạch DƯỚI (user_service) => quy đổi ở đây.
+    - name: Resolve image name
+      id: img
+      run: echo "name=$(echo '${{ matrix.service }}' | tr '_' '-')" >> "$GITHUB_OUTPUT"
+
+    - name: Build & Push image
+      uses: docker/build-push-action@v6
+      with:
+        # Context = GỐC REPO (không phải thư mục service), vì go.mod của service
+        # có `replace github.com/logistic/api => ../api` trỏ ra ngoài thư mục đó.
+        context: .
+        file: ${{ matrix.service }}/Dockerfile
+        push: true
+        # Tag theo git sha để pin chính xác + tag latest cho tiện tra cứu
+        tags: |
+          ${{ env.REGISTRY_PREFIX }}/${{ steps.img.outputs.name }}:${{ github.sha }}
+          ${{ env.REGISTRY_PREFIX }}/${{ steps.img.outputs.name }}:latest
+        # Cache layer qua GitHub Actions cache: lần build sau chỉ compile lại
+        # phần code thực sự đổi, không tải lại toàn bộ module Go.
+        cache-from: type=gha,scope=${{ matrix.service }}
+        cache-to: type=gha,scope=${{ matrix.service }},mode=max
+        provenance: false
+
+  # ===========================================================================
+  # JOB 3: DEPLOY — Mở firewall, đẩy file cấu hình, pull image, restart
+  # ===========================================================================
+  deploy:
+    name: 'Deploy Application'
+    needs: [detect, build-push]
+    # always() để job này VẪN chạy khi build-push bị skip (trường hợp chỉ đổi
+    # docker-compose.yml hay deploy tay elasticsearch — không có image nào để build).
+    # Nhưng nếu build-push đã CHẠY và THẤT BẠI thì dừng, không deploy image hỏng.
+    if: always() && needs.detect.result == 'success' && needs.build-push.result != 'failure' && !cancelled()
+    runs-on: ubuntu-latest
+    steps:
     # -------------------------------------------------------------
-    # BƯỚC 3: Đăng nhập AWS và Lấy IP của máy chủ EC2 đang chạy
-    # Mặc dù đây là luồng App, nhưng ta vẫn dùng Terraform để linh động (dynamic)
-    # lấy IP mới nhất trên S3 State, giúp pipeline không bao giờ bị hardcode IP.
+    # BƯỚC 1: Kéo mã nguồn (chỉ để lấy docker-compose.yml, nginx/, config/, scripts/)
+    # -------------------------------------------------------------
+    - name: Checkout Source Code
+      uses: actions/checkout@v4
+
+    # -------------------------------------------------------------
+    # BƯỚC 2: Đăng nhập AWS và Lấy IP của máy chủ EC2 đang chạy
+    # Dùng Terraform để lấy IP mới nhất trên S3 State, giúp pipeline
+    # không bao giờ bị hardcode IP.
     # -------------------------------------------------------------
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
@@ -108,7 +321,7 @@ jobs:
         echo "SG_ID=$SG_ID" >> $GITHUB_ENV
 
     # -------------------------------------------------------------
-    # BƯỚC 4: Mở cổng Firewall (Cổng 22 - SSH) tạm thời cho Github Runner
+    # BƯỚC 3: Mở cổng Firewall (Cổng 22 - SSH) tạm thời cho Github Runner
     # -------------------------------------------------------------
     - name: Get GitHub Runner IP
       id: ip
@@ -133,98 +346,48 @@ jobs:
           mkdir -p /home/ubuntu/logistic
 
     # -------------------------------------------------------------
-    # BƯỚC 5: Biến máy ảo Github thành "Thợ xây" (Builder)
-    # Tải môi trường Go và đóng gói 6 microservices thành file chạy Linux (Binary)
+    # BƯỚC 4: Truyền file cấu hình (SCP)
     # -------------------------------------------------------------
-    - name: Setup Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: '>=1.22.0'
-
-    - name: Compile Go Binaries
-      working-directory: ${{ github.workspace }}
-      run: |
-        # Đảm bảo ép kiểu build cho Linux (vì EC2 chạy Linux), tắt CGO để file độc lập
-        export GOOS=linux
-        export GOARCH=amd64
-        export CGO_ENABLED=0
-        go work sync
-        # Build 6 dịch vụ
-        go build -o auth_service/auth_service_bin ./auth_service/cmd
-        go build -o gateway_service/gateway_service_bin ./gateway_service/cmd
-        go build -o matching_service/matching_service_bin ./matching_service/cmd
-        go build -o media_service/media_service_bin ./media_service/cmd
-        go build -o user_service/user_service_bin ./user_service/cmd
-        go build -o vehicle_service/vehicle_service_bin ./vehicle_service/cmd
-
-    # -------------------------------------------------------------
-    # BƯỚC 6: Truyền file siêu tốc (SCP) sang EC2
-    # Chỉ truyền những file cần thiết để chạy. Bỏ rơi hoàn toàn các thư mục
-    # như api/, pkg/, nhằm giảm băng thông và bảo mật mã nguồn.
-    # -------------------------------------------------------------
-    - name: Copy Source Code to EC2 via SCP
+    # Giờ EC2 KHÔNG build gì nữa nên KHÔNG cần source code Go, cũng không cần
+    # Dockerfile. Chỉ đẩy đúng những thứ container cần lúc chạy:
+    #   docker-compose.yml : định nghĩa stack
+    #   config/            : file cấu hình cho Postgres/MySQL master-slave
+    #   nginx/             : reverse proxy
+    #   scripts/           : script khởi tạo DB
+    # => nhẹ hơn hẳn so với trước, và mã nguồn không bao giờ nằm trên EC2.
+    - name: Copy Runtime Files to EC2 via SCP
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ env.EC2_IP }}
         username: ubuntu
         key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-        source: "auth_service/,config/,gateway_service/,matching_service/,media_service/,nginx/,scripts/,user_service/,vehicle_service/,docker-compose.yml"
+        source: "config/,nginx/,scripts/,docker-compose.yml"
         target: "/home/ubuntu/logistic"
 
     # -------------------------------------------------------------
-    # BƯỚC 7: Kịch bản Deploy Thông Minh (Smart Restart)
-    # Quyết định xem service nào cần restart dựa vào Bước 2 (Nội soi)
-    # -------------------------------------------------------------
-    - name: Set Services To Restart
-      id: set_services
-      run: |
-        SERVICES=""
-        FULL_RECONCILE="false"
-
-        if [[ "${{ github.event_name }}" == 'workflow_dispatch' && "${{ inputs.service }}" != 'auto' ]]; then
-          # Trigger tay: dùng đúng giá trị người chạy chọn, bỏ qua paths-filter.
-          if [[ "${{ inputs.service }}" == 'all' ]]; then
-            FULL_RECONCILE="true"
-          else
-            SERVICES="${{ inputs.service }}"
-          fi
-        elif [[ "${{ steps.filter.outputs.compose }}" == 'true' ]]; then
-          # docker-compose.yml đổi: để podman-compose tự đối chiếu toàn bộ file,
-          # thay vì đoán thủ công service nào bị ảnh hưởng.
-          FULL_RECONCILE="true"
-        elif [[ "${{ steps.filter.outputs.shared_code }}" == 'true' ]]; then
-          # Code dùng chung (pkg/api) đổi: ép restart cả 6 service Go.
-          SERVICES="auth-service gateway-service matching-service media-service user-service vehicle-service"
-        else
-          # Trái lại, soi từng nhánh, nhánh nào đổi thì nối tên nhánh đó vào chuỗi
-          if [[ "${{ steps.filter.outputs.auth }}" == 'true' ]]; then SERVICES="$SERVICES auth-service"; fi
-          if [[ "${{ steps.filter.outputs.gateway }}" == 'true' ]]; then SERVICES="$SERVICES gateway-service"; fi
-          if [[ "${{ steps.filter.outputs.matching }}" == 'true' ]]; then SERVICES="$SERVICES matching-service"; fi
-          if [[ "${{ steps.filter.outputs.media }}" == 'true' ]]; then SERVICES="$SERVICES media-service"; fi
-          if [[ "${{ steps.filter.outputs.user }}" == 'true' ]]; then SERVICES="$SERVICES user-service"; fi
-          if [[ "${{ steps.filter.outputs.vehicle }}" == 'true' ]]; then SERVICES="$SERVICES vehicle-service"; fi
-        fi
-
-        # Lưu kết quả chốt cuối cùng vào biến môi trường cho bước SSH deploy
-        echo "SERVICES_TO_RESTART=$SERVICES" >> $GITHUB_ENV
-        echo "FULL_RECONCILE=$FULL_RECONCILE" >> $GITHUB_ENV
-
-    # -------------------------------------------------------------
-    # BƯỚC 8: Kết nối SSH vào EC2 và thực thi Docker
+    # BƯỚC 5: SSH vào EC2, pull image từ GHCR rồi restart
     # -------------------------------------------------------------
     - name: Generate .env & Deploy Podman
       uses: appleboy/ssh-action@v1.0.3
+      env:
+        SERVICES_TO_RESTART: ${{ needs.detect.outputs.services_to_restart }}
+        FULL_RECONCILE: ${{ needs.detect.outputs.full_reconcile }}
+        # GITHUB_TOKEN chỉ sống trong thời gian job chạy — đủ để podman login
+        # kéo image private về, hết job là token vô hiệu. Không cần tạo PAT.
+        GHCR_USER: ${{ github.actor }}
+        GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         host: ${{ env.EC2_IP }}
         username: ubuntu
         key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-        envs: SERVICES_TO_RESTART,FULL_RECONCILE
+        envs: SERVICES_TO_RESTART,FULL_RECONCILE,GHCR_USER,GHCR_TOKEN
         script: |
+          set -euo pipefail
           cd /home/ubuntu/logistic
-          
+
           echo "Waiting for podman to be fully installed..."
           while ! command -v podman &> /dev/null; do sleep 5; done
-          
+
           # [Tạo file .env từ Github Secrets]
           cat << 'EOF' > .env
           NATS_HOST=${{ secrets.NATS_HOST }}
@@ -280,11 +443,27 @@ jobs:
           VEHICLE_DB_NAME=${{ secrets.VEHICLE_DB_NAME }}
           VEHICLE_DB_REPLICATION_USER=${{ secrets.VEHICLE_DB_REPLICATION_USER }}
           VEHICLE_DB_REPLICATION_PASSWORD=${{ secrets.VEHICLE_DB_REPLICATION_PASSWORD }}
+          WALLET_SERVICE_GRPC_PORT=${{ secrets.WALLET_SERVICE_GRPC_PORT }}
+          WALLET_SERVICE_DB_NAME=${{ secrets.WALLET_SERVICE_DB_NAME }}
+          WALLET_SERVICE_DB_USER=${{ secrets.WALLET_SERVICE_DB_USER }}
+          WALLET_SERVICE_DB_PASSWORD=${{ secrets.WALLET_SERVICE_DB_PASSWORD }}
+          WALLET_SERVICE_DB_ROOT_PASSWORD=${{ secrets.WALLET_SERVICE_DB_ROOT_PASSWORD }}
+          WALLET_SERVICE_DB_DSN=${{ secrets.WALLET_SERVICE_DB_DSN }}
+          WALLET_SERVICE_KAFKA_BROKERS=${{ secrets.WALLET_SERVICE_KAFKA_BROKERS }}
+          WALLET_SERVICE_ES_ADDRESSES=${{ secrets.WALLET_SERVICE_ES_ADDRESSES }}
+          WALLET_SERVICE_ES_USERNAME=${{ secrets.WALLET_SERVICE_ES_USERNAME }}
+          WALLET_SERVICE_ES_PASSWORD=${{ secrets.WALLET_SERVICE_ES_PASSWORD }}
+          MATCHING_WALLET_GRPC_ADDR=${{ secrets.MATCHING_WALLET_GRPC_ADDR }}
           OTEL_EXPORTER_OTLP_ENDPOINT=${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}
           ELASTIC_PASSWORD=${{ secrets.ELASTIC_PASSWORD }}
           KIBANA_PASSWORD=${{ secrets.KIBANA_PASSWORD }}
           EOF
-          
+
+          # IMAGE_TAG được docker-compose.yml đọc qua ${IMAGE_TAG:-latest}.
+          # Ghim theo git sha => biết chính xác container đang chạy commit nào,
+          # và rollback chỉ là sửa 1 dòng trong .env rồi up -d lại.
+          echo "IMAGE_TAG=${{ github.sha }}" >> .env
+
           # Kích hoạt linger để các tiến trình của user ubuntu không bị kill khi SSH ngắt kết nối
           sudo loginctl enable-linger ubuntu
 
@@ -295,28 +474,40 @@ jobs:
           echo "${{ secrets.CLOUDFLARE_CERT_PEM }}" | sudo tee /etc/nginx/ssl/cloudflare.pem > /dev/null
           echo "${{ secrets.CLOUDFLARE_CERT_KEY }}" | sudo tee /etc/nginx/ssl/cloudflare.key > /dev/null
           sudo chmod 600 /etc/nginx/ssl/cloudflare.key
-          
+
           sudo cp nginx/logistic.conf /etc/nginx/sites-available/logistic
           sudo ln -sf /etc/nginx/sites-available/logistic /etc/nginx/sites-enabled/
           sudo rm -f /etc/nginx/sites-enabled/default
           sudo nginx -t && sudo systemctl reload nginx
-          
+
+          # Đăng nhập GHCR để kéo được image private của repo
+          echo "$GHCR_TOKEN" | podman login ghcr.io -u "$GHCR_USER" --password-stdin
+
           if [ "$FULL_RECONCILE" = "true" ]; then
             # Không truyền tên service nào => podman-compose tự đối chiếu TOÀN BỘ
             # docker-compose.yml, chỉ recreate đúng service nào cấu hình thực sự đổi.
             echo "Reconciling full stack against docker-compose.yml..."
-            podman-compose up -d --build
+            podman-compose pull || true
+            podman-compose up -d
           elif [ -z "$SERVICES_TO_RESTART" ]; then
-            # Nếu list Service cần Restart rỗng => Nghĩa là bạn commit linh tinh không dính đến source code
+            # List rỗng => commit không đụng tới source code service nào
             echo "No service changes detected. Skipping container restarts."
           else
-            # Khởi động lại duy nhất những Service có thay đổi!
-            echo "Restarting services: $SERVICES_TO_RESTART"
-            podman-compose up -d --build $SERVICES_TO_RESTART
+            # Kéo image mới (tag = sha vừa build) rồi restart đúng service đã đổi.
+            # KHÔNG dùng --build: EC2 không có source, image đã build sẵn trên runner.
+            echo "Pulling & restarting services: $SERVICES_TO_RESTART"
+            podman-compose pull $SERVICES_TO_RESTART
+            podman-compose up -d $SERVICES_TO_RESTART
           fi
 
+          # Dọn image cũ không còn tag để ổ đĩa 30GB không bị đầy dần sau mỗi lần deploy
+          podman image prune -f || true
+
+          # Xoá credential GHCR khỏi EC2, không để token nằm lại trên máy
+          podman logout ghcr.io || true
+
     # -------------------------------------------------------------
-    # BƯỚC 9: Xóa IP của Github Runner khỏi Firewall để bảo mật
+    # BƯỚC 6: Xóa IP của Github Runner khỏi Firewall để bảo mật
     # Lệnh `if: always()` đảm bảo bước này luôn chạy kể cả khi pipeline bị lỗi
     # -------------------------------------------------------------
     - name: Revoke Runner IP from Security Group

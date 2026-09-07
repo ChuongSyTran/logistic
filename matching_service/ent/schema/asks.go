@@ -7,6 +7,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/logistic/pkg/uuidx"
 )
 
 type Asks struct {
@@ -15,7 +16,7 @@ type Asks struct {
 
 func (Asks) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.UUID{}).Default(func() uuid.UUID { return uuid.Must(uuid.NewV7()) }),
+		field.UUID("id", uuid.UUID{}).Default(uuidx.New),
 		field.UUID("driver_id", uuid.UUID{}),
 		field.String("driver_phone"),
 		field.String("driver_mail"),
@@ -32,9 +33,9 @@ func (Asks) Fields() []ent.Field {
 		field.Float("origin_lng"),
 		field.Float("destination_lat"),
 		field.Float("destination_lng"),
-		field.Bytes("route_id"),
+		field.Bytes("route_id").Optional(),
 		field.Int8("status"),
-		field.Time("expires_at"),
+		field.Time("expires_at").Optional(),
 	}
 }
 

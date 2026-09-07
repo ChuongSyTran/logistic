@@ -8,6 +8,18 @@ import (
 	"vehicle_service/ent"
 )
 
+// The DriverAvailabilityFunc type is an adapter to allow the use of ordinary
+// function as DriverAvailability mutator.
+type DriverAvailabilityFunc func(context.Context, *ent.DriverAvailabilityMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f DriverAvailabilityFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.DriverAvailabilityMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.DriverAvailabilityMutation", m)
+}
+
 // The VehicleFunc type is an adapter to allow the use of ordinary
 // function as Vehicle mutator.
 type VehicleFunc func(context.Context, *ent.VehicleMutation) (ent.Value, error)
@@ -18,6 +30,30 @@ func (f VehicleFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, err
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.VehicleMutation", m)
+}
+
+// The VehicleDocumentFunc type is an adapter to allow the use of ordinary
+// function as VehicleDocument mutator.
+type VehicleDocumentFunc func(context.Context, *ent.VehicleDocumentMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f VehicleDocumentFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.VehicleDocumentMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.VehicleDocumentMutation", m)
+}
+
+// The VehicleLocationFunc type is an adapter to allow the use of ordinary
+// function as VehicleLocation mutator.
+type VehicleLocationFunc func(context.Context, *ent.VehicleLocationMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f VehicleLocationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.VehicleLocationMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.VehicleLocationMutation", m)
 }
 
 // Condition is a hook condition function.

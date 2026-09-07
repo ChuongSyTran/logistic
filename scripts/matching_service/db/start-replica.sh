@@ -26,7 +26,7 @@ if [ ! -s "$PGDATA/PG_VERSION" ]; then
     #                         1. File 'standby.signal': Báo cho Postgres biết đây là node Read-Only.
     #                         2. File 'postgresql.auto.conf': Ghi cứng thông tin mạng (IP, User, Pass) của Master.
     #                         => Nhờ 2 file này, ở những lần Restart sau (khi bỏ qua lệnh pg_basebackup), Engine của Postgres sẽ TỰ ĐỘNG đọc cấu hình, tự động kết nối lại vào Master và kéo tiếp các file WAL (Auto-resume) mà không cần ta nhúng tay vào bằng code Bash.
-    pg_basebackup -h matching-db-master -D "$PGDATA" -U "$MATCHING_DB_REPLICATION_USER" -vP -w -R
+    pg_basebackup -h matching-db-master -D "$PGDATA" -U "$REPLICATION_USER" -vP -w -R
 else
     echo "The data already exists, skip the data scraping step."
 fi

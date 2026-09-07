@@ -1,0 +1,67 @@
+# ============================================================================
+# .dockerignore — build context giờ là THƯ MỤC GỐC của repo (xem docker-compose.yml)
+# ----------------------------------------------------------------------------
+# Vì mọi service đều dùng chung context "." nên nếu không lọc, mỗi lần build
+# Docker/Podman sẽ phải nuốt trọn ~280MB rác (sách PDF, binary cũ). Lọc ở đây
+# giúp build nhanh hơn nhiều lần và context sạch, có thể tái lập (hermetic).
+# ============================================================================
+
+# --- Git & CI ---
+.git
+.github
+.gitignore
+
+# --- Tài liệu, sách (162MB). Dấu "/" đầu = CHỈ thư mục docs Ở GỐC repo,
+#     KHÔNG đụng tới gateway_service/docs (package swagger được Go import thật). ---
+/docs/
+*.md
+*.html
+*.odt
+*.docx
+*.pdf
+
+# --- Binary cũ nằm ở gốc repo (~119MB) + binary service ---
+server
+server_auth
+server_matching
+*.exe
+*_bin
+
+# --- go.work: theo "Learning Go" (ch.10) file này CHỈ dành cho máy local.
+#     Trong image ta build bằng go.mod + go.sum của từng module (GOWORK=off),
+#     nên phải chặn nó lọt vào context để build luôn tái lập được. ---
+go.work
+go.work.sum
+
+# --- Secret & state: TUYỆT ĐỐI không đưa vào image layer ---
+.env
+**/.env
+*.tfstate
+*.tfstate.*
+*.tfvars
+terraform/
+*.pem
+*.csv
+
+# --- Hạ tầng chạy runtime, không cần lúc build ---
+docker-compose.yml
+nginx/
+config/
+scripts/
+
+# --- IDE / OS / tooling ---
+.vscode/
+.idea/
+.claude/
+.agents/
+.air.toml
+tmp/
+vendor/
+Makefile
+
+# Chốt lại cho chắc: swagger docs của gateway là source code, phải giữ.
+!gateway_service/docs
+
+# --- Sơ đồ nguồn: nặng (~1.2MB) và không có tác dụng gì lúc build ---
+*.drawio
+.$*.drawio.bkp

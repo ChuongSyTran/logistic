@@ -1,17 +1,17 @@
 version: v2
 plugins:
   # Plugin sinh code Go cho các Struct
-  - remote: buf.build/protocolbuffers/go
+  - local: protoc-gen-go
     out: ../api
     opt: paths=source_relative
   # Plugin sinh code gRPC Client/Server cho Go
-  - remote: buf.build/grpc/go
+  - local: protoc-gen-go-grpc
     out: ../api
     opt: paths=source_relative
   # Plugin sinh code grpc-gateway (Reverse Proxy)
-  - remote: buf.build/grpc-ecosystem/gateway
+  - local: protoc-gen-grpc-gateway
     out: ../api
     opt: paths=source_relative
   # Plugin sinh file Swagger/OpenAPI
-  - remote: buf.build/grpc-ecosystem/openapiv2
+  - local: protoc-gen-openapiv2
     out: ../api/swagger

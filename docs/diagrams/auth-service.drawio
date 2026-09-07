@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" type="device">
+  <diagram name="auth_service">
+    <mxGraphModel dx="1080" dy="970" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1080" pageHeight="970" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="auth_service" style="text;html=1;fontSize=19;fontStyle=1;fontColor=#263238;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="40" y="8" width="1000" height="26" as="geometry"/></mxCell>
+        <mxCell id="caption" value="Danh tính và JWT. Dùng MySQL master-slave; mật khẩu và TOTP là trường Sensitive." style="text;html=1;fontSize=12;fontColor=#607D8B;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="40" y="34" width="1000" height="20" as="geometry"/></mxCell>
+        <mxCell id="gw" value="gateway_service" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1E88E5;fontColor=#0D47A1;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="300" y="70" width="220" height="78" as="geometry"/></mxCell>
+        <mxCell id="ctrl" value="controller/&#10;5 RPC" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#43A047;fontColor=#1B5E20;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="300" y="220" width="220" height="78" as="geometry"/></mxCell>
+        <mxCell id="rpc" value="Register · Login&#10;GetGoogleLoginURL&#10;GoogleCallback · VerifyToken" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFDE7;strokeColor=#FBC02D;fontColor=#795548;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="560" y="220" width="220" height="78" as="geometry"/></mxCell>
+        <mxCell id="biz" value="biz/&#10;hash mật khẩu, ký JWT" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#43A047;fontColor=#1B5E20;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="300" y="370" width="220" height="78" as="geometry"/></mxCell>
+        <mxCell id="google" value="Google OAuth2" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#ECEFF1;strokeColor=#78909C;fontColor=#37474F;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="820" y="370" width="220" height="78" as="geometry"/></mxCell>
+        <mxCell id="repo" value="repo/" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#43A047;fontColor=#1B5E20;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="300" y="520" width="220" height="78" as="geometry"/></mxCell>
+        <mxCell id="master" value="MySQL master&#10;ghi" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#FB8C00;fontColor=#E65100;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="40" y="670" width="220" height="78" as="geometry"/></mxCell>
+        <mxCell id="slave" value="MySQL slave&#10;đọc" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#FB8C00;fontColor=#E65100;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="560" y="670" width="220" height="78" as="geometry"/></mxCell>
+        <mxCell id="tbl" value="users&#10;(password, totp_secret = Sensitive)" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFDE7;strokeColor=#FBC02D;fontColor=#795548;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="300" y="820" width="220" height="78" as="geometry"/></mxCell>
+        <mxCell id="e0" value="gRPC :9001" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546E7A;strokeWidth=1.6;dashed=0;fontSize=11;fontColor=#455A64;endArrow=block;endFill=1;" edge="1" parent="1" source="gw" target="ctrl"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546E7A;strokeWidth=1.6;dashed=0;fontSize=11;fontColor=#455A64;endArrow=block;endFill=1;" edge="1" parent="1" source="ctrl" target="rpc"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546E7A;strokeWidth=1.6;dashed=0;fontSize=11;fontColor=#455A64;endArrow=block;endFill=1;" edge="1" parent="1" source="ctrl" target="biz"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" value="đổi code lấy token" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546E7A;strokeWidth=1.6;dashed=0;fontSize=11;fontColor=#455A64;endArrow=block;endFill=1;" edge="1" parent="1" source="biz" target="google"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546E7A;strokeWidth=1.6;dashed=0;fontSize=11;fontColor=#455A64;endArrow=block;endFill=1;" edge="1" parent="1" source="biz" target="repo"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546E7A;strokeWidth=1.6;dashed=0;fontSize=11;fontColor=#455A64;endArrow=block;endFill=1;" edge="1" parent="1" source="repo" target="master"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546E7A;strokeWidth=1.6;dashed=0;fontSize=11;fontColor=#455A64;endArrow=block;endFill=1;" edge="1" parent="1" source="repo" target="slave"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546E7A;strokeWidth=1.6;dashed=0;fontSize=11;fontColor=#455A64;endArrow=block;endFill=1;" edge="1" parent="1" source="master" target="tbl"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

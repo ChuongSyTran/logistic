@@ -6,7 +6,8 @@
   },
   "tags": [
     {
-      "name": "UserService"
+      "name": "UserService",
+      "description": "UserService quản lý danh tính, hồ sơ, sổ địa chỉ và thiết bị nhận push.\n\nQuy ước đường dẫn:\n  /v1/...        -\u003e API cho client (app tài xế / app chủ hàng)\n  /v1/admin/...  -\u003e API cho trang quản trị\nGateway chặn nhóm /admin bằng middleware RequireRole(\"admin\").\n\n======================= CLIENT ======================="
     }
   ],
   "consumes": [
@@ -16,6 +17,270 @@
     "application/json"
   ],
   "paths": {
+    "/v1/addresses/{id}": {
+      "delete": {
+        "operationId": "UserService_DeleteAddress",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteAddressResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      },
+      "put": {
+        "operationId": "UserService_UpdateAddress",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateAddressResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserServiceUpdateAddressBody"
+            }
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      }
+    },
+    "/v1/admin/users": {
+      "get": {
+        "operationId": "UserService_AdminListUsers",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1AdminListUsersResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "role",
+            "description": "lọc theo vai trò",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "description": "lọc theo trạng thái",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "keyword",
+            "description": "tìm theo phone/email/tên",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      }
+    },
+    "/v1/admin/users/stats": {
+      "get": {
+        "operationId": "UserService_AdminGetUserStats",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1AdminGetUserStatsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "UserService"
+        ]
+      }
+    },
+    "/v1/admin/users/{id}": {
+      "delete": {
+        "operationId": "UserService_AdminDeleteUser",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1AdminDeleteUserResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      }
+    },
+    "/v1/admin/users/{id}/status": {
+      "put": {
+        "operationId": "UserService_AdminUpdateUserStatus",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1AdminUpdateUserStatusResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserServiceAdminUpdateUserStatusBody"
+            }
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      }
+    },
+    "/v1/devices/{id}": {
+      "delete": {
+        "operationId": "UserService_DeleteDevice",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteDeviceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      }
+    },
     "/v1/users/register": {
       "post": {
         "operationId": "UserService_RegisterUser",
@@ -77,16 +342,103 @@
         "tags": [
           "UserService"
         ]
-      }
-    },
-    "/v1/users/{userId}/kyc": {
+      },
       "put": {
-        "operationId": "UserService_UpdateDriverKYC",
+        "operationId": "UserService_UpdateUser",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1UpdateDriverKYCResponse"
+              "$ref": "#/definitions/v1UpdateUserResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserServiceUpdateUserBody"
+            }
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      }
+    },
+    "/v1/users/{userId}/addresses": {
+      "get": {
+        "operationId": "UserService_ListAddresses",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListAddressesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "addressType",
+            "description": "lọc tuỳ chọn",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      },
+      "post": {
+        "operationId": "UserService_CreateAddress",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateAddressResponse"
             }
           },
           "default": {
@@ -109,7 +461,211 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/UserServiceUpdateDriverKYCBody"
+              "$ref": "#/definitions/UserServiceCreateAddressBody"
+            }
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      }
+    },
+    "/v1/users/{userId}/devices": {
+      "get": {
+        "operationId": "UserService_ListDevices",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListDevicesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      },
+      "post": {
+        "operationId": "UserService_RegisterDevice",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1RegisterDeviceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserServiceRegisterDeviceBody"
+            }
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      }
+    },
+    "/v1/users/{userId}/driver-profile": {
+      "get": {
+        "operationId": "UserService_GetDriverProfile",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetDriverProfileResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      },
+      "put": {
+        "operationId": "UserService_UpdateDriverProfile",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateDriverProfileResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserServiceUpdateDriverProfileBody"
+            }
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      }
+    },
+    "/v1/users/{userId}/shipper-profile": {
+      "get": {
+        "operationId": "UserService_GetShipperProfile",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetShipperProfileResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      },
+      "put": {
+        "operationId": "UserService_UpdateShipperProfile",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateShipperProfileResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserServiceUpdateShipperProfileBody"
             }
           }
         ],
@@ -120,12 +676,152 @@
     }
   },
   "definitions": {
-    "UserServiceUpdateDriverKYCBody": {
+    "UserServiceAdminUpdateUserStatusBody": {
       "type": "object",
       "properties": {
-        "kycStatus": {
+        "status": {
           "type": "string",
-          "title": "\"approved\" or \"rejected\""
+          "title": "active | banned | suspended"
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "UserServiceCreateAddressBody": {
+      "type": "object",
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "contactName": {
+          "type": "string"
+        },
+        "contactPhone": {
+          "type": "string"
+        },
+        "line1": {
+          "type": "string"
+        },
+        "ward": {
+          "type": "string"
+        },
+        "district": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        },
+        "latitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "longitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "addressType": {
+          "type": "string"
+        },
+        "isDefault": {
+          "type": "boolean"
+        }
+      }
+    },
+    "UserServiceRegisterDeviceBody": {
+      "type": "object",
+      "properties": {
+        "deviceToken": {
+          "type": "string"
+        },
+        "platform": {
+          "type": "string"
+        },
+        "deviceName": {
+          "type": "string"
+        }
+      }
+    },
+    "UserServiceUpdateAddressBody": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "format": "byte"
+        },
+        "label": {
+          "type": "string"
+        },
+        "contactName": {
+          "type": "string"
+        },
+        "contactPhone": {
+          "type": "string"
+        },
+        "line1": {
+          "type": "string"
+        },
+        "ward": {
+          "type": "string"
+        },
+        "district": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        },
+        "latitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "longitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "addressType": {
+          "type": "string"
+        },
+        "isDefault": {
+          "type": "boolean"
+        }
+      }
+    },
+    "UserServiceUpdateDriverProfileBody": {
+      "type": "object",
+      "properties": {
+        "licenseNumber": {
+          "type": "string"
+        },
+        "idCard": {
+          "type": "string"
+        }
+      }
+    },
+    "UserServiceUpdateShipperProfileBody": {
+      "type": "object",
+      "properties": {
+        "companyName": {
+          "type": "string"
+        },
+        "taxCode": {
+          "type": "string"
+        },
+        "businessAddress": {
+          "type": "string"
+        }
+      }
+    },
+    "UserServiceUpdateUserBody": {
+      "type": "object",
+      "properties": {
+        "fullName": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "avatarUrl": {
+          "type": "string"
         }
       }
     },
@@ -157,9 +853,162 @@
         }
       }
     },
+    "v1Address": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "byte"
+        },
+        "userId": {
+          "type": "string",
+          "format": "byte"
+        },
+        "label": {
+          "type": "string",
+          "title": "\"Kho Q7\", \"Nhà riêng\""
+        },
+        "contactName": {
+          "type": "string"
+        },
+        "contactPhone": {
+          "type": "string"
+        },
+        "line1": {
+          "type": "string"
+        },
+        "ward": {
+          "type": "string"
+        },
+        "district": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        },
+        "latitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "longitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "addressType": {
+          "type": "string",
+          "title": "pickup | delivery | both"
+        },
+        "isDefault": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "description": "Address là sổ địa chỉ của người dùng: điểm lấy hàng / giao hàng hay dùng.\nCó toạ độ sẵn nên khi tạo đơn không phải geocode lại."
+    },
+    "v1AdminDeleteUserResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "v1AdminGetUserStatsResponse": {
+      "type": "object",
+      "properties": {
+        "totalUsers": {
+          "type": "string",
+          "format": "int64"
+        },
+        "totalDrivers": {
+          "type": "string",
+          "format": "int64"
+        },
+        "totalShippers": {
+          "type": "string",
+          "format": "int64"
+        },
+        "activeUsers": {
+          "type": "string",
+          "format": "int64"
+        },
+        "bannedUsers": {
+          "type": "string",
+          "format": "int64"
+        },
+        "pendingKyc": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "v1AdminListUsersResponse": {
+      "type": "object",
+      "properties": {
+        "users": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1User"
+          }
+        },
+        "pagination": {
+          "$ref": "#/definitions/v1Pagination"
+        }
+      }
+    },
+    "v1AdminUpdateUserStatusResponse": {
+      "type": "object",
+      "properties": {
+        "user": {
+          "$ref": "#/definitions/v1User"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "v1CreateAddressResponse": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "$ref": "#/definitions/v1Address"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "v1DeleteAddressResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "v1DeleteDeviceResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      }
+    },
     "v1DriverProfile": {
       "type": "object",
       "properties": {
+        "id": {
+          "type": "string",
+          "format": "byte"
+        },
         "userId": {
           "type": "string",
           "format": "byte"
@@ -172,10 +1021,42 @@
         },
         "rating": {
           "type": "number",
-          "format": "float"
+          "format": "double"
+        },
+        "totalTrips": {
+          "type": "integer",
+          "format": "int32"
         },
         "kycStatus": {
+          "type": "string",
+          "title": "pending | approved | rejected"
+        },
+        "kycNote": {
           "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "v1GetDriverProfileResponse": {
+      "type": "object",
+      "properties": {
+        "driverProfile": {
+          "$ref": "#/definitions/v1DriverProfile"
+        }
+      }
+    },
+    "v1GetShipperProfileResponse": {
+      "type": "object",
+      "properties": {
+        "shipperProfile": {
+          "$ref": "#/definitions/v1ShipperProfile"
         }
       }
     },
@@ -187,11 +1068,70 @@
         },
         "driverProfile": {
           "$ref": "#/definitions/v1DriverProfile",
-          "title": "only if role == driver"
+          "title": "chỉ có khi role == driver"
         },
         "shipperProfile": {
           "$ref": "#/definitions/v1ShipperProfile",
-          "title": "only if role == shipper"
+          "title": "chỉ có khi role == shipper"
+        }
+      }
+    },
+    "v1ListAddressesResponse": {
+      "type": "object",
+      "properties": {
+        "addresses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Address"
+          }
+        },
+        "pagination": {
+          "$ref": "#/definitions/v1Pagination"
+        }
+      }
+    },
+    "v1ListDevicesResponse": {
+      "type": "object",
+      "properties": {
+        "devices": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1UserDevice"
+          }
+        }
+      }
+    },
+    "v1Pagination": {
+      "type": "object",
+      "properties": {
+        "page": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "pageSize": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "totalItems": {
+          "type": "string",
+          "format": "int64"
+        },
+        "totalPages": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "v1RegisterDeviceResponse": {
+      "type": "object",
+      "properties": {
+        "device": {
+          "$ref": "#/definitions/v1UserDevice"
+        },
+        "message": {
+          "type": "string"
         }
       }
     },
@@ -209,7 +1149,15 @@
         },
         "role": {
           "type": "string",
-          "title": "\"driver\" or \"shipper\""
+          "title": "driver | shipper"
+        },
+        "fullName": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string",
+          "format": "byte",
+          "description": "Danh tính auth_service đã cấp, gateway gắn vào. Có id: chỉ dựng hồ sơ, không\nlưu mật khẩu. Bỏ trống: luồng đăng ký độc lập, user_service tự sinh id."
         }
       }
     },
@@ -222,12 +1170,19 @@
         },
         "message": {
           "type": "string"
+        },
+        "user": {
+          "$ref": "#/definitions/v1User"
         }
       }
     },
     "v1ShipperProfile": {
       "type": "object",
       "properties": {
+        "id": {
+          "type": "string",
+          "format": "byte"
+        },
         "userId": {
           "type": "string",
           "format": "byte"
@@ -237,12 +1192,63 @@
         },
         "taxCode": {
           "type": "string"
+        },
+        "businessAddress": {
+          "type": "string"
+        },
+        "totalOrders": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
         }
       }
     },
-    "v1UpdateDriverKYCResponse": {
+    "v1UpdateAddressResponse": {
       "type": "object",
       "properties": {
+        "address": {
+          "$ref": "#/definitions/v1Address"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "v1UpdateDriverProfileResponse": {
+      "type": "object",
+      "properties": {
+        "driverProfile": {
+          "$ref": "#/definitions/v1DriverProfile"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "v1UpdateShipperProfileResponse": {
+      "type": "object",
+      "properties": {
+        "shipperProfile": {
+          "$ref": "#/definitions/v1ShipperProfile"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "v1UpdateUserResponse": {
+      "type": "object",
+      "properties": {
+        "user": {
+          "$ref": "#/definitions/v1User"
+        },
         "message": {
           "type": "string"
         }
@@ -261,19 +1267,64 @@
         "email": {
           "type": "string"
         },
-        "role": {
+        "fullName": {
           "type": "string"
         },
+        "role": {
+          "type": "string",
+          "title": "driver | shipper | admin"
+        },
         "status": {
+          "type": "string",
+          "title": "active | banned | suspended"
+        },
+        "avatarUrl": {
           "type": "string"
         },
         "createdAt": {
-          "type": "string"
+          "type": "string",
+          "format": "date-time"
         },
         "updatedAt": {
-          "type": "string"
+          "type": "string",
+          "format": "date-time"
         }
       }
+    },
+    "v1UserDevice": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "byte"
+        },
+        "userId": {
+          "type": "string",
+          "format": "byte"
+        },
+        "deviceToken": {
+          "type": "string"
+        },
+        "platform": {
+          "type": "string",
+          "title": "android | ios | web"
+        },
+        "deviceName": {
+          "type": "string"
+        },
+        "isActive": {
+          "type": "boolean"
+        },
+        "lastSeenAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "description": "UserDevice lưu push token của từng thiết bị. notification_service đọc bảng này\n(qua gRPC) để biết đẩy push tới đâu."
     }
   }
 }

@@ -228,6 +228,14 @@ func (_c *AsksCreate) SetExpiresAt(v time.Time) *AsksCreate {
 	return _c
 }
 
+// SetNillableExpiresAt sets the "expires_at" field if the given value is not nil.
+func (_c *AsksCreate) SetNillableExpiresAt(v *time.Time) *AsksCreate {
+	if v != nil {
+		_c.SetExpiresAt(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *AsksCreate) SetID(v uuid.UUID) *AsksCreate {
 	_c.mutation.SetID(v)
@@ -398,14 +406,8 @@ func (_c *AsksCreate) check() error {
 	if _, ok := _c.mutation.DestinationLng(); !ok {
 		return &ValidationError{Name: "destination_lng", err: errors.New(`ent: missing required field "Asks.destination_lng"`)}
 	}
-	if _, ok := _c.mutation.RouteID(); !ok {
-		return &ValidationError{Name: "route_id", err: errors.New(`ent: missing required field "Asks.route_id"`)}
-	}
 	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Asks.status"`)}
-	}
-	if _, ok := _c.mutation.ExpiresAt(); !ok {
-		return &ValidationError{Name: "expires_at", err: errors.New(`ent: missing required field "Asks.expires_at"`)}
 	}
 	return nil
 }

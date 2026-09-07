@@ -1,8 +1,20 @@
 syntax = "proto3";
 
 package logistic.vehicle_service.v1;
-
 option go_package = "github.com/logistic/api/logistic/vehicle_service/v1;vehiclev1";
+
+import "google/protobuf/timestamp.proto";
+
+// KIỂU ID: mọi field định danh là `bytes` — 16 byte thô của UUID v7. Lý do đầy
+// đủ và ranh giới đổi sang chuỗi ở gateway nằm trong
+// api/logistic/user_service/v1/user_messages.proto.
+//
+// Ngoại lệ có chủ đích: `zone_id` vẫn là string, vì nó là mã vùng địa lý
+// (geohash) chứ không phải khoá chính của thực thể nào.
+
+// ---------------------------------------------------------------------------
+// DOMAIN MODELS
+// ---------------------------------------------------------------------------
 
 message Vehicle {
   bytes id = 1;
@@ -10,29 +22,96 @@ message Vehicle {
   string license_plate = 3;
   string brand = 4;
   string model = 5;
-  string vehicle_type = 6; // Truck, Van, Bike
-  float capacity_weight_kg = 7;
-  float capacity_volume_cbm = 8;
-  string status = 9;
+  int32 manufacture_year = 6;
+  string vehicle_type = 7; // truck | van | bike | container | trailer
+  double capacity_weight_kg = 8;
+  double capacity_volume_cbm = 9;
+  string status = 10;            // active | maintenance | inactive
+  string verification_status = 11; // pending | verified | rejected
+  google.protobuf.Timestamp created_at = 12;
+  google.protobuf.Timestamp updated_at = 13;
 }
+
+// VehicleDocument: đăng kiểm, bảo hiểm, giấy phép... Admin duyệt từng giấy tờ,
+// xe chỉ được "verified" khi mọi giấy tờ bắt buộc đã approved và còn hạn.
+message VehicleDocument {
+  bytes id = 1;
+  bytes vehicle_id = 2;
+  string document_type = 3; // registration | inspection | insurance | license
+  string document_number = 4;
+  string file_url = 5;
+  google.protobuf.Timestamp issued_at = 6;
+  google.protobuf.Timestamp expires_at = 7;
+  string review_status = 8; // pending | approved | rejected
+  string review_note = 9;
+  google.protobuf.Timestamp created_at = 10;
+}
+
+// VehicleLocation là bản ghi GPS mới nhất của xe (một dòng / xe).
+// Toạ độ nóng nằm ở Redis GEO; bảng này là bản lưu bền để khởi động lại không mất.
+message VehicleLocation {
+  bytes vehicle_id = 1;
+  bytes driver_id = 2;
+  double latitude = 3;
+  double longitude = 4;
+  double heading = 5;    // hướng di chuyển, độ
+  double speed_kph = 6;
+  string zone_id = 7;
+  google.protobuf.Timestamp recorded_at = 8;
+}
+
+// DriverAvailability: tài xế bật/tắt nhận đơn, kèm sức chứa còn trống.
+// Đây chính là đầu vào cho matching engine khi tìm "xe đang chạy" phù hợp.
+message DriverAvailability {
+  bytes id = 1;
+  bytes driver_id = 2;
+  bytes vehicle_id = 3;
+  bool is_online = 4;
+  double available_weight_kg = 5;
+  double available_volume_cbm = 6;
+  double current_lat = 7;
+  double current_lng = 8;
+  string zone_id = 9;
+  google.protobuf.Timestamp updated_at = 10;
+}
+
+message Pagination {
+  int32 page = 1;
+  int32 page_size = 2;
+  int64 total_items = 3;
+  int32 total_pages = 4;
+}
+
+// ---------------------------------------------------------------------------
+// CLIENT REQUESTS / RESPONSES
+// ---------------------------------------------------------------------------
 
 message RegisterVehicleRequest {
   bytes driver_id = 1;
   string license_plate = 2;
   string brand = 3;
   string model = 4;
-  string vehicle_type = 5;
-  float capacity_weight_kg = 6;
-  float capacity_volume_cbm = 7;
+  int32 manufacture_year = 5;
+  string vehicle_type = 6;
+  double capacity_weight_kg = 7;
+  double capacity_volume_cbm = 8;
 }
 
 message RegisterVehicleResponse {
   bytes id = 1;
   string message = 2;
+  Vehicle vehicle = 3;
 }
 
+// driver_id trong các request dưới đây là DANH TÍNH NGƯỜI GỌI, do gateway lấy từ
+// token rồi gắn vào — không phải giá trị client tự khai. vehicle_service so nó với
+// chủ xe và từ chối nếu lệch. Bỏ trống (nil) nghĩa là gọi từ luồng quản trị, bỏ
+// qua kiểm tra; xem DeleteVehicleRequest đã dùng đúng quy ước này từ trước.
+// driver_id dưới đây là danh tính người gọi do gateway lấy từ token, không phải
+// giá trị client khai. vehicle_service so với chủ xe; bỏ trống = luồng quản trị.
 message GetVehicleRequest {
   bytes id = 1;
+  bytes driver_id = 2;
 }
 
 message GetVehicleResponse {
@@ -41,17 +120,222 @@ message GetVehicleResponse {
 
 message ListVehiclesRequest {
   bytes driver_id = 1;
+  string status = 2;
+  string vehicle_type = 3;
+  int32 page = 4;
+  int32 page_size = 5;
 }
 
 message ListVehiclesResponse {
   repeated Vehicle vehicles = 1;
+  Pagination pagination = 2;
+}
+
+message UpdateVehicleRequest {
+  bytes id = 1;
+  string brand = 2;
+  string model = 3;
+  int32 manufacture_year = 4;
+  string vehicle_type = 5;
+  double capacity_weight_kg = 6;
+  double capacity_volume_cbm = 7;
+  bytes driver_id = 8;
+}
+
+message UpdateVehicleResponse {
+  Vehicle vehicle = 1;
+  string message = 2;
+}
+
+message DeleteVehicleRequest {
+  bytes id = 1;
+  bytes driver_id = 2;
+}
+
+message DeleteVehicleResponse {
+  string message = 1;
 }
 
 message UpdateVehicleStatusRequest {
   bytes id = 1;
   string status = 2;
+  bytes driver_id = 3;
 }
 
 message UpdateVehicleStatusResponse {
   string message = 1;
+  Vehicle vehicle = 2;
+}
+
+message UploadVehicleDocumentRequest {
+  bytes vehicle_id = 1;
+  string document_type = 2;
+  string document_number = 3;
+  string file_url = 4;
+  google.protobuf.Timestamp issued_at = 5;
+  google.protobuf.Timestamp expires_at = 6;
+  bytes driver_id = 7;
+}
+
+message UploadVehicleDocumentResponse {
+  VehicleDocument document = 1;
+  string message = 2;
+}
+
+message ListVehicleDocumentsRequest {
+  bytes vehicle_id = 1;
+  string review_status = 2;
+  bytes driver_id = 3;
+}
+
+message ListVehicleDocumentsResponse {
+  repeated VehicleDocument documents = 1;
+}
+
+message DeleteVehicleDocumentRequest {
+  bytes id = 1;
+  bytes driver_id = 2;
+}
+
+message DeleteVehicleDocumentResponse {
+  string message = 1;
+}
+
+message ReportLocationRequest {
+  bytes vehicle_id = 1;
+  bytes driver_id = 2;
+  double latitude = 3;
+  double longitude = 4;
+  double heading = 5;
+  double speed_kph = 6;
+}
+
+message ReportLocationResponse {
+  string message = 1;
+  string zone_id = 2;
+}
+
+message GetVehicleLocationRequest {
+  bytes vehicle_id = 1;
+  bytes driver_id = 2;
+}
+
+message GetVehicleLocationResponse {
+  VehicleLocation location = 1;
+}
+
+message SetDriverAvailabilityRequest {
+  bytes driver_id = 1;
+  bytes vehicle_id = 2;
+  bool is_online = 3;
+  double available_weight_kg = 4;
+  double available_volume_cbm = 5;
+  double current_lat = 6;
+  double current_lng = 7;
+}
+
+message SetDriverAvailabilityResponse {
+  DriverAvailability availability = 1;
+  string message = 2;
+}
+
+message GetDriverAvailabilityRequest {
+  bytes driver_id = 1;
+}
+
+message GetDriverAvailabilityResponse {
+  DriverAvailability availability = 1;
+}
+
+// SearchNearbyVehicles là API mà matching_service gọi sang để lấy danh sách xe
+// đang online quanh điểm lấy hàng. Truy vấn chạy trên Redis GEO nên trả về
+// trong vài mili-giây kể cả khi có hàng chục nghìn xe.
+message SearchNearbyVehiclesRequest {
+  double latitude = 1;
+  double longitude = 2;
+  double radius_km = 3;
+  double min_weight_kg = 4;  // sức chứa còn trống tối thiểu
+  double min_volume_cbm = 5;
+  string vehicle_type = 6;
+  int32 limit = 7;
+}
+
+message NearbyVehicle {
+  bytes vehicle_id = 1;
+  bytes driver_id = 2;
+  string license_plate = 3;
+  string vehicle_type = 4;
+  double distance_km = 5;
+  double available_weight_kg = 6;
+  double available_volume_cbm = 7;
+  double latitude = 8;
+  double longitude = 9;
+}
+
+message SearchNearbyVehiclesResponse {
+  repeated NearbyVehicle vehicles = 1;
+  int32 total_found = 2;
+}
+
+// ---------------------------------------------------------------------------
+// ADMIN REQUESTS / RESPONSES
+// ---------------------------------------------------------------------------
+
+message AdminListVehiclesRequest {
+  string status = 1;
+  string verification_status = 2;
+  string vehicle_type = 3;
+  string keyword = 4; // biển số
+  int32 page = 5;
+  int32 page_size = 6;
+}
+
+message AdminListVehiclesResponse {
+  repeated Vehicle vehicles = 1;
+  Pagination pagination = 2;
+}
+
+message AdminVerifyVehicleRequest {
+  bytes id = 1;
+  bool approved = 2;
+  string note = 3;
+  bytes reviewer_id = 4;
+}
+
+message AdminVerifyVehicleResponse {
+  Vehicle vehicle = 1;
+  string message = 2;
+}
+
+message AdminListPendingDocumentsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+}
+
+message AdminListPendingDocumentsResponse {
+  repeated VehicleDocument documents = 1;
+  Pagination pagination = 2;
+}
+
+message AdminReviewDocumentRequest {
+  bytes id = 1;
+  bool approved = 2;
+  string note = 3;
+  bytes reviewer_id = 4;
+}
+
+message AdminReviewDocumentResponse {
+  VehicleDocument document = 1;
+  string message = 2;
+}
+
+message AdminGetVehicleStatsRequest {}
+
+message AdminGetVehicleStatsResponse {
+  int64 total_vehicles = 1;
+  int64 active_vehicles = 2;
+  int64 maintenance_vehicles = 3;
+  int64 pending_verification = 4;
+  int64 online_drivers = 5;
+  int64 pending_documents = 6;
 }

@@ -22,6 +22,12 @@ type ShipperProfileCreate struct {
 	hooks    []Hook
 }
 
+// SetUserID sets the "user_id" field.
+func (_c *ShipperProfileCreate) SetUserID(v uuid.UUID) *ShipperProfileCreate {
+	_c.mutation.SetUserID(v)
+	return _c
+}
+
 // SetCompanyName sets the "company_name" field.
 func (_c *ShipperProfileCreate) SetCompanyName(v string) *ShipperProfileCreate {
 	_c.mutation.SetCompanyName(v)
@@ -46,6 +52,34 @@ func (_c *ShipperProfileCreate) SetTaxCode(v string) *ShipperProfileCreate {
 func (_c *ShipperProfileCreate) SetNillableTaxCode(v *string) *ShipperProfileCreate {
 	if v != nil {
 		_c.SetTaxCode(*v)
+	}
+	return _c
+}
+
+// SetBusinessAddress sets the "business_address" field.
+func (_c *ShipperProfileCreate) SetBusinessAddress(v string) *ShipperProfileCreate {
+	_c.mutation.SetBusinessAddress(v)
+	return _c
+}
+
+// SetNillableBusinessAddress sets the "business_address" field if the given value is not nil.
+func (_c *ShipperProfileCreate) SetNillableBusinessAddress(v *string) *ShipperProfileCreate {
+	if v != nil {
+		_c.SetBusinessAddress(*v)
+	}
+	return _c
+}
+
+// SetTotalOrders sets the "total_orders" field.
+func (_c *ShipperProfileCreate) SetTotalOrders(v int) *ShipperProfileCreate {
+	_c.mutation.SetTotalOrders(v)
+	return _c
+}
+
+// SetNillableTotalOrders sets the "total_orders" field if the given value is not nil.
+func (_c *ShipperProfileCreate) SetNillableTotalOrders(v *int) *ShipperProfileCreate {
+	if v != nil {
+		_c.SetTotalOrders(*v)
 	}
 	return _c
 }
@@ -92,12 +126,6 @@ func (_c *ShipperProfileCreate) SetNillableID(v *uuid.UUID) *ShipperProfileCreat
 	return _c
 }
 
-// SetUserID sets the "user" edge to the User entity by ID.
-func (_c *ShipperProfileCreate) SetUserID(id uuid.UUID) *ShipperProfileCreate {
-	_c.mutation.SetUserID(id)
-	return _c
-}
-
 // SetUser sets the "user" edge to the User entity.
 func (_c *ShipperProfileCreate) SetUser(v *User) *ShipperProfileCreate {
 	return _c.SetUserID(v.ID)
@@ -138,6 +166,10 @@ func (_c *ShipperProfileCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (_c *ShipperProfileCreate) defaults() {
+	if _, ok := _c.mutation.TotalOrders(); !ok {
+		v := shipperprofile.DefaultTotalOrders
+		_c.mutation.SetTotalOrders(v)
+	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := shipperprofile.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
@@ -154,6 +186,12 @@ func (_c *ShipperProfileCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_c *ShipperProfileCreate) check() error {
+	if _, ok := _c.mutation.UserID(); !ok {
+		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "ShipperProfile.user_id"`)}
+	}
+	if _, ok := _c.mutation.TotalOrders(); !ok {
+		return &ValidationError{Name: "total_orders", err: errors.New(`ent: missing required field "ShipperProfile.total_orders"`)}
+	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ShipperProfile.created_at"`)}
 	}
@@ -206,6 +244,14 @@ func (_c *ShipperProfileCreate) createSpec() (*ShipperProfile, *sqlgraph.CreateS
 		_spec.SetField(shipperprofile.FieldTaxCode, field.TypeString, value)
 		_node.TaxCode = value
 	}
+	if value, ok := _c.mutation.BusinessAddress(); ok {
+		_spec.SetField(shipperprofile.FieldBusinessAddress, field.TypeString, value)
+		_node.BusinessAddress = value
+	}
+	if value, ok := _c.mutation.TotalOrders(); ok {
+		_spec.SetField(shipperprofile.FieldTotalOrders, field.TypeInt, value)
+		_node.TotalOrders = value
+	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(shipperprofile.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
@@ -228,7 +274,7 @@ func (_c *ShipperProfileCreate) createSpec() (*ShipperProfile, *sqlgraph.CreateS
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.user_shipper_profile = &nodes[0]
+		_node.UserID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

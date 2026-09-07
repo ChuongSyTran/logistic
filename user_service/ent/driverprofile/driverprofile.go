@@ -16,14 +16,24 @@ const (
 	Label = "driver_profile"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldUserID holds the string denoting the user_id field in the database.
+	FieldUserID = "user_id"
 	// FieldLicenseNumber holds the string denoting the license_number field in the database.
 	FieldLicenseNumber = "license_number"
 	// FieldIDCard holds the string denoting the id_card field in the database.
 	FieldIDCard = "id_card"
 	// FieldRating holds the string denoting the rating field in the database.
 	FieldRating = "rating"
+	// FieldTotalTrips holds the string denoting the total_trips field in the database.
+	FieldTotalTrips = "total_trips"
 	// FieldKycStatus holds the string denoting the kyc_status field in the database.
 	FieldKycStatus = "kyc_status"
+	// FieldKycNote holds the string denoting the kyc_note field in the database.
+	FieldKycNote = "kyc_note"
+	// FieldKycReviewedBy holds the string denoting the kyc_reviewed_by field in the database.
+	FieldKycReviewedBy = "kyc_reviewed_by"
+	// FieldKycReviewedAt holds the string denoting the kyc_reviewed_at field in the database.
+	FieldKycReviewedAt = "kyc_reviewed_at"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -38,24 +48,23 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	UserInverseTable = "users"
 	// UserColumn is the table column denoting the user relation/edge.
-	UserColumn = "user_driver_profile"
+	UserColumn = "user_id"
 )
 
 // Columns holds all SQL columns for driverprofile fields.
 var Columns = []string{
 	FieldID,
+	FieldUserID,
 	FieldLicenseNumber,
 	FieldIDCard,
 	FieldRating,
+	FieldTotalTrips,
 	FieldKycStatus,
+	FieldKycNote,
+	FieldKycReviewedBy,
+	FieldKycReviewedAt,
 	FieldCreatedAt,
 	FieldUpdatedAt,
-}
-
-// ForeignKeys holds the SQL foreign-keys that are owned by the "driver_profiles"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"user_driver_profile",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -65,17 +74,14 @@ func ValidColumn(column string) bool {
 			return true
 		}
 	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
-			return true
-		}
-	}
 	return false
 }
 
 var (
 	// DefaultRating holds the default value on creation for the "rating" field.
 	DefaultRating float64
+	// DefaultTotalTrips holds the default value on creation for the "total_trips" field.
+	DefaultTotalTrips int
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -121,6 +127,11 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
 }
 
+// ByUserID orders the results by the user_id field.
+func ByUserID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUserID, opts...).ToFunc()
+}
+
 // ByLicenseNumber orders the results by the license_number field.
 func ByLicenseNumber(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldLicenseNumber, opts...).ToFunc()
@@ -136,9 +147,29 @@ func ByRating(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRating, opts...).ToFunc()
 }
 
+// ByTotalTrips orders the results by the total_trips field.
+func ByTotalTrips(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTotalTrips, opts...).ToFunc()
+}
+
 // ByKycStatus orders the results by the kyc_status field.
 func ByKycStatus(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldKycStatus, opts...).ToFunc()
+}
+
+// ByKycNote orders the results by the kyc_note field.
+func ByKycNote(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldKycNote, opts...).ToFunc()
+}
+
+// ByKycReviewedBy orders the results by the kyc_reviewed_by field.
+func ByKycReviewedBy(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldKycReviewedBy, opts...).ToFunc()
+}
+
+// ByKycReviewedAt orders the results by the kyc_reviewed_at field.
+func ByKycReviewedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldKycReviewedAt, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

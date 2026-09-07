@@ -1166,6 +1166,16 @@ func RouteIDLTE(v []byte) predicate.Asks {
 	return predicate.Asks(sql.FieldLTE(FieldRouteID, v))
 }
 
+// RouteIDIsNil applies the IsNil predicate on the "route_id" field.
+func RouteIDIsNil() predicate.Asks {
+	return predicate.Asks(sql.FieldIsNull(FieldRouteID))
+}
+
+// RouteIDNotNil applies the NotNil predicate on the "route_id" field.
+func RouteIDNotNil() predicate.Asks {
+	return predicate.Asks(sql.FieldNotNull(FieldRouteID))
+}
+
 // StatusEQ applies the EQ predicate on the "status" field.
 func StatusEQ(v int8) predicate.Asks {
 	return predicate.Asks(sql.FieldEQ(FieldStatus, v))
@@ -1244,6 +1254,16 @@ func ExpiresAtLT(v time.Time) predicate.Asks {
 // ExpiresAtLTE applies the LTE predicate on the "expires_at" field.
 func ExpiresAtLTE(v time.Time) predicate.Asks {
 	return predicate.Asks(sql.FieldLTE(FieldExpiresAt, v))
+}
+
+// ExpiresAtIsNil applies the IsNil predicate on the "expires_at" field.
+func ExpiresAtIsNil() predicate.Asks {
+	return predicate.Asks(sql.FieldIsNull(FieldExpiresAt))
+}
+
+// ExpiresAtNotNil applies the NotNil predicate on the "expires_at" field.
+func ExpiresAtNotNil() predicate.Asks {
+	return predicate.Asks(sql.FieldNotNull(FieldExpiresAt))
 }
 
 // HasMatches applies the HasEdge predicate on the "matches" edge.

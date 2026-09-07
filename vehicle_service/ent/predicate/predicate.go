@@ -6,5 +6,14 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// DriverAvailability is the predicate function for driveravailability builders.
+type DriverAvailability func(*sql.Selector)
+
 // Vehicle is the predicate function for vehicle builders.
 type Vehicle func(*sql.Selector)
+
+// VehicleDocument is the predicate function for vehicledocument builders.
+type VehicleDocument func(*sql.Selector)
+
+// VehicleLocation is the predicate function for vehiclelocation builders.
+type VehicleLocation func(*sql.Selector)

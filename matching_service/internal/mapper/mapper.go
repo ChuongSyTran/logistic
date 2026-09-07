@@ -15,11 +15,8 @@ import (
 // goverter:useZeroValueOnPointerInconsistency
 // goverter:ignoreUnexported
 // goverter:extend IdentityTime
-//
-//go:generate go run github.com/jmattheis/goverter/cmd/goverter@latest gen ./
+//go:generate go run github.com/jmattheis/goverter/cmd/goverter@v1.9.4 gen ./
 type MatchingMapper interface {
-	// ==================== REPO MAPPER ====================
-
 	// goverter:map . CurrentLocation | MapAskCurrentLocation
 	// goverter:map . Destination | MapAskDestination
 	// goverter:map MinPrice | Float64PtrToFloat64
@@ -34,11 +31,12 @@ type MatchingMapper interface {
 	EntBidToEntityBid(source *ent.Bids) entity.Bid
 	EntBidListToEntityBidList(source []*ent.Bids) []entity.Bid
 
-	// ==================== CONTROLLER MAPPER ====================
-
 	// goverter:ignore ID
 	// goverter:ignore CreatedAt
 	// goverter:ignore Status
+	// Trạng thái thương lượng do server ghi, không nhận từ client.
+	// goverter:ignore OfferedPrice
+	// goverter:ignore OfferedAskID
 	// goverter:map ShipperId ShipperID | BytesToUUID
 	// goverter:map ConsigneeId ConsigneeID | BytesToUUID
 	// goverter:map ExpiresAt ExpiresAt | TimestampToTime
@@ -62,8 +60,6 @@ type MatchingMapper interface {
 	// goverter:map ZoneID ZoneId
 	MapEntityLocationToPb(loc entity.Location) *pb.Location
 
-	// ==================== BROKER MAPPER ====================
-
 	// goverter:map ID Id | UUIDToBytes
 	// goverter:map ShipperID ShipperId | UUIDToBytes
 	// goverter:map ConsigneeID ConsigneeId | UUIDToBytes
@@ -82,8 +78,6 @@ type MatchingMapper interface {
 	EntityAskToPbAsk(source entity.Ask) *pb.Ask
 	EntityAskListToPbAskList(source []entity.Ask) []*pb.Ask
 }
-
-// ==================== HELPERS ====================
 
 func Float64PtrToFloat64(f *float64) float64 {
 	if f == nil {

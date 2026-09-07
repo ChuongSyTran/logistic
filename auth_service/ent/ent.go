@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"auth_service/ent/refreshtoken"
 	"auth_service/ent/users"
 	"context"
 	"errors"
@@ -73,7 +74,8 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			users.Table: users.ValidColumn,
+			refreshtoken.Table: refreshtoken.ValidColumn,
+			users.Table:        users.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

@@ -1,0 +1,71 @@
+# Chuẩn hoá ký tự xuống dòng.
+#
+# Git trên Windows mặc định bật core.autocrlf=true: khi checkout, nó đổi LF thành
+# CRLF cho mọi file text. Với mã nguồn thì vô hại, nhưng với script chạy trong
+# container Linux thì hỏng — dòng đầu trở thành `#!/bin/bash\r`, kernel đi tìm
+# chương trình tên `bash\r` và báo:
+#
+#     /bin/bash^M: bad interpreter: No such file or directory
+#
+# Triệu chứng khó đoán ở chỗ nó phụ thuộc vào cấu hình Git của từng máy: cùng một
+# commit, máy Linux chạy được còn máy Windows thì không.
+#
+# Khai báo dưới đây bắt Git luôn ghi LF vào thư mục làm việc, bất kể core.autocrlf
+# của người dùng đặt gì.
+
+# Mặc định: Git tự nhận diện file text, và luôn dùng LF.
+* text=auto eol=lf
+
+# ---------------------------------------------------------------------------
+# Bắt buộc LF — những file này chạy hoặc được đọc bên trong container Linux
+# ---------------------------------------------------------------------------
+*.sh        text eol=lf
+*.bash      text eol=lf
+*.cnf       text eol=lf
+*.conf      text eol=lf
+*.sql       text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+Dockerfile  text eol=lf
+Makefile    text eol=lf
+.env        text eol=lf
+*.go        text eol=lf
+*.proto     text eol=lf
+*.md        text eol=lf
+*.json      text eol=lf
+
+# ---------------------------------------------------------------------------
+# Giữ CRLF — chỉ chạy trên Windows
+# ---------------------------------------------------------------------------
+*.ps1       text eol=crlf
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+
+# ---------------------------------------------------------------------------
+# Nhị phân — Git không được đụng vào nội dung
+# ---------------------------------------------------------------------------
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.ico       binary
+*.svg       text eol=lf
+*.pdf       binary
+*.docx      binary
+*.odt       binary
+*.epub      binary
+*.exe       binary
+*.pem       binary
+*.gz        binary
+*.zip       binary
+
+# File sinh tự động: đánh dấu để GitHub gộp lại trong diff và không tính vào
+# thống kê ngôn ngữ của repo.
+*.pb.go            linguist-generated=true
+*.pb.gw.go         linguist-generated=true
+**/ent/**          linguist-generated=true
+**/generated/**    linguist-generated=true
+gateway_service/docs/docs.go        linguist-generated=true
+gateway_service/docs/swagger.json   linguist-generated=true
+gateway_service/docs/swagger.yaml   linguist-generated=true
+logistic.postman_collection.json    linguist-generated=true

@@ -64,6 +64,10 @@ type Bids struct {
 	DestinationLat float64 `json:"destination_lat,omitempty"`
 	// DestinationLng holds the value of the "destination_lng" field.
 	DestinationLng float64 `json:"destination_lng,omitempty"`
+	// OfferedPrice holds the value of the "offered_price" field.
+	OfferedPrice float64 `json:"offered_price,omitempty"`
+	// OfferedAskID holds the value of the "offered_ask_id" field.
+	OfferedAskID uuid.UUID `json:"offered_ask_id,omitempty"`
 	// Status holds the value of the "status" field.
 	Status int8 `json:"status,omitempty"`
 	// ExpiresAt holds the value of the "expires_at" field.
@@ -110,7 +114,7 @@ func (*Bids) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case bids.FieldIsDeleted:
 			values[i] = new(sql.NullBool)
-		case bids.FieldVolumeM3, bids.FieldWeightKg, bids.FieldMaxPrice, bids.FieldCargoValue, bids.FieldRequiredDeposit, bids.FieldDesiredDeposit, bids.FieldOriginLat, bids.FieldOriginLng, bids.FieldDestinationLat, bids.FieldDestinationLng:
+		case bids.FieldVolumeM3, bids.FieldWeightKg, bids.FieldMaxPrice, bids.FieldCargoValue, bids.FieldRequiredDeposit, bids.FieldDesiredDeposit, bids.FieldOriginLat, bids.FieldOriginLng, bids.FieldDestinationLat, bids.FieldDestinationLng, bids.FieldOfferedPrice:
 			values[i] = new(sql.NullFloat64)
 		case bids.FieldStatus:
 			values[i] = new(sql.NullInt64)
@@ -118,7 +122,7 @@ func (*Bids) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case bids.FieldCreatedAt, bids.FieldUpdatedAt, bids.FieldDeletedAt, bids.FieldExpiresAt:
 			values[i] = new(sql.NullTime)
-		case bids.FieldID, bids.FieldCreatedBy, bids.FieldUpdatedBy, bids.FieldShipperID, bids.FieldConsigneeID:
+		case bids.FieldID, bids.FieldCreatedBy, bids.FieldUpdatedBy, bids.FieldShipperID, bids.FieldConsigneeID, bids.FieldOfferedAskID:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -280,6 +284,18 @@ func (_m *Bids) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.DestinationLng = value.Float64
 			}
+		case bids.FieldOfferedPrice:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field offered_price", values[i])
+			} else if value.Valid {
+				_m.OfferedPrice = value.Float64
+			}
+		case bids.FieldOfferedAskID:
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field offered_ask_id", values[i])
+			} else if value != nil {
+				_m.OfferedAskID = *value
+			}
 		case bids.FieldStatus:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
@@ -408,6 +424,12 @@ func (_m *Bids) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("destination_lng=")
 	builder.WriteString(fmt.Sprintf("%v", _m.DestinationLng))
+	builder.WriteString(", ")
+	builder.WriteString("offered_price=")
+	builder.WriteString(fmt.Sprintf("%v", _m.OfferedPrice))
+	builder.WriteString(", ")
+	builder.WriteString("offered_ask_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.OfferedAskID))
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Status))

@@ -20,12 +20,18 @@ const (
 	FieldPhone = "phone"
 	// FieldEmail holds the string denoting the email field in the database.
 	FieldEmail = "email"
+	// FieldFullName holds the string denoting the full_name field in the database.
+	FieldFullName = "full_name"
+	// FieldAvatarURL holds the string denoting the avatar_url field in the database.
+	FieldAvatarURL = "avatar_url"
 	// FieldPasswordHash holds the string denoting the password_hash field in the database.
 	FieldPasswordHash = "password_hash"
 	// FieldRole holds the string denoting the role field in the database.
 	FieldRole = "role"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
+	// FieldStatusReason holds the string denoting the status_reason field in the database.
+	FieldStatusReason = "status_reason"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -34,6 +40,10 @@ const (
 	EdgeDriverProfile = "driver_profile"
 	// EdgeShipperProfile holds the string denoting the shipper_profile edge name in mutations.
 	EdgeShipperProfile = "shipper_profile"
+	// EdgeAddresses holds the string denoting the addresses edge name in mutations.
+	EdgeAddresses = "addresses"
+	// EdgeDevices holds the string denoting the devices edge name in mutations.
+	EdgeDevices = "devices"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// DriverProfileTable is the table that holds the driver_profile relation/edge.
@@ -42,14 +52,28 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "driverprofile" package.
 	DriverProfileInverseTable = "driver_profiles"
 	// DriverProfileColumn is the table column denoting the driver_profile relation/edge.
-	DriverProfileColumn = "user_driver_profile"
+	DriverProfileColumn = "user_id"
 	// ShipperProfileTable is the table that holds the shipper_profile relation/edge.
 	ShipperProfileTable = "shipper_profiles"
 	// ShipperProfileInverseTable is the table name for the ShipperProfile entity.
 	// It exists in this package in order to avoid circular dependency with the "shipperprofile" package.
 	ShipperProfileInverseTable = "shipper_profiles"
 	// ShipperProfileColumn is the table column denoting the shipper_profile relation/edge.
-	ShipperProfileColumn = "user_shipper_profile"
+	ShipperProfileColumn = "user_id"
+	// AddressesTable is the table that holds the addresses relation/edge.
+	AddressesTable = "addresses"
+	// AddressesInverseTable is the table name for the Address entity.
+	// It exists in this package in order to avoid circular dependency with the "address" package.
+	AddressesInverseTable = "addresses"
+	// AddressesColumn is the table column denoting the addresses relation/edge.
+	AddressesColumn = "user_id"
+	// DevicesTable is the table that holds the devices relation/edge.
+	DevicesTable = "user_devices"
+	// DevicesInverseTable is the table name for the UserDevice entity.
+	// It exists in this package in order to avoid circular dependency with the "userdevice" package.
+	DevicesInverseTable = "user_devices"
+	// DevicesColumn is the table column denoting the devices relation/edge.
+	DevicesColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -57,9 +81,12 @@ var Columns = []string{
 	FieldID,
 	FieldPhone,
 	FieldEmail,
+	FieldFullName,
+	FieldAvatarURL,
 	FieldPasswordHash,
 	FieldRole,
 	FieldStatus,
+	FieldStatusReason,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -117,8 +144,9 @@ const DefaultStatus = StatusActive
 
 // Status values.
 const (
-	StatusActive Status = "active"
-	StatusBanned Status = "banned"
+	StatusActive    Status = "active"
+	StatusBanned    Status = "banned"
+	StatusSuspended Status = "suspended"
 )
 
 func (s Status) String() string {
@@ -128,7 +156,7 @@ func (s Status) String() string {
 // StatusValidator is a validator for the "status" field enum values. It is called by the builders before save.
 func StatusValidator(s Status) error {
 	switch s {
-	case StatusActive, StatusBanned:
+	case StatusActive, StatusBanned, StatusSuspended:
 		return nil
 	default:
 		return fmt.Errorf("user: invalid enum value for status field: %q", s)
@@ -153,6 +181,16 @@ func ByEmail(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldEmail, opts...).ToFunc()
 }
 
+// ByFullName orders the results by the full_name field.
+func ByFullName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldFullName, opts...).ToFunc()
+}
+
+// ByAvatarURL orders the results by the avatar_url field.
+func ByAvatarURL(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAvatarURL, opts...).ToFunc()
+}
+
 // ByPasswordHash orders the results by the password_hash field.
 func ByPasswordHash(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPasswordHash, opts...).ToFunc()
@@ -166,6 +204,11 @@ func ByRole(opts ...sql.OrderTermOption) OrderOption {
 // ByStatus orders the results by the status field.
 func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStatus, opts...).ToFunc()
+}
+
+// ByStatusReason orders the results by the status_reason field.
+func ByStatusReason(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStatusReason, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.
@@ -191,6 +234,34 @@ func ByShipperProfileField(field string, opts ...sql.OrderTermOption) OrderOptio
 		sqlgraph.OrderByNeighborTerms(s, newShipperProfileStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByAddressesCount orders the results by addresses count.
+func ByAddressesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAddressesStep(), opts...)
+	}
+}
+
+// ByAddresses orders the results by addresses terms.
+func ByAddresses(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAddressesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByDevicesCount orders the results by devices count.
+func ByDevicesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newDevicesStep(), opts...)
+	}
+}
+
+// ByDevices orders the results by devices terms.
+func ByDevices(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newDevicesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newDriverProfileStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -203,5 +274,19 @@ func newShipperProfileStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ShipperProfileInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2O, false, ShipperProfileTable, ShipperProfileColumn),
+	)
+}
+func newAddressesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AddressesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AddressesTable, AddressesColumn),
+	)
+}
+func newDevicesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(DevicesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, DevicesTable, DevicesColumn),
 	)
 }

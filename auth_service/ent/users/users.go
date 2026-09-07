@@ -3,10 +3,12 @@
 package users
 
 import (
+	"fmt"
 	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/google/uuid"
 )
 
 const (
@@ -28,6 +30,8 @@ const (
 	FieldTotpSecret = "totp_secret"
 	// FieldGoogleID holds the string denoting the google_id field in the database.
 	FieldGoogleID = "google_id"
+	// FieldRole holds the string denoting the role field in the database.
+	FieldRole = "role"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -46,6 +50,7 @@ var Columns = []string{
 	FieldPassword,
 	FieldTotpSecret,
 	FieldGoogleID,
+	FieldRole,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -74,7 +79,36 @@ var (
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
 	UpdateDefaultUpdatedAt func() time.Time
+	// DefaultID holds the default value on creation for the "id" field.
+	DefaultID func() uuid.UUID
 )
+
+// Role defines the type for the "role" enum field.
+type Role string
+
+// RoleShipper is the default value of the Role enum.
+const DefaultRole = RoleShipper
+
+// Role values.
+const (
+	RoleDriver  Role = "driver"
+	RoleShipper Role = "shipper"
+	RoleAdmin   Role = "admin"
+)
+
+func (r Role) String() string {
+	return string(r)
+}
+
+// RoleValidator is a validator for the "role" field enum values. It is called by the builders before save.
+func RoleValidator(r Role) error {
+	switch r {
+	case RoleDriver, RoleShipper, RoleAdmin:
+		return nil
+	default:
+		return fmt.Errorf("users: invalid enum value for role field: %q", r)
+	}
+}
 
 // OrderOption defines the ordering options for the Users queries.
 type OrderOption func(*sql.Selector)
@@ -117,6 +151,11 @@ func ByTotpSecret(opts ...sql.OrderTermOption) OrderOption {
 // ByGoogleID orders the results by the google_id field.
 func ByGoogleID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldGoogleID, opts...).ToFunc()
+}
+
+// ByRole orders the results by the role field.
+func ByRole(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRole, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

@@ -1,0 +1,656 @@
+<mxfile host="app.diagrams.net" agent="claude-code" type="device">
+  <diagram name="Toan bo luong build" id="one-big-flow">
+    <mxGraphModel dx="2000" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2450" pageHeight="11925" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="T1" value="Từ dòng code Go đến container đang chạy trên EC2" style="text;html=1;fontSize=30;fontStyle=1;align=left;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="40" y="26" width="1600" height="52.800000000000004" as="geometry"/>
+        </mxCell>
+        <mxCell id="T2" value="Đọc từ trên xuống. Chín phần, mỗi phần là hệ quả trực tiếp của phần trước nó." style="text;html=1;fontSize=15;align=left;fontColor=#5A6B77;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="40" y="78.80000000000001" width="1600" height="32.400000000000006" as="geometry"/>
+        </mxCell>
+        <mxCell id="T3" value="Nguồn: Learning Go (Jon Bodner, 2nd ed., ch.10)  ·  tài liệu Podman/Buildah chính thức  ·  mã nguồn containers/buildah  ·  Dockerfile thực tế của repo logistic" style="text;html=1;fontSize=12;align=left;fontColor=#8797A2;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="40" y="111.20000000000002" width="1800" height="28.32" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="H1" value="PHẦN I  —  NỀN TẢNG: GO QUẢN VERSION THẾ NÀO" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#16212B;strokeColor=none;fontColor=#FFFFFF;fontFamily=Verdana;fontSize=17;fontStyle=1;align=left;spacing=18;" parent="1" vertex="1">
+          <mxGeometry x="40" y="161.20000000000005" width="2320" height="56" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P1intro" value="VÌ SAO BẮT ĐẦU TỪ ĐÂY" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4E7EA;strokeColor=#0E7480;strokeWidth=3;fontFamily=Verdana;fontSize=14;align=left;verticalAlign=top;spacing=14;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="233.20000000000005" width="2320" height="156" as="geometry"/>
+        </mxCell>
+        <mxCell id="P1introd" value="Go KHÔNG có registry trung tâm như npm. Không server nào giữ danh sách package. Go dùng thẳng REPOSITORY và TAG GIT làm nguồn sự thật.&#xa;Nghĩa là: hệ thống quản version của Go CHÍNH LÀ version control.&#xa;&#xa;Mọi rắc rối ở các phần sau — vì sao build context phải là gốc repo, vì sao phải tắt go.work, vì sao Dockerfile tách hai lớp COPY — đều bắt nguồn từ&#xa;cách Go giải phụ thuộc. Nên phải hiểu phần này trước." style="text;html=1;fontSize=12;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="58" y="269.20000000000005" width="2284" height="106" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P1a" value="1.  BA TẦNG — hay bị gộp làm một" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DFE5E8;strokeColor=#16212B;strokeWidth=2;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="403.20000000000005" width="1130" height="224.56" as="geometry"/>
+        </mxCell>
+        <mxCell id="P1ad" value="Repository    nơi chứa mã nguồn trong version control&#xa;              →  TranSenpai/logistic&#xa;&#xa;Module        đơn vị được VERSION và phân phối. Một go.mod = một module&#xa;              →  12 module (api, pkg, 6 service, wallet, notification...)&#xa;&#xa;Package       thư mục chứa code, đơn vị để tổ chức và import&#xa;              →  internal/biz, internal/repo, internal/controller&#xa;&#xa;Mặc định là 1 repo = 1 module. Repo này đi ngược lại: 12 module trong 1 repo.&#xa;Hoàn toàn hợp lệ — nhưng đó chính là gốc rễ của mọi thứ ở PHẦN II." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="58" y="437.20000000000005" width="1094" height="176.56" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P1b" value="2.  SEMANTIC VERSIONING — Go BẮT BUỘC, không phải khuyến khích" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DFE5E8;strokeColor=#16212B;strokeWidth=2;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="1230" y="403.20000000000005" width="1130" height="224.56" as="geometry"/>
+        </mxCell>
+        <mxCell id="P1bd" value="v major . minor . patch&#xa;&#xa;   patch      v1.4.2       sửa bug, KHÔNG đổi API&#xa;   minor      v1.5.0       thêm tính năng, vẫn tương thích ngược (patch về 0)&#xa;   major      v2.0.0       PHÁ VỠ tương thích (minor và patch về 0)&#xa;   pre-release v1.5.0-rc2   thêm dấu gạch nối. Go KHÔNG BAO GIỜ tự chọn bản này&#xa;                            — muốn dùng phải ghi rõ version trong go get&#xa;&#xa;LUẬT NGẦM PHÍA SAU — import compatibility rule:&#xa;   Nếu package cũ và package mới cùng import path, bản mới PHẢI tương thích ngược.&#xa;   Mọi bản minor và patch đều phải giữ lời hứa đó. Không giữ được thì đó là BUG." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="1248" y="437.20000000000005" width="1094" height="176.56" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P1c" value="3.  MINIMAL VERSION SELECTION — chỗ Go khác hẳn npm" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4E7EA;strokeColor=#0E7480;strokeWidth=3;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="633.2" width="1130" height="314.32000000000005" as="geometry"/>
+        </mxCell>
+        <mxCell id="P1cd" value="Nhiều module cùng cần một module khác, ở các version khác nhau. Go giải thế nào?&#xa;&#xa;Go KHÔNG lấy bản mới nhất. Go lấy bản THẤP NHẤT thoả mãn TẤT CẢ yêu cầu.&#xa;&#xa;Ví dụ nguyên văn của sách:&#xa;      A cần D v1.1.0&#xa;      B cần D v1.2.0&#xa;      C cần D v1.2.3&#xa;      →  Go import D đúng MỘT lần, chọn v1.2.3&#xa;      →  Dù trên mạng đã có v1.4.0, Go KHÔNG đụng tới.&#xa;         Yêu cầu của anh đã được thoả mãn rồi.&#xa;&#xa;HỆ QUẢ THỰC TẾ: build của anh KHÔNG TỰ TRÔI.&#xa;Không có chuyện sáng CI xanh, chiều CI đỏ chỉ vì thư viện nào đó vừa ra bản mới.&#xa;Muốn nâng version thì phải nâng CÓ CHỦ ĐÍCH bằng go get.&#xa;&#xa;Xem cây phụ thuộc thật:   cd user_service &amp;&amp; GOWORK=off go mod graph" style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="58" y="667.2" width="1094" height="266.32000000000005" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P1d" value="4.  go.mod GIỮ Ý ĐỊNH  —  go.sum GIỮ BẰNG CHỨNG" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4E7EA;strokeColor=#0E7480;strokeWidth=3;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="1230" y="633.2" width="1130" height="284.4" as="geometry"/>
+        </mxCell>
+        <mxCell id="P1dd" value="Đây là phân biệt then chốt để hiểu PHẦN II. Hai file luôn đi cùng nhau nên dễ tưởng là&#xa;một, nhưng chúng trả lời hai câu hỏi KHÁC HẲN:&#xa;&#xa;   go.mod      Module này CẦN những gì, ở version nào?&#xa;               Hỏng  →  không tìm thấy package, sai version&#xa;&#xa;   go.sum      Nội dung tải về có ĐÚNG thứ đã từng thấy không?&#xa;               Chứa hash mã hoá của từng module.&#xa;               Hỏng  →  missing go.sum entry&#xa;&#xa;go.sum KHÔNG quyết định version nào được chọn — việc đó là của MVS.&#xa;Nhiệm vụ duy nhất của nó: phát hiện mã nguồn bị đánh tráo giữa đường.&#xa;&#xa;→ Vì thế go.sum phải ĐẦY ĐỦ THEO TỪNG MODULE. Đây chính là chỗ go.work&#xa;   có thể lừa anh (xem khối số 8 bên dưới)." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="1248" y="667.2" width="1094" height="236.4" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P1e" value="5.  PROXY SERVER + CHECKSUM DATABASE" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DFE5E8;strokeColor=#16212B;strokeWidth=2;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="947.5200000000001" width="1130" height="299.36" as="geometry"/>
+        </mxCell>
+        <mxCell id="P1ed" value="Mặc định go get KHÔNG tải thẳng từ repo. Nó gửi request tới proxy server của Google.&#xa;Proxy giữ bản sao của gần như MỌI version của MỌI module public&#xa;   →  module bị xoá khỏi GitHub thì anh vẫn build được.&#xa;&#xa;Google còn giữ RIÊNG một CHECKSUM DATABASE — khác với proxy.&#xa;Mỗi lần go get / go mod tidy, Go tự tính hash rồi đối chiếu với DB này.&#xa;Lệch nhau  →  KHÔNG CÀI.&#xa;&#xa;Nó chặn được CẢ HAI kiểu tấn công:&#xa;   · kẻ xấu chiếm module rồi chèn mã độc&#xa;   · tác giả sửa code rồi DÙNG LẠI tag version cũ (vô tình hay cố ý)&#xa;&#xa;Không muốn gửi request cho Google:&#xa;   GOPROXY=direct     tải thẳng từ repo (mất lá chắn khi module bị xoá)&#xa;   proxy riêng        Athens (mã nguồn mở), Artifactory, Sonatype&#xa;Repo private: proxy riêng giúp khỏi lộ tên repo nội bộ ra dịch vụ bên ngoài." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="58" y="981.5200000000001" width="1094" height="251.36" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P1f" value="6.  BA CÁCH CAN THIỆP VÀO VIỆC CHỌN VERSION" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DFE5E8;strokeColor=#16212B;strokeWidth=2;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="1230" y="947.5200000000001" width="1130" height="344.24" as="geometry"/>
+        </mxCell>
+        <mxCell id="P1fd" value="replace — ĐỔI HƯỚNG&#xa;   Trỏ mọi tham chiếu tới một module sang chỗ khác: một fork, hoặc đường dẫn trên đĩa.&#xa;        replace github.com/logistic/api =&gt; ../api&#xa;   Vế TRÁI là tên module, vế PHẢI là nơi tìm nó thật sự.&#xa;   Dạng đường dẫn local thì KHÔNG được ghi version ở vế phải.&#xa;&#xa;   Bodner khuyên TRÁNH replace dạng local: module có nó thường không build được ở&#xa;   máy người khác, vì chẳng ai đảm bảo họ có thư mục đó ở đúng vị trí.&#xa;   NHƯNG với monorepo thì cảnh báo này KHÔNG áp dụng — ../api luôn nằm cùng repo,&#xa;   ai clone về cũng có. Nên dự án GIỮ replace. Đây là quyết định có cân nhắc.&#xa;&#xa;exclude — CHẶN BẢN LỖI&#xa;   Cấm CHÍNH module của anh dùng một version cụ thể của thư viện nào đó.&#xa;&#xa;retract — THU HỒI BẢN ĐÃ PHÁT HÀNH&#xa;        retract v1.5.0                 // chưa test kỹ&#xa;        retract [v1.7.0, v1.8.5]       // thu hồi cả một khoảng&#xa;   DỄ NHẦM:  exclude chặn ANH dùng bản của người khác.&#xa;             retract chặn NGƯỜI KHÁC dùng bản của anh." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="1248" y="981.5200000000001" width="1094" height="296.24" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P1g" value="7.  PHÁ VỠ TƯƠNG THÍCH  →  MAJOR VERSION NẰM TRONG IMPORT PATH" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4E7EA;strokeColor=#0E7480;strokeWidth=3;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="1291.7600000000002" width="1130" height="299.36" as="geometry"/>
+        </mxCell>
+        <mxCell id="P1gd" value="Đây là chỗ Go làm khác hẳn phần còn lại của thế giới.&#xa;Lên major version KHÔNG chỉ là đổi tag — IMPORT PATH PHẢI ĐỔI THEO.&#xa;&#xa;      import &quot;github.com/logistic/pkg&quot;        // v0 hoặc v1&#xa;      import &quot;github.com/logistic/pkg/v2&quot;     // v2 trở lên&#xa;&#xa;Với mọi major khác 0 và 1, đường dẫn module phải kết thúc bằng vN.&#xa;Hai cách tổ chức: tạo thư mục con tên v2 ngay trong module (chép cả README, LICENSE),&#xa;hoặc tách nhánh riêng trong repo.&#xa;&#xa;v1 và v2 là HAI MODULE KHÁC NHAU dưới mắt Go — chúng có thể cùng tồn tại&#xa;trong một binary.&#xa;&#xa;VÌ SAO PHIỀN VẬY MÀ VẪN LÀM: chính điều này khiến MVS an toàn. Vì bản phá vỡ&#xa;tương thích KHÔNG THỂ lẻn vào dưới cùng một đường dẫn, Go mới dám tự động nâng&#xa;minor và patch mà không sợ vỡ build của anh." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="58" y="1325.7600000000002" width="1094" height="251.36" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P1h" value="8.  go.work  —  LỜI CẢNH BÁO CỦA BODNER" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F2DED8;strokeColor=#A63A22;strokeWidth=3;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="1230" y="1291.7600000000002" width="1130" height="269.44000000000005" as="geometry"/>
+        </mxCell>
+        <mxCell id="P1hd" value="Workspace ra đời từ Go 1.18 để giải một bài toán thật: cần sửa hai module cùng lúc và&#xa;muốn thử ngay — chẳng lẽ mỗi lần lại push lên GitHub rồi tag một version tạm?&#xa;&#xa;Bodner viết rất dứt khoát:&#xa;      &quot;The go.work file is meant for your local computer only.&quot;&#xa;&#xa;Ông cũng nói thẳng về cách làm cũ: đừng dùng replace tạm trỏ tới thư mục local rồi&#xa;quên gỡ trước khi commit — workspace sinh ra chính là để tránh cái antipattern đó.&#xa;&#xa;DỰ ÁN NÀY VẪN COMMIT go.work, và đó là lựa chọn có lý: monorepo thì mọi module đều&#xa;nằm sẵn trong repo, đường dẫn ./api không bao giờ trỏ trượt, lại giúp IDE hiểu đúng&#xa;và người mới clone về là chạy được ngay.&#xa;&#xa;NHƯNG PHẢI TRẢ GIÁ BẰNG MỘT LUẬT — nội dung của PHẦN II ngay bên dưới." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="1248" y="1325.7600000000002" width="1094" height="221.44000000000003" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P1i" value="9.  VENDORING  —  Bodner nói đang thoái trào" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FAFBFB;strokeColor=#9DACB6;dashed=1;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="1591.1200000000003" width="2320" height="149.76" as="geometry"/>
+        </mxCell>
+        <mxCell id="P1id" value="go mod vendor tạo thư mục vendor/ chứa toàn bộ dependency ngay trong module. Thời trước module và proxy thì bắt buộc; giờ ít dùng dần.&#xa;&#xa;Lý do CÒN dùng: CI/CD có build server phù du (ephemeral), module cache không được giữ lại  →  vendor giúp khỏi gọi mạng tải lại mỗi lần build.&#xa;Cái giá phải trả: phình to kích thước codebase trong version control.&#xa;&#xa;Dự án này KHÔNG vendor — thay vào đó dùng layer cache của Docker (PHẦN VI, VII) để đạt cùng mục đích mà không nhét thư viện vào git." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="58" y="1625.1200000000003" width="2284" height="101.76" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="A1" value="Go giải phụ thuộc bằng replace + go.sum riêng từng module.&#10;Giờ phải đưa thứ đó vào container. Vấn đề bắt đầu ở đây." style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#0E7480;strokeWidth=4;endArrow=block;endSize=8;fontFamily=Verdana;fontSize=13;fontStyle=1;verticalAlign=bottom;" parent="1" source="P1i" target="H2" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="H2" value="PHẦN II  —  BÀI TOÁN: ĐƯA MODULE GO VÀO CONTAINER" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#16212B;strokeColor=none;fontColor=#FFFFFF;fontFamily=Verdana;fontSize=17;fontStyle=1;align=left;spacing=18;" parent="1" vertex="1">
+          <mxGeometry x="40" y="1839.1200000000003" width="2320" height="56" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P2a" value="LỖI GỐC: BUILD CONTEXT BÓP NGHẸT replace" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F2DED8;strokeColor=#A63A22;strokeWidth=3;fontFamily=Verdana;fontSize=14;align=left;verticalAlign=top;spacing=14;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="1911.1200000000003" width="1130" height="361.20000000000005" as="geometry"/>
+        </mxCell>
+        <mxCell id="P2ad" value="Triệu chứng ban đầu trông giống lỗi dependency. Nhưng go.sum của cả 6 service đều ĐẦY ĐỦ.&#xa;Nguyên nhân nằm chỗ khác hẳn.&#xa;&#xa;Trong user_service/go.mod có:&#xa;      replace github.com/logistic/api =&gt; ../api&#xa;      replace github.com/logistic/pkg =&gt; ../pkg&#xa;&#xa;Hai đường dẫn ../ đó nằm NGOÀI thư mục service.&#xa;&#xa;SAI  —  context: ./user_service&#xa;      Docker/Podman chỉ gửi thư mục user_service cho builder.&#xa;      api/ và pkg/ KHÔNG được gửi  →  chúng đơn giản là không tồn tại.&#xa;      Build chết ngay ở stage 1.&#xa;&#xa;ĐÚNG  —  context: .   (gốc repo)  +  dockerfile: user_service/Dockerfile&#xa;      Cả ba thư mục cùng nằm trong tầm với. replace giải được.&#xa;&#xa;Lệnh chạy tay:   podman build -f user_service/Dockerfile -t user_service .&#xa;                                                                        ↑ dấu chấm này&#xa;                                                                          chính là context" style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="58" y="1947.1200000000003" width="1094" height="311.20000000000005" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P2b" value="LUẬT: GOWORK=off  —  KHÔNG go.work NÀO ĐƯỢC THAM GIA BUILD IMAGE" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4E7EA;strokeColor=#0E7480;strokeWidth=3;fontFamily=Verdana;fontSize=14;align=left;verticalAlign=top;spacing=14;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="1230" y="1911.1200000000003" width="1130" height="391.12" as="geometry"/>
+        </mxCell>
+        <mxCell id="P2bd" value="Đây là cái giá phải trả cho việc commit go.work (PHẦN I, khối 8).&#xa;Cũng là loại lỗi khó chịu nhất:  &quot;máy tôi chạy được mà CI đỏ&quot;.&#xa;&#xa;Ở MÁY LOCAL (workspace bật)&#xa;      go.work gộp chung module graph của cả 12 module,&#xa;      rồi ghi hash vào go.work.sum.&#xa;      →  go.sum của một module thiếu hash VẪN build trót lọt.&#xa;         Khuyết điểm bị che mất.&#xa;&#xa;TRONG CONTAINER (GOWORK=off)&#xa;      Go chỉ đọc go.mod + go.sum RIÊNG của module đó,&#xa;      cộng go.mod của api/pkg qua replace.&#xa;      →  thiếu một hash là VỠ:  missing go.sum entry&#xa;&#xa;CÁCH THỰC HIỆN:&#xa;      · Dockerfile đặt   ENV GOWORK=off&#xa;      · .dockerignore chặn go.work + go.work.sum khỏi build context&#xa;&#xa;CHỐT CHẶN:&#xa;      make verify-modules    build từng module với GOWORK=off, y hệt CI&#xa;      make tidy-modules      go mod tidy từng module, KHÔNG qua workspace&#xa;                             (dùng thay cho go work sync)" style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="1248" y="1947.1200000000003" width="1094" height="341.12" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P2c" value=".dockerignore — vì context giờ là cả repo" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DFE5E8;strokeColor=#16212B;strokeWidth=2;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="2302.2400000000002" width="2320" height="164.72000000000003" as="geometry"/>
+        </mxCell>
+        <mxCell id="P2cd" value="Dời context về gốc repo có cái giá của nó: mỗi lần build, Docker/Podman phải nuốt trọn mọi thứ ở gốc. Không lọc thì mất ~281MB rác mỗi lần.&#xa;&#xa;      docs/  162MB (sách PDF)   ·   server, server_auth, server_matching  ~119MB (binary cũ)   ·   *.exe, *_bin&#xa;      go.work + go.work.sum  →  chặn ở đây là lớp phòng thủ thứ hai cho luật GOWORK=off&#xa;      .env, *.tfstate, *.tfvars, *.pem  →  TUYỆT ĐỐI không để lọt vào image layer&#xa;&#xa;Lưu ý mẫu: /docs/ có dấu gạch chéo đầu = CHỈ thư mục docs ở GỐC repo. Không đụng tới gateway_service/docs (package swagger được Go import thật)." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="58" y="2336.2400000000002" width="2284" height="116.72000000000001" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="A2" value="Đã biết phải đưa gì vào container. Nhưng container được dựng từ LAYER.&#10;Muốn hiểu build thì phải hiểu layer trước." style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#0E7480;strokeWidth=4;endArrow=block;endSize=8;fontFamily=Verdana;fontSize=13;fontStyle=1;verticalAlign=bottom;" parent="1" source="P2c" target="H3" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="H3" value="PHẦN III  —  LAYER LÀ GÌ" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#16212B;strokeColor=none;fontColor=#FFFFFF;fontFamily=Verdana;fontSize=17;fontStyle=1;align=left;spacing=18;" parent="1" vertex="1">
+          <mxGeometry x="40" y="2550.2400000000007" width="2320" height="56" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P3warn" value="HIỂU LẦM PHỔ BIẾN:  tưởng mỗi layer là một bản sao đầy đủ của hệ thống file.   KHÔNG PHẢI." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F2DED8;strokeColor=#A63A22;strokeWidth=3;fontFamily=Verdana;fontSize=15;align=left;verticalAlign=middle;spacing=16;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="2622.2400000000007" width="2320" height="56" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P3a" value="ĐỊNH NGHĨA" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4E7EA;strokeColor=#0E7480;strokeWidth=3;fontFamily=Verdana;fontSize=14;align=left;verticalAlign=top;spacing=14;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="2698.2400000000007" width="1130" height="196.64000000000001" as="geometry"/>
+        </mxCell>
+        <mxCell id="P3ad" value="Layer là một BẢN GHI THAY ĐỔI (diff) so với layer nằm ngay dưới nó,&#xa;được đóng gói thành một file tar.&#xa;&#xa;Nó chỉ chứa:&#xa;      · file MỚI THÊM&#xa;      · file BỊ SỬA (chép nguyên bản mới vào)&#xa;      · dấu hiệu file BỊ XOÁ&#xa;&#xa;File nào không đụng tới thì KHÔNG nằm trong layer đó." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="58" y="2734.2400000000007" width="1094" height="146.64000000000001" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P3b" value="VÍ VON CHO DỄ HÌNH DUNG" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FAFBFB;strokeColor=#9DACB6;dashed=1;fontFamily=Verdana;fontSize=14;align=left;verticalAlign=top;spacing=14;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="1230" y="2698.2400000000007" width="1130" height="196.64000000000001" as="geometry"/>
+        </mxCell>
+        <mxCell id="P3bd" value="Giống chồng GIẤY CAN (giấy trong suốt) đặt lên nhau.&#xa;&#xa;Mỗi tờ chỉ vẽ thêm phần của riêng nó, chỗ nào không vẽ thì để trong suốt.&#xa;&#xa;Nhìn từ TRÊN XUỐNG, mắt anh thấy hình hợp nhất của tất cả các tờ —&#xa;dù thật ra chẳng có tờ nào chứa hình đầy đủ cả.&#xa;&#xa;Cái &quot;hình hợp nhất&quot; đó chính là merged view, và nó KHÔNG tốn thêm&#xa;dung lượng — chỉ là một góc nhìn." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="1248" y="2734.2400000000007" width="1094" height="146.64000000000001" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P3hdr" value="MỖI LAYER THỰC SỰ CHỨA GÌ  —  lấy đúng stage 2 (runtime) của dự án" style="text;html=1;fontSize=15;fontStyle=1;align=left;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="40" y="2894.8800000000006" width="900" height="32.400000000000006" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P3l3" value="LAYER 3   ←   COPY --from=builder /out/user_service_bin ." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4E7EA;strokeColor=#0E7480;strokeWidth=2;fontFamily=Verdana;fontSize=12;align=left;verticalAlign=top;spacing=10;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="2930.8800000000006" width="1130" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="P3l3d" value="+ /app/user_service_bin&#xa;&#xa;ĐÚNG MỘT FILE. Khoảng 25 MB.&#xa;Không có /bin, không có /etc — vì layer này không đụng tới chúng." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Courier New;" parent="1" vertex="1">
+          <mxGeometry x="58" y="2960.8800000000006" width="1094" height="74" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P3l2" value="LAYER 2   ←   RUN apk --no-cache add ca-certificates tzdata" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DFE5E8;strokeColor=#16212B;strokeWidth=2;fontFamily=Verdana;fontSize=12;align=left;verticalAlign=top;spacing=10;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="3312.8800000000006" width="1130" height="130.8" as="geometry"/>
+        </mxCell>
+        <mxCell id="P3l2d" value="+ /usr/share/ca-certificates/...&#xa;+ /usr/share/zoneinfo/...&#xa;~ /lib/apk/db/installed          (file BỊ SỬA → chép nguyên bản mới vào đây)&#xa;&#xa;Chỉ file mới và file sửa. Vài MB." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Courier New;" parent="1" vertex="1">
+          <mxGeometry x="58" y="3342.8800000000006" width="1094" height="86.80000000000001" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P3l1" value="LAYER 1   ←   FROM docker.io/library/alpine:3.24" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DFE5E8;strokeColor=#16212B;strokeWidth=2;fontFamily=Verdana;fontSize=12;align=left;verticalAlign=top;spacing=10;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="3446.8800000000006" width="1130" height="130.8" as="geometry"/>
+        </mxCell>
+        <mxCell id="P3l1d" value="+ /bin/sh, /bin/busybox&#xa;+ /etc/passwd, /etc/apk/...&#xa;+ /usr/lib/, /lib/ld-musl-x86_64.so.1&#xa;&#xa;Layer đáy nên nó chứa TOÀN BỘ alpine tối giản. Khoảng 8 MB." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Courier New;" parent="1" vertex="1">
+          <mxGeometry x="58" y="3476.8800000000006" width="1094" height="86.80000000000001" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P3merged" value="CONTAINER NHÌN THẤY  (merged view)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4E7EA;strokeColor=#3F6B3A;strokeWidth=3;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="1230" y="2930.8800000000006" width="1130" height="382" as="geometry"/>
+        </mxCell>
+        <mxCell id="P3mergedd" value="/&#xa;├── app/&#xa;│   └── user_service_bin            ←  layer 3&#xa;├── bin/&#xa;│   ├── sh                          ←  layer 1&#xa;│   └── busybox                     ←  layer 1&#xa;├── etc/&#xa;│   ├── passwd                      ←  layer 1&#xa;│   └── apk/                        ←  layer 1&#xa;├── lib/&#xa;│   ├── ld-musl-x86_64.so.1         ←  layer 1&#xa;│   └── apk/db/installed            ←  layer 2  (đè bản của layer 1)&#xa;└── usr/share/&#xa;    ├── ca-certificates/            ←  layer 2&#xa;    └── zoneinfo/                   ←  layer 2&#xa;&#xa;Container tưởng đây là một hệ thống file bình thường.&#xa;Nó KHÔNG biết có layer nào cả.&#xa;&#xa;Chú ý dòng /lib/apk/db/installed: bản của layer 1 VẪN CÒN NGUYÊN bên dưới,&#xa;chỉ là không ai thấy nữa. Cơ chế ở PHẦN IV." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Courier New;" parent="1" vertex="1">
+          <mxGeometry x="1248" y="2962.8800000000006" width="1094" height="336" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P3diff" value="diffID  —  CĂN CƯỚC CỦA LAYER" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4E7EA;strokeColor=#0E7480;strokeWidth=3;fontFamily=Verdana;fontSize=14;align=left;verticalAlign=top;spacing=14;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="3588.8800000000006" width="1130" height="241.52" as="geometry"/>
+        </mxCell>
+        <mxCell id="P3diffd" value="Mỗi layer có một diffID  =  sha256 của chính file tar (chưa nén) chứa nội dung nó.&#xa;&#xa;Vì thế:   nội dung giống nhau  →  diffID giống nhau  →  hệ thống biết CHẮC hai layer là MỘT.&#xa;&#xa;Đây là nền tảng của ba thứ:&#xa;      · cache  (PHẦN VI)&#xa;      · chia sẻ layer giữa nhiều image&#xa;      · pull chỉ tải phần còn thiếu&#xa;&#xa;VÍ DỤ THỰC TẾ CỦA DỰ ÁN:&#xa;6 service đều FROM alpine:3.24  →  cả 6 image DÙNG CHUNG một layer đáy trên đĩa.&#xa;6 image × 25MB  KHÔNG  tốn 150MB, vì phần alpine 8MB chỉ nằm MỘT bản duy nhất." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="58" y="3624.8800000000006" width="1094" height="191.52" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P3imm" value="LAYER LÀ BẤT BIẾN  —  tính chất quan trọng nhất" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4E7EA;strokeColor=#0E7480;strokeWidth=3;fontFamily=Verdana;fontSize=14;align=left;verticalAlign=top;spacing=14;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="1230" y="3588.8800000000006" width="1130" height="241.52" as="geometry"/>
+        </mxCell>
+        <mxCell id="P3immd" value="Layer đã tạo thì KHÔNG BAO GIỜ sửa được nữa.&#xa;Muốn đổi gì thì chỉ có một cách: chồng thêm layer mới lên trên.&#xa;&#xa;Hai hệ quả đi rất xa:&#xa;&#xa;      →  Đây chính là lý do CACHE hoạt động được.&#xa;         Layer bất biến nghĩa là kết quả cũ luôn dùng lại được (PHẦN VI).&#xa;&#xa;      →  Và cũng là lý do XOÁ FILE ở layer sau KHÔNG làm image nhỏ đi.&#xa;         Không xoá được thứ nằm trong layer bất biến bên dưới (PHẦN IV).&#xa;&#xa;Hai hệ quả này nghe trái ngược nhau nhưng cùng xuất phát từ một tính chất." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="1248" y="3624.8800000000006" width="1094" height="191.52" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="A3" value="Layer chỉ là các thư mục rời rạc. Cái GHÉP chúng lại thành một hệ thống file&#10;cho container nhìn thấy — đó là OverlayFS." style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#0E7480;strokeWidth=4;endArrow=block;endSize=8;fontFamily=Verdana;fontSize=13;fontStyle=1;verticalAlign=bottom;" parent="1" source="P3diff" target="H4" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="H4" value="PHẦN IV  —  OVERLAYFS: CÁI GHÉP CÁC LAYER LẠI THÀNH MỘT" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#16212B;strokeColor=none;fontColor=#FFFFFF;fontFamily=Verdana;fontSize=17;fontStyle=1;align=left;spacing=18;" parent="1" vertex="1">
+          <mxGeometry x="40" y="3888.8800000000006" width="2320" height="56" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P4intro" value="OverlayFS là một filesystem của NHÂN LINUX. Nó nhận nhiều thư mục, trình bày ra thành MỘT thư mục duy nhất." style="text;html=1;fontSize=14;align=left;fontColor=#5A6B77;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="40" y="3958.8800000000006" width="1600" height="31.040000000000003" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P4a" value="BỐN THÀNH PHẦN" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DFE5E8;strokeColor=#16212B;strokeWidth=2;fontFamily=Verdana;fontSize=14;align=left;verticalAlign=top;spacing=14;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="3994.8800000000006" width="1130" height="271.44000000000005" as="geometry"/>
+        </mxCell>
+        <mxCell id="P4ad" value="merged        Thứ container NHÌN THẤY.&#xa;              Không tốn dung lượng. Chỉ là góc nhìn do nhân dựng ra.&#xa;&#xa;upperdir      MỘT thư mục, GHI ĐƯỢC.&#xa;              Mọi thay đổi trong lúc container chạy đều rơi vào đây.&#xa;              Khi BUILD, chính đây là chỗ layer mới hình thành&#xa;              trước khi được commit.&#xa;&#xa;lowerdir      NHIỀU thư mục, CHỈ ĐỌC, CÓ THỨ TỰ.&#xa;              Chính là các layer của image, xếp chồng.&#xa;              Viết cách nhau bằng dấu hai chấm, BÊN TRÁI = TRÊN CÙNG.&#xa;&#xa;workdir       Chỗ nháp của nhân. Phải cùng phân vùng với upperdir&#xa;              để nhân thao tác nguyên tử. Anh không bao giờ đụng tới." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="58" y="4030.8800000000006" width="1094" height="221.44000000000003" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P4b" value="LỆNH MOUNT THỰC TẾ" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DFE5E8;strokeColor=#16212B;strokeWidth=2;fontFamily=Verdana;fontSize=14;align=left;verticalAlign=top;spacing=14;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="1230" y="3994.8800000000006" width="1130" height="286.4" as="geometry"/>
+        </mxCell>
+        <mxCell id="P4bd" value="mount -t overlay overlay \&#xa;  -o lowerdir=/l3:/l2:/l1,upperdir=/rw,workdir=/work \&#xa;  /merged&#xa;&#xa;containers/storage sinh ra đúng lệnh kiểu này cho mỗi working container&#xa;lúc build. Không có phép màu nào cả — chỉ là một mount của nhân Linux.&#xa;&#xa;&#xa;VÌ SAO lowerdir CHỈ ĐỌC LẠI QUAN TRỌNG&#xa;&#xa;Chính vì nó chỉ đọc mà nảy sinh hai cơ chế đặc biệt:&#xa;      COPY-UP    khi cần GHI&#xa;      WHITEOUT   khi cần XOÁ&#xa;&#xa;Hiểu hai cái này là hiểu hết OverlayFS." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Courier New;" parent="1" vertex="1">
+          <mxGeometry x="1248" y="4030.8800000000006" width="1094" height="236.4" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P4hdr" value="BA THAO TÁC  —  nhân xử lý thế nào" style="text;html=1;fontSize=15;fontStyle=1;align=left;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="40" y="4281.280000000001" width="700" height="32.400000000000006" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P4r" value="1.   ĐỌC một file" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DFE5E8;strokeColor=#16212B;strokeWidth=2;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="4317.280000000001" width="740" height="256" as="geometry"/>
+        </mxCell>
+        <mxCell id="P4rd" value="Nhân tìm theo đúng thứ tự:&#xa;&#xa;      1.  upperdir&#xa;      2.  lowerdir trên cùng&#xa;      3.  lowerdir kế tiếp&#xa;      ...&#xa;&#xa;Gặp cái nào TRƯỚC thì trả về cái đó,&#xa;dừng tìm luôn.&#xa;&#xa;→  Đây là lý do layer 2 &quot;đè&quot; được file của&#xa;   layer 1: file cũ vẫn còn nguyên bên dưới,&#xa;   chỉ là không ai thấy nữa." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="58" y="4351.280000000001" width="704" height="208" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P4w" value="2.   GHI vào file đang ở lowerdir   →   COPY-UP" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F2DED8;strokeColor=#A63A22;strokeWidth=3;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="830" y="4317.280000000001" width="740" height="256" as="geometry"/>
+        </mxCell>
+        <mxCell id="P4wd" value="lowerdir chỉ đọc  →  không sửa tại chỗ được.&#xa;&#xa;Nhân buộc phải:&#xa;      1.  CHÉP NGUYÊN CẢ FILE lên upperdir&#xa;      2.  rồi mới sửa bản chép đó&#xa;&#xa;HỆ QUẢ ĐẮT GIÁ:&#xa;      Sửa 1 byte của file 1 GB&#xa;      →  tốn nguyên 1 GB trong layer mới.&#xa;&#xa;→  Vì thế nên gộp mọi thao tác trên file lớn&#xa;   vào CÙNG một lệnh RUN, đừng rải ra&#xa;   nhiều lệnh." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="848" y="4351.280000000001" width="704" height="208" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P4d" value="3.   XOÁ file đang ở lowerdir   →   WHITEOUT" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F2DED8;strokeColor=#A63A22;strokeWidth=3;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="1620" y="4317.280000000001" width="740" height="269.44000000000005" as="geometry"/>
+        </mxCell>
+        <mxCell id="P4dd" value="Không xoá thật được (lowerdir chỉ đọc).&#xa;&#xa;Nhân ghi một DẤU CHE ở upperdir:&#xa;      OverlayFS dùng character device 0:0&#xa;      (trong tar của image là file .wh.&lt;tên&gt;)&#xa;&#xa;Khi đọc, gặp dấu che thì nhân coi như file đó&#xa;KHÔNG TỒN TẠI.&#xa;&#xa;NHƯNG:&#xa;      File gốc VẪN NẰM NGUYÊN ở layer dưới&#xa;      và VẪN TỐN DUNG LƯỢNG.&#xa;&#xa;→  Dẫn thẳng tới bài học bên dưới." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="1638" y="4351.280000000001" width="704" height="221.44000000000003" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P4lhdr" value="BÀI HỌC THỰC TẾ  —  vì sao Dockerfile của dự án viết   apk --no-cache" style="text;html=1;fontSize=15;fontStyle=1;align=left;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="40" y="4589.280000000001" width="1000" height="32.400000000000006" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P4bad" value="SAI   —   image KHÔNG nhỏ đi" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F2DED8;strokeColor=#A63A22;strokeWidth=3;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="4625.280000000001" width="1130" height="216" as="geometry"/>
+        </mxCell>
+        <mxCell id="P4badd" value="RUN apk add ca-certificates tzdata&#xa;RUN rm -rf /var/cache/apk/*&#xa;&#xa;      Layer A:  thêm cache apk           (+ vài MB)&#xa;      Layer B:  chỉ thêm DẤU CHE         (+ vài byte)&#xa;&#xa;File cache VẪN NẰM NGUYÊN trong layer A.&#xa;Container không thấy nó, nhưng khi pull/push anh vẫn phải tải nguyên layer A.&#xa;&#xa;Image không nhỏ đi một byte nào, mà còn phình thêm vì có thêm một layer." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Courier New;" parent="1" vertex="1">
+          <mxGeometry x="58" y="4659.280000000001" width="1094" height="168" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P4good" value="ĐÚNG   —   cache không bao giờ được tạo ra" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4E7EA;strokeColor=#3F6B3A;strokeWidth=3;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="1230" y="4625.280000000001" width="1130" height="224.56" as="geometry"/>
+        </mxCell>
+        <mxCell id="P4goodd" value="RUN apk --no-cache add ca-certificates tzdata&#xa;&#xa;Chỉ MỘT layer, và trong đó không hề có file cache.&#xa;&#xa;&#xa;NGUYÊN TẮC CHUNG:&#xa;&#xa;      Dọn dẹp phải nằm TRONG CÙNG lệnh RUN đã tạo ra rác.&#xa;      Dọn ở lệnh RUN sau là VÔ ÍCH về mặt dung lượng.&#xa;&#xa;Áp dụng cho mọi thứ: apt cache, pip cache, file tạm khi biên dịch..." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Courier New;" parent="1" vertex="1">
+          <mxGeometry x="1248" y="4659.280000000001" width="1094" height="176.56" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P4tie" value="NỐI VỚI VIỆC BUILD  —  hoá ra &quot;tạo working container&quot; chỉ là dựng một overlay mount" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4E7EA;strokeColor=#0E7480;strokeWidth=3;fontFamily=Verdana;fontSize=14;align=left;verticalAlign=top;spacing=14;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="4857.280000000001" width="2320" height="176.24" as="geometry"/>
+        </mxCell>
+        <mxCell id="P4tied" value="Các layer của base image   →   lowerdir&#xa;Một thư mục RỖNG mới        →   upperdir&#xa;&#xa;Rồi mỗi lệnh RUN / COPY ghi vào upperdir. Hết một chỉ thị, Buildah &quot;commit&quot;  =  đóng gói upperdir thành tar  →  ra layer mới.&#xa;Layer đó NHẬP VÀO lowerdir cho chỉ thị kế tiếp, và một upperdir rỗng khác được tạo ra. Cứ thế lặp lại cho tới chỉ thị cuối cùng.&#xa;&#xa;Đó là toàn bộ cơ chế. Phần V sẽ đặt nó vào bối cảnh đầy đủ của một lần podman build." style="text;html=1;fontSize=12;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="58" y="4893.280000000001" width="2284" height="126.24000000000001" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="A4" value="Đã hiểu layer và cách chúng được ghép. Giờ xem toàn cảnh một lần build." style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#0E7480;strokeWidth=4;endArrow=block;endSize=8;fontFamily=Verdana;fontSize=13;fontStyle=1;verticalAlign=bottom;" parent="1" source="P4tie" target="H5" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="H5" value="PHẦN V  —  PODMAN BUILD: SÁU GIAI ĐOẠN" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#16212B;strokeColor=none;fontColor=#FFFFFF;fontFamily=Verdana;fontSize=17;fontStyle=1;align=left;spacing=18;" parent="1" vertex="1">
+          <mxGeometry x="40" y="5109.280000000001" width="2320" height="56" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P5key" value="ĐIỀU BẤT NGỜ NHẤT:  Podman KHÔNG tự build image." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4E7EA;strokeColor=#0E7480;strokeWidth=3;fontFamily=Verdana;fontSize=14;align=left;verticalAlign=top;spacing=14;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="5181.280000000001" width="2320" height="211.60000000000002" as="geometry"/>
+        </mxCell>
+        <mxCell id="P5keyd" value="Tài liệu chính thức nói rõ: podman build dùng code lấy từ dự án BUILDAH, và code Buildah đó tạo ra các &quot;Buildah container&quot; cho những lệnh RUN.&#xa;Nói cách khác, podman build chỉ là lớp vỏ CLI. Bên dưới là ba thư viện tách bạch:&#xa;&#xa;      buildah (imagebuildah)      Bộ điều phối build: đọc Containerfile, chạy từng chỉ thị, commit layer&#xa;                                  executor.go — điều phối nhiều stage   ·   stage_executor.go — chạy MỘT stage (Prepare/Execute/Run/Copy/Commit)&#xa;      containers/image            Kéo, đẩy, kiểm tra, ký image. Nói chuyện với registry. Xử lý manifest, config JSON, layer blob&#xa;      containers/storage          Lưu layer hệ thống file, image, container. Điều khiển driver overlay. ĐÂY LÀ NƠI LAYER CACHE THỰC SỰ NẰM&#xa;&#xa;KHÁC DOCKER CỔ ĐIỂN:  không gửi build context tới daemon qua socket. Podman chạy build NGAY TRONG TIẾN TRÌNH CỦA CHÍNH NÓ, với quyền của&#xa;user đang gọi  →  rootless được, không cần daemon chạy nền." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="58" y="5217.280000000001" width="2284" height="161.60000000000002" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P5g0" value="GIAI ĐOẠN 0   —   PHÂN TÍCH CÚ PHÁP" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DFE5E8;strokeColor=#16212B;strokeWidth=2;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="5392.880000000001" width="740" height="206" as="geometry"/>
+        </mxCell>
+        <mxCell id="P5g0d" value="Containerfile được parse thành cây chỉ thị.&#xa;&#xa;Song song đó, .containerignore (hoặc&#xa;.dockerignore) được đọc để quyết định&#xa;FILE NÀO THUỘC BUILD CONTEXT.&#xa;&#xa;→  Đây chính là chỗ .dockerignore của dự án&#xa;   phát huy tác dụng: loại 281MB rác TRƯỚC KHI&#xa;   bất kỳ byte nào được đọc tới." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="58" y="5426.880000000001" width="704" height="158" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P5g1" value="GIAI ĐOẠN 1   —   LẬP KẾ HOẠCH STAGE" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DFE5E8;strokeColor=#16212B;strokeWidth=2;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="830" y="5392.880000000001" width="740" height="209.60000000000002" as="geometry"/>
+        </mxCell>
+        <mxCell id="P5g1d" value="Containerfile bị cắt thành các stage theo mỗi&#xa;lệnh FROM. Dockerfile của dự án có 2 stage:&#xa;builder và runtime.&#xa;&#xa;Buildah dựng đồ thị phụ thuộc giữa các stage —&#xa;COPY --from=builder tạo một cạnh từ stage&#xa;runtime về stage builder.&#xa;&#xa;--skip-unused-stages (BẬT MẶC ĐỊNH) bỏ qua&#xa;những stage mà stage đích không cần tới." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="848" y="5426.880000000001" width="704" height="161.60000000000002" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P5g2" value="GIAI ĐOẠN 2   —   GIẢI TÊN VÀ KÉO BASE IMAGE" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4E7EA;strokeColor=#0E7480;strokeWidth=2;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="1620" y="5392.880000000001" width="740" height="254.48000000000002" as="geometry"/>
+        </mxCell>
+        <mxCell id="P5g2d" value="FROM docker.io/library/golang:1.26-alpine&#xa;được giải tên qua registries.conf.&#xa;&#xa;LƯU Ý RIÊNG CỦA PODMAN:&#xa;Podman xử lý &quot;short name&quot; khác Docker. Gõ&#xa;golang:1.26-alpine trơn, Podman sẽ HỎI anh chọn&#xa;registry nào (hoặc lỗi nếu chạy không tương tác).&#xa;→  Đó là lý do Dockerfile ghi ĐẦY ĐỦ&#xa;   docker.io/library/... để chạy được cả trên&#xa;   Docker lẫn Podman.&#xa;&#xa;Chưa có trong local storage thì containers/image&#xa;kéo manifest + config JSON + layer blob về." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="1638" y="5426.880000000001" width="704" height="206.48000000000002" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P5g3" value="GIAI ĐOẠN 3   —   TẠO WORKING CONTAINER" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DFE5E8;strokeColor=#16212B;strokeWidth=2;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="5647.360000000001" width="740" height="224.56" as="geometry"/>
+        </mxCell>
+        <mxCell id="P5g3d" value="Buildah tạo working container từ base image&#xa;(đúng như lệnh buildah from).&#xa;&#xa;Thực chất chỉ là dựng một overlay mount:&#xa;      base image     →  lowerdir&#xa;      thư mục rỗng   →  upperdir&#xa;&#xa;Điểm mount hợp nhất (merged) chính là nơi các&#xa;lệnh sẽ thao tác.&#xa;&#xa;→  Toàn bộ cơ chế đã giải thích ở PHẦN IV." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="58" y="5681.360000000001" width="704" height="176.56" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P5g4" value="GIAI ĐOẠN 4   —   VÒNG LẶP CHỈ THỊ" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4E7EA;strokeColor=#0E7480;strokeWidth=3;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="830" y="5647.360000000001" width="740" height="239.52" as="geometry"/>
+        </mxCell>
+        <mxCell id="P5g4d" value="Phần cốt lõi. Mỗi chỉ thị trong stage được xử lý&#xa;TUẦN TỰ.&#xa;&#xa;Với mỗi chỉ thị:&#xa;      createdBy  →  digest nội dung (COPY/ADD)&#xa;      →  generateCacheKey  →  tra cache&#xa;      →  TRÚNG: bỏ qua  |  TRƯỢT: thực thi thật&#xa;      →  commit layer trung gian (nếu --layers)&#xa;&#xa;RUN chạy qua OCI runtime (crun / runc).&#xa;&#xa;→  PHẦN VI mổ xẻ chi tiết." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="848" y="5681.360000000001" width="704" height="191.52" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P5g5" value="GIAI ĐOẠN 5   —   COMMIT IMAGE CUỐI" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DFE5E8;strokeColor=#16212B;strokeWidth=2;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="1620" y="5647.360000000001" width="740" height="239.52" as="geometry"/>
+        </mxCell>
+        <mxCell id="P5g5d" value="commit ghi image mới từ layer đọc-ghi của&#xa;container cộng với các layer của base image.&#xa;&#xa;METADATA — ENV, CMD, EXPOSE, WORKDIR, LABEL&#xa;→  ghi vào CONFIG JSON của image,&#xa;   KHÔNG tạo layer hệ thống file.&#xa;→  Đây là lý do các lệnh đó gần như MIỄN PHÍ&#xa;   về dung lượng.&#xa;&#xa;Với multi-stage: chỉ image của stage CUỐI được&#xa;gắn tag. Các stage trung gian bị bỏ,&#xa;trừ khi dùng --save-stages." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="1638" y="5681.360000000001" width="704" height="191.52" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P5e01" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#16212B;strokeWidth=2;endArrow=block;" parent="1" source="P5g0" target="P5g1" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="P5e12" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#16212B;strokeWidth=2;endArrow=block;" parent="1" source="P5g1" target="P5g2" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="P5e23" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#16212B;strokeWidth=2;endArrow=block;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" parent="1" source="P5g2" target="P5g5" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="P5e34" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#16212B;strokeWidth=2;endArrow=block;" parent="1" source="P5g3" target="P5g4" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="P5e45" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#0E7480;strokeWidth=3;endArrow=block;" parent="1" source="P5g4" target="P5g5" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="A5" value="Giai đoạn 4 là nơi cache xảy ra. Mổ xẻ nó." style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#0E7480;strokeWidth=4;endArrow=block;endSize=8;fontFamily=Verdana;fontSize=13;fontStyle=1;verticalAlign=bottom;" parent="1" source="P5g3" target="H6" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="H6" value="PHẦN VI  —  VÒNG LẶP CHỈ THỊ VÀ VÌ SAO CACHE ĐƯỢC" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#16212B;strokeColor=none;fontColor=#FFFFFF;fontFamily=Verdana;fontSize=17;fontStyle=1;align=left;spacing=18;" parent="1" vertex="1">
+          <mxGeometry x="40" y="5927.360000000001" width="2320" height="56" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P6s1" value="1.   Dựng chuỗi   createdBy" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DFE5E8;strokeColor=#16212B;strokeWidth=2;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="720" y="6007.360000000001" width="960" height="96" as="geometry"/>
+        </mxCell>
+        <mxCell id="P6s1d" value="Biểu diễn chuẩn hoá của chỉ thị.    Ví dụ:   /bin/sh -c go mod download" style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="738" y="6041.360000000001" width="924" height="48" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P6s2" value="2.   Nếu là COPY / ADD:  băm nội dung" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DFE5E8;strokeColor=#16212B;strokeWidth=2;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="720" y="6127.360000000001" width="960" height="106" as="geometry"/>
+        </mxCell>
+        <mxCell id="P6s2d" value="ContentDigester tính digest của ĐÚNG những file được copy.&#xa;→  Sửa 1 byte trong source là digest đổi." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="738" y="6161.360000000001" width="924" height="58" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P6s3" value="3.   generateCacheKey" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4E7EA;strokeColor=#0E7480;strokeWidth=3;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="720" y="6257.360000000001" width="960" height="106" as="geometry"/>
+        </mxCell>
+        <mxCell id="P6s3d" value="Lấy history + diffIDs của IMAGE CHA, kết hợp với createdBy (bước 1) và digest (bước 2).&#xa;→  ra cache key.        Hàm thật trong mã nguồn Buildah:  generateCacheKey  →  getCreatedBy" style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="738" y="6291.360000000001" width="924" height="58" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P6s4" value="4.   Tra cache&#xa;Tìm image trung gian có history khớp?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#D4E7EA;strokeColor=#0E7480;strokeWidth=3;fontFamily=Verdana;fontSize=13;align=center;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry x="880" y="6387.360000000001" width="640" height="150" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P6s5a" value="5a.   TRÚNG   —   bỏ qua thực thi" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4E7EA;strokeColor=#3F6B3A;strokeWidth=3;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="200" y="6587.360000000001" width="900" height="116" as="geometry"/>
+        </mxCell>
+        <mxCell id="P6s5ad" value="Trỏ working container sang image đã cache.&#xa;Không chạy gì cả. Không tốn CPU, không tốn mạng." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="218" y="6621.360000000001" width="864" height="68" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P6s5b" value="5b.   TRƯỢT   —   thực thi thật" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F2DED8;strokeColor=#A63A22;strokeWidth=3;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="1300" y="6587.360000000001" width="900" height="116" as="geometry"/>
+        </mxCell>
+        <mxCell id="P6s5bd" value="RUN    →  chạy qua OCI runtime (crun / runc)&#xa;COPY   →  builder.Add()" style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="1318" y="6621.360000000001" width="864" height="68" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P6s6" value="6.   Commit layer trung gian   (nếu --layers)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DFE5E8;strokeColor=#16212B;strokeWidth=3;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="720" y="6747.360000000001" width="960" height="96" as="geometry"/>
+        </mxCell>
+        <mxCell id="P6s6d" value="Image này trở thành CHA của chỉ thị kế tiếp.   →   quay lại bước 1." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="738" y="6781.360000000001" width="924" height="48" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P6e12" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#16212B;strokeWidth=2;endArrow=block;" parent="1" source="P6s1" target="P6s2" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="P6e23" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#16212B;strokeWidth=2;endArrow=block;" parent="1" source="P6s2" target="P6s3" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="P6e34" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#0E7480;strokeWidth=3;endArrow=block;" parent="1" source="P6s3" target="P6s4" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="P6e4a" value="TRÚNG" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#3F6B3A;strokeWidth=3;endArrow=block;fontFamily=Verdana;fontSize=12;fontStyle=1" parent="1" source="P6s4" target="P6s5a" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="P6e4b" value="TRƯỢT" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#A63A22;strokeWidth=3;endArrow=block;fontFamily=Verdana;fontSize=12;fontStyle=1" parent="1" source="P6s4" target="P6s5b" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="P6e5a6" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#16212B;strokeWidth=2;endArrow=block;" parent="1" source="P6s5a" target="P6s6" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="P6e5b6" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#16212B;strokeWidth=2;endArrow=block;" parent="1" source="P6s5b" target="P6s6" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P6why" value="VÌ SAO CACHE ĐƯỢC  —  ba tính chất cộng lại" style="text;html=1;fontSize=15;fontStyle=1;align=left;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="40" y="6867.360000000001" width="700" height="32.400000000000006" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P6w1" value="a.   Layer bất biến, định địa chỉ bằng nội dung" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FAFBFB;strokeColor=#16212B;strokeWidth=2;fontFamily=Verdana;fontSize=12;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="6903.360000000001" width="740" height="136" as="geometry"/>
+        </mxCell>
+        <mxCell id="P6w1d" value="Mỗi layer có một diffID — hash của chính nội dung nó.&#xa;Layer đã tạo thì không bao giờ đổi.&#xa;&#xa;(Đã giải thích ở PHẦN III)" style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="58" y="6937.360000000001" width="704" height="88" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P6w2" value="b.   Image = chuỗi layer có thứ tự + history" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FAFBFB;strokeColor=#16212B;strokeWidth=2;fontFamily=Verdana;fontSize=12;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="830" y="6903.360000000001" width="740" height="136" as="geometry"/>
+        </mxCell>
+        <mxCell id="P6w2d" value="History ghi createdBy của từng bước.&#xa;&#xa;Nên một image trung gian TỰ NÓ mang theo bằng chứng&#xa;đầy đủ về chuỗi chỉ thị đã tạo ra nó." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="848" y="6937.360000000001" width="704" height="88" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P6w3" value="c.   Chỉ thị là hàm thuần theo (cha + input)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FAFBFB;strokeColor=#16212B;strokeWidth=2;fontFamily=Verdana;fontSize=12;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="1620" y="6903.360000000001" width="740" height="136" as="geometry"/>
+        </mxCell>
+        <mxCell id="P6w3d" value="Cùng image cha, cùng chỉ thị, cùng nội dung file&#xa;→  CHẮC CHẮN ra cùng kết quả.&#xa;&#xa;Thế thì khỏi chạy — cứ lấy kết quả cũ." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="1638" y="6937.360000000001" width="704" height="88" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P6casc" value="ĐỔ DÂY CHUYỀN  —  tính chất quan trọng nhất về mặt thực hành" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F2DED8;strokeColor=#A63A22;strokeWidth=3;fontFamily=Verdana;fontSize=14;align=left;verticalAlign=top;spacing=14;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="7063.360000000001" width="2320" height="346.24" as="geometry"/>
+        </mxCell>
+        <mxCell id="P6cascd" value="MỘT CHỈ THỊ TRƯỢT CACHE THÌ MỌI CHỈ THỊ SAU NÓ ĐỀU TRƯỢT THEO.&#xa;&#xa;Lý do nằm ngay ở bước 3: cache key của chỉ thị N chứa history của image cha, tức là kết quả của chỉ thị N−1.&#xa;Cha đổi thì key đổi, dù bản thân chỉ thị N không đổi một ký tự nào.&#xa;&#xa;→  ĐÂY LÀ TOÀN BỘ LÝ DO Dockerfile của dự án TÁCH LÀM HAI LỚP COPY:&#xa;&#xa;      COPY api/go.mod api/go.sum ./api/                              ┐&#xa;      COPY pkg/go.mod pkg/go.sum ./pkg/                              │  LỚP 1 — hiếm đổi&#xa;      COPY user_service/go.mod user_service/go.sum ./user_service/   │&#xa;      RUN ... go mod download                                        ┘  đắt, nhưng được cache&#xa;&#xa;      COPY api/ ./api/                                               ┐&#xa;      COPY pkg/ ./pkg/                                               │  LỚP 2 — đổi liên tục&#xa;      COPY user_service/ ./user_service/                             │&#xa;      RUN ... go build ...                                           ┘&#xa;&#xa;Sửa một dòng .go: digest ở LỚP 2 đổi  →  go build chạy lại. Nhưng go.mod/go.sum không đổi  →  go mod download VẪN TRÚNG CACHE.&#xa;Nếu gộp thành một COPY . . duy nhất thì MỌI lần sửa code đều kéo theo tải lại sạch toàn bộ dependency." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="58" y="7099.360000000001" width="2284" height="296.24" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P6cfg" value="BẬT / TẮT CACHE" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DFE5E8;strokeColor=#16212B;strokeWidth=2;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="7409.6" width="1130" height="176" as="geometry"/>
+        </mxCell>
+        <mxCell id="P6cfgd" value="Mặc định của cờ --layers KHÁC NHAU giữa hai lệnh — chỗ này hay nhầm:&#xa;&#xa;      podman build      →   --layers = true&#xa;      buildah bud       →   --layers = false&#xa;&#xa;Ghi đè bằng biến môi trường:  BUILDAH_LAYERS&#xa;Tắt hẳn cache cho một lần build:  --no-cache" style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="58" y="7443.6" width="1094" height="128" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P6dist" value="CACHE PHÂN TÁN QUA REGISTRY" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DFE5E8;strokeColor=#16212B;strokeWidth=2;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="1230" y="7409.6" width="1130" height="194.64000000000001" as="geometry"/>
+        </mxCell>
+        <mxCell id="P6distd" value="--cache-from / --cache-to cho phép chia sẻ cache giữa nhiều máy.&#xa;CẢ HAI BỊ BỎ QUA nếu không có --layers.&#xa;&#xa;Cách Buildah làm KHÁC Docker/BuildKit ở điểm căn bản:&#xa;Buildah KÉO THẲNG image trung gian từ remote registry, thay vì nhúng cache&#xa;vào trong image như BuildKit. Cách này giống kaniko, ưu điểm là không làm&#xa;phình image gốc.&#xa;&#xa;--cache-ttl=1h  bỏ qua cache trung gian cũ hơn một giờ." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="1248" y="7443.6" width="1094" height="146.64000000000001" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="A6" value="Nhưng còn một loại cache thứ hai, hoàn toàn khác — và rất hay bị lẫn." style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#0E7480;strokeWidth=4;endArrow=block;endSize=8;fontFamily=Verdana;fontSize=13;fontStyle=1;verticalAlign=bottom;" parent="1" source="P6cfg" target="H7" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="H7" value="PHẦN VII  —  HAI LOẠI CACHE, ĐỪNG LẪN" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#16212B;strokeColor=none;fontColor=#FFFFFF;fontFamily=Verdana;fontSize=17;fontStyle=1;align=left;spacing=18;" parent="1" vertex="1">
+          <mxGeometry x="40" y="7653.6" width="2320" height="56" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P7intro" value="Chúng BỔ SUNG cho nhau chứ không thay thế. Một cái bỏ qua hẳn cả chỉ thị; cái kia không bỏ qua được, chỉ làm chỉ thị chạy nhanh hơn." style="text;html=1;fontSize=14;align=left;fontColor=#5A6B77;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="40" y="7723.6" width="1800" height="31.040000000000003" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P7l" value="LAYER CACHE" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4E7EA;strokeColor=#0E7480;strokeWidth=3;fontFamily=Verdana;fontSize=15;align=left;verticalAlign=top;spacing=14;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="7759.6" width="1130" height="328" as="geometry"/>
+        </mxCell>
+        <mxCell id="P7ld" value="Nằm ở đâu&#xa;      containers/storage — cùng chỗ chứa image&#xa;&#xa;Có vào image không&#xa;      CÓ. Nó là layer thật, có diffID.&#xa;&#xa;Ảnh hưởng cache key&#xa;      CÓ. History của nó là đầu vào cho chỉ thị kế tiếp.&#xa;&#xa;--cache-to đẩy đi được&#xa;      CÓ. Buildah kéo image trung gian từ remote registry.&#xa;      Bị BỎ QUA nếu không có --layers.&#xa;&#xa;Tác dụng&#xa;      BỎ QUA HẲN việc thực thi chỉ thị." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="58" y="7795.6" width="1094" height="278" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P7m" value="CACHE MOUNT   ( --mount=type=cache )" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F2DED8;strokeColor=#A63A22;strokeWidth=3;fontFamily=Verdana;fontSize=15;align=left;verticalAlign=top;spacing=14;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="1230" y="7759.6" width="1130" height="328" as="geometry"/>
+        </mxCell>
+        <mxCell id="P7md" value="Nằm ở đâu&#xa;      Thư mục TRÊN HOST, NGOÀI image storage:&#xa;            $TMPDIR/buildah-cache&#xa;            (hoặc /var/tmp/buildah-cache nếu $TMPDIR trống)&#xa;            $TMPDIR/buildah-cache/&lt;id&gt;   khi dùng tuỳ chọn id=&#xa;      Buildah tạo cache cha RIÊNG cho từng user.&#xa;&#xa;Có vào image không&#xa;      KHÔNG BAO GIỜ. Gắn lúc RUN chạy, xong là tháo ra.&#xa;&#xa;Ảnh hưởng cache key      KHÔNG.&#xa;--cache-to đẩy đi được   KHÔNG. Nằm trong state cục bộ của máy build.&#xa;&#xa;Tác dụng&#xa;      Chỉ thị VẪN CHẠY, nhưng chạy nhanh hơn.&#xa;&#xa;Hỗ trợ từ  Buildah v1.29.0  (đi kèm Podman v4.4)" style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="1248" y="7795.6" width="1094" height="278" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P7two" value="HAI TARGET  =  HAI LOẠI CACHE KHÁC NHAU CỦA GO" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DFE5E8;strokeColor=#16212B;strokeWidth=2;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="8099.6" width="2320" height="181.68" as="geometry"/>
+        </mxCell>
+        <mxCell id="P7twod" value="RUN --mount=type=cache,target=/go/pkg/mod \&#xa;    --mount=type=cache,target=/root/.cache/go-build \&#xa;    go build -trimpath -ldflags=&quot;-s -w&quot; -o /out/user_service_bin ./cmd&#xa;&#xa;      /go/pkg/mod              GOMODCACHE     mã nguồn thư viện đã tải        →   tiết kiệm BĂNG THÔNG&#xa;      /root/.cache/go-build    GOCACHE        kết quả biên dịch từng package  →   tiết kiệm CPU&#xa;&#xa;Sửa một dòng .go là layer RUN bắt buộc chạy lại (layer cache trượt) — nhưng nhờ cache mount, Go thấy GOCACHE còn nguyên nên chỉ biên dịch lại đúng phần đổi." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Courier New;" parent="1" vertex="1">
+          <mxGeometry x="58" y="8135.6" width="2284" height="131.68" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P7trap" value="BẪY:  đừng ghi output vào BÊN TRONG thư mục cache mount" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F2DED8;strokeColor=#A63A22;strokeWidth=3;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="8281.28" width="1130" height="196" as="geometry"/>
+        </mxCell>
+        <mxCell id="P7trapd" value="Binary đi ra /out/ chứ không phải chỗ khác  —  CÓ CHỦ Ý.&#xa;&#xa;/out là thư mục THƯỜNG trong layer, nên stage 2 mới&#xa;COPY --from=builder /out/... được.&#xa;&#xa;Nếu lỡ ghi vào /go/pkg/mod:&#xa;      tháo mount xong là file BAY MẤT,&#xa;      mà lỗi lại nổ tận stage 2 dưới dạng &quot;not found&quot;&#xa;      →  rất khó lần ngược ra nguyên nhân." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="58" y="8315.28" width="1094" height="148" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P7ci" value="TRÊN CI THÌ CACHE MOUNT VÔ DỤNG" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FAFBFB;strokeColor=#16212B;strokeWidth=2;fontFamily=Verdana;fontSize=13;align=left;verticalAlign=top;spacing=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="1230" y="8281.28" width="1130" height="209.60000000000002" as="geometry"/>
+        </mxCell>
+        <mxCell id="P7cid" value="cache-to: type=gha KHÔNG xuất cache mount đi — nó nằm trong state cục bộ.&#xa;&#xa;GitHub Actions cấp runner MỚI TINH mỗi lần chạy&#xa;→  hai thư mục này LUÔN RỖNG.&#xa;   Không hại gì, nhưng cũng không giúp gì.&#xa;&#xa;Thứ tăng tốc CI là LAYER cache, nhờ layer go mod download đã tách riêng.&#xa;&#xa;Cache mount phát huy khi build LẶP LẠI trên cùng một máy:&#xa;máy anh chạy make docker-build, hoặc self-hosted runner." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="1248" y="8315.28" width="1094" height="161.60000000000002" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="A7" value="Ghép tất cả lại: đây là Dockerfile thật của dự án, từng dòng một." style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#0E7480;strokeWidth=4;endArrow=block;endSize=8;fontFamily=Verdana;fontSize=13;fontStyle=1;verticalAlign=bottom;" parent="1" source="P7trap" target="H8" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="H8" value="PHẦN VIII  —  DOCKERFILE THẬT CỦA DỰ ÁN, TỪNG DÒNG" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#16212B;strokeColor=none;fontColor=#FFFFFF;fontFamily=Verdana;fontSize=17;fontStyle=1;align=left;spacing=18;" parent="1" vertex="1">
+          <mxGeometry x="40" y="8545.280000000002" width="2320" height="56" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P8s1box" value="STAGE 1  —  builder" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#5A6B77;strokeWidth=3;dashed=1;fontFamily=Verdana;fontSize=15;fontStyle=1;verticalAlign=top;align=left;spacing=12;" parent="1" vertex="1">
+          <mxGeometry x="40" y="8621.280000000002" width="1130" height="920" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P8a1" value="FROM docker.io/library/golang:1.26-alpine AS builder" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4E7EA;strokeColor=#0E7480;strokeWidth=2;fontFamily=Courier New;fontSize=12;align=left;spacing=8;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry x="60" y="9541.280000000002" width="1090" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="P8a1n" value="Kéo base image + tạo working container.  Ghi ĐẦY ĐỦ registry để Podman không phải hỏi short-name." style="text;html=1;fontSize=10;align=left;fontColor=#5A6B77;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="60" y="9579.280000000002" width="1090" height="25.6" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P8a2" value="ENV GOWORK=off CGO_ENABLED=0 GOOS=linux GOARCH=amd64" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FAFBFB;strokeColor=#9DACB6;dashed=1;fontFamily=Courier New;fontSize=12;align=left;spacing=8;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry x="60" y="9609.280000000002" width="1090" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="P8a2n" value="METADATA — không tạo layer file.&#xa;   GOWORK=off      luật của PHẦN II. Mỗi module tự đứng bằng go.mod + go.sum riêng.&#xa;   CGO_ENABLED=0   binary TĨNH. Alpine dùng musl chứ không phải glibc — tắt cgo thì binary không phụ thuộc libc hệ thống.&#xa;   GOOS/GOARCH     ghim đích Linux/amd64, không phụ thuộc máy build." style="text;html=1;fontSize=10;align=left;fontColor=#5A6B77;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="60" y="9681.280000000002" width="1090" height="66.4" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P8a3" value="COPY api/go.mod api/go.sum ./api/&#xa;COPY pkg/go.mod pkg/go.sum ./pkg/&#xa;COPY user_service/go.mod user_service/go.sum ./user_service/" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4E7EA;strokeColor=#0E7480;strokeWidth=2;fontFamily=Courier New;fontSize=12;align=left;spacing=8;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry x="60" y="9803.680000000002" width="1090" height="66" as="geometry"/>
+        </mxCell>
+        <mxCell id="P8a3n" value="LỚP 1 — hiếm đổi.  Phải copy cả go.mod của api và pkg vì replace trỏ tới chúng — Go cần đọc go.mod ở hai chỗ đó để tính MVS, dù chưa cần source." style="text;html=1;fontSize=10;align=left;fontColor=#5A6B77;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="60" y="9895.680000000002" width="1090" height="30" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P8a4" value="RUN --mount=type=cache,target=/go/pkg/mod \&#xa;    go mod download" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4E7EA;strokeColor=#0E7480;strokeWidth=3;fontFamily=Courier New;fontSize=12;align=left;spacing=8;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry x="60" y="9961.680000000002" width="1090" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="P8a4n" value="ĐẮT — nhưng được cache. Chừng nào go.mod/go.sum chưa đổi, layer này TRÚNG cache và không chạy lại. Đây là điểm mấu chốt của việc tách hai lớp." style="text;html=1;fontSize=10;align=left;fontColor=#0E7480;fontStyle=1;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="60" y="10211.680000000002" width="1090" height="30" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P8a5" value="COPY api/ ./api/&#xa;COPY pkg/ ./pkg/&#xa;COPY user_service/ ./user_service/" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F2DED8;strokeColor=#A63A22;strokeWidth=2;fontFamily=Courier New;fontSize=12;align=left;spacing=8;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry x="60" y="10249.680000000002" width="1090" height="66" as="geometry"/>
+        </mxCell>
+        <mxCell id="P8a5n" value="LỚP 2 — ĐỔI LIÊN TỤC. Sửa 1 dòng .go là ContentDigester ra digest khác → layer này TRƯỢT cache." style="text;html=1;fontSize=10;align=left;fontColor=#A63A22;fontStyle=1;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="60" y="10317.680000000002" width="1090" height="30" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P8a6" value="RUN --mount=type=cache,target=/go/pkg/mod \&#xa;    --mount=type=cache,target=/root/.cache/go-build \&#xa;    go build -trimpath -ldflags=&quot;-s -w&quot; -o /out/user_service_bin ./cmd" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F2DED8;strokeColor=#A63A22;strokeWidth=2;fontFamily=Courier New;fontSize=12;align=left;spacing=8;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry x="60" y="10355.680000000002" width="1090" height="66" as="geometry"/>
+        </mxCell>
+        <mxCell id="P8a6n" value="TRƯỢT theo (đổ dây chuyền). Nhưng nhờ cache mount, Go thấy GOCACHE còn nguyên nên chỉ biên dịch lại phần thực sự đổi — không dịch từ số 0." style="text;html=1;fontSize=10;align=left;fontColor=#5A6B77;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="60" y="10423.680000000002" width="1090" height="30" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P8flags" value="HAI CỜ CỦA go build  —  ĐÃ ĐO THẬT" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DFE5E8;strokeColor=#16212B;strokeWidth=2;fontFamily=Verdana;fontSize=12;align=left;verticalAlign=top;spacing=10;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="60" y="10463.680000000002" width="1090" height="246.4" as="geometry"/>
+        </mxCell>
+        <mxCell id="P8flagsd" value="Build thử một chương trình mẫu hai kiểu:&#xa;      không cờ                        2.22 MB&#xa;      -trimpath -ldflags &quot;-s -w&quot;      1.50 MB      (−33%)&#xa;&#xa;-trimpath        Bỏ đường dẫn tuyệt đối của máy build khỏi binary.&#xa;                 Thấy rõ nhất ở panic trace:&#xa;                       C:/Users/trank/.../sw_test/main.go     →     swtest/main.go&#xa;                 Nhờ vậy build TÁI LẬP ĐƯỢC và không lộ cấu trúc thư mục máy build.&#xa;&#xa;-ldflags &quot;-s -w&quot;  Cờ cho LINKER. -s bỏ symbol table, -w bỏ DWARF debug info.&#xa;                 MẤT:        không debug được bằng delve/gdb trên binary này.&#xa;                 KHÔNG MẤT:  panic vẫn in ĐỦ tên hàm VÀ số dòng — thông tin đó nằm ở&#xa;                             pclntab chứ không phải symbol table.&#xa;                             Nhiều người hiểu nhầm chỗ này rồi ngại dùng -s -w." style="text;html=1;fontSize=10;align=left;verticalAlign=top;fontFamily=Courier New;" parent="1" vertex="1">
+          <mxGeometry x="78" y="10493.680000000002" width="1054" height="202.4" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P8s2box" value="STAGE 2  —  runtime" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#0E7480;strokeWidth=4;fontFamily=Verdana;fontSize=15;fontStyle=1;verticalAlign=top;align=left;spacing=12;" parent="1" vertex="1">
+          <mxGeometry x="1230" y="8621.280000000002" width="1130" height="620" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P8b1" value="FROM docker.io/library/alpine:3.24" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4E7EA;strokeColor=#0E7480;strokeWidth=2;fontFamily=Courier New;fontSize=12;align=left;spacing=8;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry x="1250" y="9541.280000000002" width="1090" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="P8b1n" value="Base MỚI HOÀN TOÀN — stage 1 không dính dáng gì sang đây. Toàn bộ Go toolchain (~400MB), mã nguồn và module cache NẰM LẠI ở stage 1 và bị vứt." style="text;html=1;fontSize=10;align=left;fontColor=#5A6B77;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="1250" y="9579.280000000002" width="1090" height="30" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P8b2" value="RUN apk --no-cache add ca-certificates tzdata" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4E7EA;strokeColor=#0E7480;strokeWidth=2;fontFamily=Courier New;fontSize=12;align=left;spacing=8;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry x="1250" y="9645.280000000002" width="1090" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="P8b2n" value="ca-certificates   cần cho TLS khi gọi ra ngoài (gRPC, Cloudinary, Google OAuth)&#xa;tzdata            cần để time.LoadLocation(&quot;Asia/Ho_Chi_Minh&quot;) không lỗi&#xa;--no-cache        không để lại chỉ mục package trong layer — lý do đầy đủ ở PHẦN IV" style="text;html=1;fontSize=10;align=left;fontColor=#5A6B77;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="1250" y="9747.680000000002" width="1090" height="52.800000000000004" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P8b3" value="COPY --from=builder /out/user_service_bin ." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4E7EA;strokeColor=#0E7480;strokeWidth=4;fontFamily=Courier New;fontSize=12;align=left;spacing=8;verticalAlign=middle;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="1250" y="9803.680000000002" width="1090" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="P8b3n" value="ĐÚNG MỘT FILE băng qua ranh giới hai stage. Đây là toàn bộ ý nghĩa của multi-stage build." style="text;html=1;fontSize=10;align=left;fontColor=#0E7480;fontStyle=1;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="1250" y="9869.680000000002" width="1090" height="25.6" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P8b4" value="WORKDIR /app    ·    EXPOSE 9004    ·    CMD [&quot;./user_service_bin&quot;]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FAFBFB;strokeColor=#9DACB6;dashed=1;fontFamily=Courier New;fontSize=12;align=left;spacing=8;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry x="1250" y="9925.680000000002" width="1090" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="P8b4n" value="METADATA — vào config JSON, KHÔNG tạo layer. Gần như miễn phí về dung lượng." style="text;html=1;fontSize=10;align=left;fontColor=#5A6B77;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="1250" y="10011.680000000002" width="1090" height="25.6" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P8final" value="IMAGE CUỐI   ≈ 25 MB" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4E7EA;strokeColor=#3F6B3A;strokeWidth=4;fontFamily=Verdana;fontSize=15;align=left;verticalAlign=top;spacing=14;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="1250" y="10053.680000000002" width="1090" height="158" as="geometry"/>
+        </mxCell>
+        <mxCell id="P8finald" value="alpine (~8MB)  +  binary tĩnh (~17MB)&#xa;&#xa;Không toolchain. Không mã nguồn. Không shell script build.&#xa;&#xa;So với stage 1 (~1.2 GB): nhẹ hơn khoảng 50 lần.&#xa;Và 6 service dùng chung layer alpine nên tổng dung lượng còn tiết kiệm hơn nữa." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="1268" y="10089.680000000002" width="1054" height="108" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P8cross" value="COPY --from=builder&#10;đúng 1 file" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#0E7480;strokeWidth=4;endArrow=block;fontFamily=Verdana;fontSize=12;fontStyle=1" parent="1" source="P8a6" target="P8b3" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1200" y="8545"/>
+              <mxPoint x="1200" y="8230"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="A8" value="Cuối cùng: thứ này chạy ở đâu, và ai build nó." style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#0E7480;strokeWidth=4;endArrow=block;endSize=8;fontFamily=Verdana;fontSize=13;fontStyle=1;verticalAlign=bottom;" parent="1" source="P8s1box" target="H9" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="H9" value="PHẦN IX  —  CHẠY Ở ĐÂU: PODMAN, BUILDKIT VÀ PIPELINE" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#16212B;strokeColor=none;fontColor=#FFFFFF;fontFamily=Verdana;fontSize=17;fontStyle=1;align=left;spacing=18;" parent="1" vertex="1">
+          <mxGeometry x="40" y="10833.680000000002" width="2320" height="56" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P9cmp" value="PODMAN/BUILDAH  so với  BUILDKIT  —  dự án này chạm CẢ HAI" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DFE5E8;strokeColor=#16212B;strokeWidth=2;fontFamily=Verdana;fontSize=14;align=left;verticalAlign=top;spacing=14;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="10905.680000000002" width="2320" height="256.48" as="geometry"/>
+        </mxCell>
+        <mxCell id="P9cmpd" value="CI  dùng docker/build-push-action   →   chạy trên BUILDKIT&#xa;EC2 dùng podman-compose            →   chạy trên BUILDAH  (nhưng từ khi chuyển sang GHCR thì EC2 chỉ pull, KHÔNG build nữa)&#xa;&#xa;                                  Buildah (podman build)                          BuildKit (docker build)&#xa;      Mô hình thực thi            Tuần tự, từng chỉ thị một                       Đồ thị DAG (LLB)&#xa;      Chạy song song              Không (trong một stage)                         Có — các stage độc lập chạy song song&#xa;      Daemon                      Không cần                                       Cần buildkitd (nhúng trong dockerd)&#xa;      Rootless                    Có, thiết kế từ đầu                             Có, cần cấu hình&#xa;      --cache-from                Kéo image trung gian từ registry                Nhập cache blob (inline / registry / gha)&#xa;      Cache mount                 Thư mục trên host ($TMPDIR/buildah-cache)       Trong state của builder&#xa;&#xa;HỆ QUẢ THỰC TẾ: 6 image trong CI build SONG SONG nhờ strategy.matrix của GitHub Actions, chứ KHÔNG phải nhờ BuildKit.&#xa;Nếu có lúc nào chạy podman build cho cả 6 service trên cùng một máy thì chúng sẽ chạy lần lượt." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="58" y="10941.680000000002" width="2284" height="206.48000000000002" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P9pipe" value="PIPELINE  —  ai build, ai chạy" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4E7EA;strokeColor=#0E7480;strokeWidth=3;fontFamily=Verdana;fontSize=14;align=left;verticalAlign=top;spacing=14;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="11175.680000000002" width="2320" height="276" as="geometry"/>
+        </mxCell>
+        <mxCell id="P9piped" value="JOB 1  detect        paths-filter dò xem thư mục nào đổi  →  sinh matrix JSON&#xa;JOB 2  build-push    matrix ×6, chạy SONG SONG. Mỗi nhánh: verify GOWORK=off  →  docker build 2 stage  →  push GHCR (tag = git sha + latest)&#xa;JOB 3  deploy        mở SSH  →  SCP file cấu hình  →  sinh .env  →  EC2 podman pull  →  up -d  →  đóng SSH&#xa;&#xa;VÌ SAO BUILD TRÊN RUNNER CHỨ KHÔNG PHẢI EC2:&#xa;      · EC2 là t3.large (2 vCPU / 8 GB) đang gánh Kafka×6 + Elasticsearch×2 + Kibana + MySQL×2 + Postgres×4.&#xa;        Thêm 6 lượt biên dịch Go vào đó thì OOM killer rất dễ bóp chết Elasticsearch.&#xa;      · Mã nguồn không cần lên EC2. Máy chủ chỉ cần image đã đóng gói.&#xa;&#xa;KHÔNG BAO GIỜ băng qua sang EC2:   mã nguồn Go   ·   Go toolchain   ·   Dockerfile   ·   go.work&#xa;&#xa;IMAGE_TAG = git sha được ghi vào .env, compose đọc qua ${IMAGE_TAG:-latest}&#xa;→  luôn biết container đang chạy đúng commit nào, và rollback chỉ là sửa một dòng trong .env rồi up -d lại." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="58" y="11211.680000000002" width="2284" height="226" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P9end" value="KIỂM TRA TRƯỚC KHI PUSH" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DFE5E8;strokeColor=#16212B;strokeWidth=2;fontFamily=Verdana;fontSize=14;align=left;verticalAlign=top;spacing=14;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="11465.680000000002" width="2320" height="196.64000000000001" as="geometry"/>
+        </mxCell>
+        <mxCell id="P9endd" value="make verify-modules      Build từng service với GOWORK=off — đúng y hệt bước CI chạy. Bắt sớm lỗi &quot;máy tôi chạy được mà CI đỏ&quot;.&#xa;make tidy-modules        go mod tidy cho từng module, KHÔNG qua workspace. Dùng thay cho go work sync khi thêm dependency mới.&#xa;make docker-build        Build thử cả 6 image ở local.&#xa;&#xa;Một service lẻ:          podman build -f user_service/Dockerfile -t user-service:dev .&#xa;Xem cây phụ thuộc:       cd user_service &amp;&amp; GOWORK=off go mod graph&#xa;&#xa;LƯU Ý: đừng chạy go work sync rồi push. Lệnh đó tính theo module graph GỘP của workspace, hash có thể rơi vào go.work.sum&#xa;thay vì go.sum của từng module — đúng cái bẫy đã mô tả ở PHẦN II." style="text;html=1;fontSize=11;align=left;verticalAlign=top;fontFamily=Verdana;" parent="1" vertex="1">
+          <mxGeometry x="58" y="11501.680000000002" width="2284" height="146.64000000000001" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="P9src" value="NGUỒN THAM KHẢO&#xa;&#xa;Learning Go: An Idiomatic Approach to Real-World Go Programming, 2nd ed. — Jon Bodner, Chương 10 (Modules, Packages, and Imports)&#xa;docs.podman.io — podman-build.1        ·        github.com/containers/buildah — docs/buildah-build.1.md, imagebuildah/stage_executor.go&#xa;buildah.io — thông báo phát hành v1.29.0        ·        github.com/containers/podman — Discussion #15612 (vị trí cache mount)&#xa;docs.redhat.com — Building container images with Buildah (vai trò containers/image và containers/storage)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FAFBFB;strokeColor=#9DACB6;dashed=1;fontFamily=Verdana;fontSize=11;align=left;verticalAlign=top;spacing=14;" parent="1" vertex="1">
+          <mxGeometry x="40" y="11665.680000000002" width="2320" height="140" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

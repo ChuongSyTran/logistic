@@ -12,12 +12,11 @@ const (
 	MatchStatusRejected int8 = 3
 )
 
-// MatchContract represents a successful match between a Bid and an Ask
 type MatchContract struct {
-	ID         uuid.UUID `json:"id"`
-	BidID      uuid.UUID `json:"bid_id"`
-	AskID      uuid.UUID `json:"ask_id"`
-	Status     int8      `json:"status"`
+	ID     uuid.UUID `json:"id"`
+	BidID  uuid.UUID `json:"bid_id"`
+	AskID  uuid.UUID `json:"ask_id"`
+	Status int8      `json:"status"`
 
 	ConsensusPrice   float64 `json:"consensus_price"`
 	ConsensusDeposit float64 `json:"consensus_deposit"`

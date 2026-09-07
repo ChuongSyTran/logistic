@@ -1,0 +1,250 @@
+syntax = "proto3";
+
+package logistic.notification_service.v1;
+option go_package = "github.com/logistic/api/logistic/notification_service/v1;notificationv1";
+
+import "google/protobuf/timestamp.proto";
+
+// KIỂU ID: mọi field định danh là `bytes` — 16 byte thô của UUID v7. Lý do đầy
+// đủ và ranh giới đổi sang chuỗi ở gateway nằm trong
+// api/logistic/user_service/v1/user_messages.proto.
+//
+// `ref_id` cũng là bytes: nó trỏ tới một bid/ask/match có thật, nên phải cùng
+// không gian định danh với các service đó.
+
+// ---------------------------------------------------------------------------
+// DOMAIN MODELS
+// ---------------------------------------------------------------------------
+
+// Notification là một thông báo đã được sinh ra cho MỘT người nhận cụ thể.
+// Sự kiện "tìm được xe" sẽ đẻ ra 2 dòng: một cho shipper, một cho tài xế.
+message Notification {
+  bytes id = 1;
+  bytes user_id = 2;
+  string recipient_role = 3; // driver | shipper | admin
+  string type = 4;           // match_found | driver_candidate | offer_received ...
+  string channel = 5;        // in_app | push | email | sms
+  string title = 6;
+  string body = 7;
+  string data = 8;      // JSON payload để app deep-link
+  string ref_type = 9;  // bid | ask | match
+  bytes ref_id = 10;
+  bool is_read = 11;
+  string status = 12; // pending | sent | failed | read
+  google.protobuf.Timestamp read_at = 13;
+  google.protobuf.Timestamp created_at = 14;
+}
+
+// NotificationTemplate cho phép admin sửa câu chữ thông báo mà không cần deploy.
+// Placeholder dạng {{driver_name}} được điền lúc render.
+message NotificationTemplate {
+  bytes id = 1;
+  string code = 2; // MATCH_FOUND_SHIPPER, DRIVER_CANDIDATE...
+  string name = 3;
+  string channel = 4;
+  string locale = 5; // vi | en
+  string title_template = 6;
+  string body_template = 7;
+  bool is_active = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+}
+
+// NotificationPreference: người dùng tự chọn muốn nhận gì, qua kênh nào.
+message NotificationPreference {
+  bytes id = 1;
+  bytes user_id = 2;
+  bool in_app_enabled = 3;
+  bool push_enabled = 4;
+  bool email_enabled = 5;
+  bool sms_enabled = 6;
+  bool match_events_enabled = 7;
+  bool promotion_enabled = 8;
+  string quiet_hours_start = 9; // "22:00"
+  string quiet_hours_end = 10;  // "07:00"
+  google.protobuf.Timestamp updated_at = 11;
+}
+
+message Pagination {
+  int32 page = 1;
+  int32 page_size = 2;
+  int64 total_items = 3;
+  int32 total_pages = 4;
+}
+
+// ---------------------------------------------------------------------------
+// CLIENT REQUESTS / RESPONSES
+// ---------------------------------------------------------------------------
+
+message ListNotificationsRequest {
+  bytes user_id = 1;
+  string type = 2;
+  bool unread_only = 3;
+  int32 page = 4;
+  int32 page_size = 5;
+}
+
+message ListNotificationsResponse {
+  repeated Notification notifications = 1;
+  Pagination pagination = 2;
+  int64 unread_count = 3;
+}
+
+message GetNotificationRequest {
+  bytes id = 1;
+  bytes user_id = 2;
+}
+
+message GetNotificationResponse {
+  Notification notification = 1;
+}
+
+message MarkAsReadRequest {
+  bytes id = 1;
+  bytes user_id = 2;
+}
+
+message MarkAsReadResponse {
+  string message = 1;
+  int64 unread_count = 2;
+}
+
+message MarkAllAsReadRequest {
+  bytes user_id = 1;
+}
+
+message MarkAllAsReadResponse {
+  string message = 1;
+  int64 marked_count = 2;
+}
+
+message DeleteNotificationRequest {
+  bytes id = 1;
+  bytes user_id = 2;
+}
+
+message DeleteNotificationResponse {
+  string message = 1;
+}
+
+message GetUnreadCountRequest {
+  bytes user_id = 1;
+}
+
+message GetUnreadCountResponse {
+  int64 unread_count = 1;
+}
+
+message GetPreferencesRequest {
+  bytes user_id = 1;
+}
+
+message GetPreferencesResponse {
+  NotificationPreference preference = 1;
+}
+
+message UpdatePreferencesRequest {
+  bytes user_id = 1;
+  bool in_app_enabled = 2;
+  bool push_enabled = 3;
+  bool email_enabled = 4;
+  bool sms_enabled = 5;
+  bool match_events_enabled = 6;
+  bool promotion_enabled = 7;
+  string quiet_hours_start = 8;
+  string quiet_hours_end = 9;
+}
+
+message UpdatePreferencesResponse {
+  NotificationPreference preference = 1;
+  string message = 2;
+}
+
+// ---------------------------------------------------------------------------
+// ADMIN REQUESTS / RESPONSES
+// ---------------------------------------------------------------------------
+
+// AdminSendNotification: gửi thủ công. Để trống user_ids + đặt broadcast_role
+// thì gửi cho toàn bộ người dùng thuộc vai trò đó.
+message AdminSendNotificationRequest {
+  repeated bytes user_ids = 1;
+  string broadcast_role = 2;
+  string type = 3;
+  string channel = 4;
+  string title = 5;
+  string body = 6;
+  string data = 7;
+}
+
+message AdminSendNotificationResponse {
+  string message = 1;
+  int64 sent_count = 2;
+}
+
+message AdminListNotificationsRequest {
+  bytes user_id = 1;
+  string type = 2;
+  string status = 3;
+  int32 page = 4;
+  int32 page_size = 5;
+}
+
+message AdminListNotificationsResponse {
+  repeated Notification notifications = 1;
+  Pagination pagination = 2;
+}
+
+message AdminListTemplatesRequest {
+  string channel = 1;
+  string locale = 2;
+}
+
+message AdminListTemplatesResponse {
+  repeated NotificationTemplate templates = 1;
+}
+
+message AdminCreateTemplateRequest {
+  string code = 1;
+  string name = 2;
+  string channel = 3;
+  string locale = 4;
+  string title_template = 5;
+  string body_template = 6;
+  bool is_active = 7;
+}
+
+message AdminCreateTemplateResponse {
+  NotificationTemplate template = 1;
+  string message = 2;
+}
+
+message AdminUpdateTemplateRequest {
+  bytes id = 1;
+  string name = 2;
+  string title_template = 3;
+  string body_template = 4;
+  bool is_active = 5;
+}
+
+message AdminUpdateTemplateResponse {
+  NotificationTemplate template = 1;
+  string message = 2;
+}
+
+message AdminDeleteTemplateRequest {
+  bytes id = 1;
+}
+
+message AdminDeleteTemplateResponse {
+  string message = 1;
+}
+
+message AdminGetNotificationStatsRequest {}
+
+message AdminGetNotificationStatsResponse {
+  int64 total_notifications = 1;
+  int64 unread_notifications = 2;
+  int64 sent_today = 3;
+  int64 failed_notifications = 4;
+  int64 total_templates = 5;
+}

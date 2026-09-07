@@ -30,6 +30,20 @@ func (_u *ShipperProfileUpdate) Where(ps ...predicate.ShipperProfile) *ShipperPr
 	return _u
 }
 
+// SetUserID sets the "user_id" field.
+func (_u *ShipperProfileUpdate) SetUserID(v uuid.UUID) *ShipperProfileUpdate {
+	_u.mutation.SetUserID(v)
+	return _u
+}
+
+// SetNillableUserID sets the "user_id" field if the given value is not nil.
+func (_u *ShipperProfileUpdate) SetNillableUserID(v *uuid.UUID) *ShipperProfileUpdate {
+	if v != nil {
+		_u.SetUserID(*v)
+	}
+	return _u
+}
+
 // SetCompanyName sets the "company_name" field.
 func (_u *ShipperProfileUpdate) SetCompanyName(v string) *ShipperProfileUpdate {
 	_u.mutation.SetCompanyName(v)
@@ -70,29 +84,50 @@ func (_u *ShipperProfileUpdate) ClearTaxCode() *ShipperProfileUpdate {
 	return _u
 }
 
-// SetCreatedAt sets the "created_at" field.
-func (_u *ShipperProfileUpdate) SetCreatedAt(v time.Time) *ShipperProfileUpdate {
-	_u.mutation.SetCreatedAt(v)
+// SetBusinessAddress sets the "business_address" field.
+func (_u *ShipperProfileUpdate) SetBusinessAddress(v string) *ShipperProfileUpdate {
+	_u.mutation.SetBusinessAddress(v)
 	return _u
 }
 
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (_u *ShipperProfileUpdate) SetNillableCreatedAt(v *time.Time) *ShipperProfileUpdate {
+// SetNillableBusinessAddress sets the "business_address" field if the given value is not nil.
+func (_u *ShipperProfileUpdate) SetNillableBusinessAddress(v *string) *ShipperProfileUpdate {
 	if v != nil {
-		_u.SetCreatedAt(*v)
+		_u.SetBusinessAddress(*v)
 	}
+	return _u
+}
+
+// ClearBusinessAddress clears the value of the "business_address" field.
+func (_u *ShipperProfileUpdate) ClearBusinessAddress() *ShipperProfileUpdate {
+	_u.mutation.ClearBusinessAddress()
+	return _u
+}
+
+// SetTotalOrders sets the "total_orders" field.
+func (_u *ShipperProfileUpdate) SetTotalOrders(v int) *ShipperProfileUpdate {
+	_u.mutation.ResetTotalOrders()
+	_u.mutation.SetTotalOrders(v)
+	return _u
+}
+
+// SetNillableTotalOrders sets the "total_orders" field if the given value is not nil.
+func (_u *ShipperProfileUpdate) SetNillableTotalOrders(v *int) *ShipperProfileUpdate {
+	if v != nil {
+		_u.SetTotalOrders(*v)
+	}
+	return _u
+}
+
+// AddTotalOrders adds value to the "total_orders" field.
+func (_u *ShipperProfileUpdate) AddTotalOrders(v int) *ShipperProfileUpdate {
+	_u.mutation.AddTotalOrders(v)
 	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
 func (_u *ShipperProfileUpdate) SetUpdatedAt(v time.Time) *ShipperProfileUpdate {
 	_u.mutation.SetUpdatedAt(v)
-	return _u
-}
-
-// SetUserID sets the "user" edge to the User entity by ID.
-func (_u *ShipperProfileUpdate) SetUserID(id uuid.UUID) *ShipperProfileUpdate {
-	_u.mutation.SetUserID(id)
 	return _u
 }
 
@@ -180,8 +215,17 @@ func (_u *ShipperProfileUpdate) sqlSave(ctx context.Context) (_node int, err err
 	if _u.mutation.TaxCodeCleared() {
 		_spec.ClearField(shipperprofile.FieldTaxCode, field.TypeString)
 	}
-	if value, ok := _u.mutation.CreatedAt(); ok {
-		_spec.SetField(shipperprofile.FieldCreatedAt, field.TypeTime, value)
+	if value, ok := _u.mutation.BusinessAddress(); ok {
+		_spec.SetField(shipperprofile.FieldBusinessAddress, field.TypeString, value)
+	}
+	if _u.mutation.BusinessAddressCleared() {
+		_spec.ClearField(shipperprofile.FieldBusinessAddress, field.TypeString)
+	}
+	if value, ok := _u.mutation.TotalOrders(); ok {
+		_spec.SetField(shipperprofile.FieldTotalOrders, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedTotalOrders(); ok {
+		_spec.AddField(shipperprofile.FieldTotalOrders, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(shipperprofile.FieldUpdatedAt, field.TypeTime, value)
@@ -235,6 +279,20 @@ type ShipperProfileUpdateOne struct {
 	mutation *ShipperProfileMutation
 }
 
+// SetUserID sets the "user_id" field.
+func (_u *ShipperProfileUpdateOne) SetUserID(v uuid.UUID) *ShipperProfileUpdateOne {
+	_u.mutation.SetUserID(v)
+	return _u
+}
+
+// SetNillableUserID sets the "user_id" field if the given value is not nil.
+func (_u *ShipperProfileUpdateOne) SetNillableUserID(v *uuid.UUID) *ShipperProfileUpdateOne {
+	if v != nil {
+		_u.SetUserID(*v)
+	}
+	return _u
+}
+
 // SetCompanyName sets the "company_name" field.
 func (_u *ShipperProfileUpdateOne) SetCompanyName(v string) *ShipperProfileUpdateOne {
 	_u.mutation.SetCompanyName(v)
@@ -275,29 +333,50 @@ func (_u *ShipperProfileUpdateOne) ClearTaxCode() *ShipperProfileUpdateOne {
 	return _u
 }
 
-// SetCreatedAt sets the "created_at" field.
-func (_u *ShipperProfileUpdateOne) SetCreatedAt(v time.Time) *ShipperProfileUpdateOne {
-	_u.mutation.SetCreatedAt(v)
+// SetBusinessAddress sets the "business_address" field.
+func (_u *ShipperProfileUpdateOne) SetBusinessAddress(v string) *ShipperProfileUpdateOne {
+	_u.mutation.SetBusinessAddress(v)
 	return _u
 }
 
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (_u *ShipperProfileUpdateOne) SetNillableCreatedAt(v *time.Time) *ShipperProfileUpdateOne {
+// SetNillableBusinessAddress sets the "business_address" field if the given value is not nil.
+func (_u *ShipperProfileUpdateOne) SetNillableBusinessAddress(v *string) *ShipperProfileUpdateOne {
 	if v != nil {
-		_u.SetCreatedAt(*v)
+		_u.SetBusinessAddress(*v)
 	}
+	return _u
+}
+
+// ClearBusinessAddress clears the value of the "business_address" field.
+func (_u *ShipperProfileUpdateOne) ClearBusinessAddress() *ShipperProfileUpdateOne {
+	_u.mutation.ClearBusinessAddress()
+	return _u
+}
+
+// SetTotalOrders sets the "total_orders" field.
+func (_u *ShipperProfileUpdateOne) SetTotalOrders(v int) *ShipperProfileUpdateOne {
+	_u.mutation.ResetTotalOrders()
+	_u.mutation.SetTotalOrders(v)
+	return _u
+}
+
+// SetNillableTotalOrders sets the "total_orders" field if the given value is not nil.
+func (_u *ShipperProfileUpdateOne) SetNillableTotalOrders(v *int) *ShipperProfileUpdateOne {
+	if v != nil {
+		_u.SetTotalOrders(*v)
+	}
+	return _u
+}
+
+// AddTotalOrders adds value to the "total_orders" field.
+func (_u *ShipperProfileUpdateOne) AddTotalOrders(v int) *ShipperProfileUpdateOne {
+	_u.mutation.AddTotalOrders(v)
 	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
 func (_u *ShipperProfileUpdateOne) SetUpdatedAt(v time.Time) *ShipperProfileUpdateOne {
 	_u.mutation.SetUpdatedAt(v)
-	return _u
-}
-
-// SetUserID sets the "user" edge to the User entity by ID.
-func (_u *ShipperProfileUpdateOne) SetUserID(id uuid.UUID) *ShipperProfileUpdateOne {
-	_u.mutation.SetUserID(id)
 	return _u
 }
 
@@ -415,8 +494,17 @@ func (_u *ShipperProfileUpdateOne) sqlSave(ctx context.Context) (_node *ShipperP
 	if _u.mutation.TaxCodeCleared() {
 		_spec.ClearField(shipperprofile.FieldTaxCode, field.TypeString)
 	}
-	if value, ok := _u.mutation.CreatedAt(); ok {
-		_spec.SetField(shipperprofile.FieldCreatedAt, field.TypeTime, value)
+	if value, ok := _u.mutation.BusinessAddress(); ok {
+		_spec.SetField(shipperprofile.FieldBusinessAddress, field.TypeString, value)
+	}
+	if _u.mutation.BusinessAddressCleared() {
+		_spec.ClearField(shipperprofile.FieldBusinessAddress, field.TypeString)
+	}
+	if value, ok := _u.mutation.TotalOrders(); ok {
+		_spec.SetField(shipperprofile.FieldTotalOrders, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedTotalOrders(); ok {
+		_spec.AddField(shipperprofile.FieldTotalOrders, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(shipperprofile.FieldUpdatedAt, field.TypeTime, value)

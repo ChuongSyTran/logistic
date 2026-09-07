@@ -1,0 +1,256 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36">
+  <diagram name="Page-1" id="5NiNV69GLPA62DNRaxUP">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="3300" pageHeight="4681" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="bmiBATCYnSne2LnjSMMy-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="route - table - public 1a" vertex="1">
+          <mxGeometry height="30" width="100" x="310" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="public 1a" vertex="1">
+          <mxGeometry height="30" width="140" x="120" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="public 1b" vertex="1">
+          <mxGeometry height="30" width="140" x="120" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="private 1a" vertex="1">
+          <mxGeometry height="30" width="100" x="520" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-5" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="private 1b" vertex="1">
+          <mxGeometry height="30" width="100" x="520" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-7" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="route - table - public 1b" vertex="1">
+          <mxGeometry height="30" width="100" x="310" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-8" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="route - table - private 1a" vertex="1">
+          <mxGeometry height="30" width="100" x="680" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-9" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="route - table - private 1b" vertex="1">
+          <mxGeometry height="30" width="100" x="680" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-11" edge="1" parent="1" style="endArrow=none;dashed=1;html=1;rounded=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="70" y="320" as="sourcePoint" />
+            <mxPoint x="880" y="320" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-13" edge="1" parent="1" style="endArrow=none;dashed=1;html=1;rounded=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="460" y="720" as="sourcePoint" />
+            <mxPoint x="460" y="30" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-14" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="270" y="224.66" as="sourcePoint" />
+            <mxPoint x="300" y="224.66" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-15" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="270" y="344.65999999999997" as="sourcePoint" />
+            <mxPoint x="300" y="344.66" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-16" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="640" y="224.66" as="sourcePoint" />
+            <mxPoint x="660" y="224.66" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-17" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="640" y="354.65999999999997" as="sourcePoint" />
+            <mxPoint x="660" y="354.65999999999997" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-18" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="VPC 192.168.0.0/20" vertex="1">
+          <mxGeometry height="30" width="140" x="120" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-19" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="192.168.0.0/20 =&amp;gt; local" vertex="1">
+          <mxGeometry height="30" width="130" x="310" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-20" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="192.168.0.0/20 =&amp;gt; local" vertex="1">
+          <mxGeometry height="30" width="130" x="310" y="370" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-21" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="192.168.0.0/20 =&amp;gt; local" vertex="1">
+          <mxGeometry height="30" width="130" x="680" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-23" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="192.168.0.0/20 =&amp;gt; local" vertex="1">
+          <mxGeometry height="30" width="130" x="680" y="380" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-24" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Internet GW" vertex="1">
+          <mxGeometry height="30" width="80" x="-40" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-25" parent="1" style="ellipse;shape=cloud;whiteSpace=wrap;html=1;" value="Internet" vertex="1">
+          <mxGeometry height="40" width="80" x="-40" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-26" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="50" y="180" as="sourcePoint" />
+            <mxPoint x="110" y="180" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-27" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="-1.0000000000000036" y="70" as="sourcePoint" />
+            <mxPoint y="150" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-28" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="0.0.0.0/0 =&amp;gt; igw-id" vertex="1">
+          <mxGeometry height="30" width="130" x="300" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-29" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="0.0.0.0/0 =&amp;gt; igw-id" vertex="1">
+          <mxGeometry height="30" width="130" x="300" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-30" parent="1" style="whiteSpace=wrap;html=1;" value="EC2" vertex="1">
+          <mxGeometry height="50" width="60" x="200" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-32" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="private IP" vertex="1">
+          <mxGeometry height="20" width="60" x="130" y="290" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-33" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="public IP" vertex="1">
+          <mxGeometry height="20" width="60" x="130" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-34" parent="1" style="whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Web server&lt;br&gt;api.*&lt;br&gt;tool.*" vertex="1">
+          <mxGeometry height="50" width="80" x="180" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-35" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="&amp;nbsp;Elastic public IP" vertex="1">
+          <mxGeometry height="20" width="90" x="80" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-37" parent="1" style="whiteSpace=wrap;html=1;" value="Bastion" vertex="1">
+          <mxGeometry height="50" width="80" x="180" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-38" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="&amp;nbsp;Elastic public IP" vertex="1">
+          <mxGeometry height="20" width="90" x="80" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-40" parent="1" style="whiteSpace=wrap;html=1;" value="B.E Go" vertex="1">
+          <mxGeometry height="50" width="80" x="640" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-41" parent="1" style="whiteSpace=wrap;html=1;" value="Payment" vertex="1">
+          <mxGeometry height="50" width="80" x="640" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-44" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="270" y="470" as="sourcePoint" />
+            <mxPoint x="510" y="470" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-45" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="270" y="544.58" as="sourcePoint" />
+            <mxPoint x="510" y="544.58" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-46" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Actor" vertex="1">
+          <mxGeometry height="60" width="30" x="-120" y="510" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-47" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="SSH" vertex="1">
+          <mxGeometry height="30" width="60" x="-30" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-48" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="-60" y="540" as="sourcePoint" />
+            <mxPoint x="70" y="540" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-49" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="SSH" vertex="1">
+          <mxGeometry height="30" width="60" x="350" y="510" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-50" parent="1" style="whiteSpace=wrap;html=1;" value="Recording&lt;br&gt;audit log" vertex="1">
+          <mxGeometry height="40" width="80" x="180" y="590" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-51" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="SG" vertex="1">
+          <mxGeometry height="30" width="70" x="550" y="450" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-52" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="SG" vertex="1">
+          <mxGeometry height="30" width="70" x="550" y="530" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-53" parent="1" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="192.168.0.111 -&amp;gt; 22" vertex="1">
+          <mxGeometry height="30" width="125" x="507.5" y="570" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-54" parent="1" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="192.168.0.111" vertex="1">
+          <mxGeometry height="30" width="85" x="80" y="550" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-55" parent="1" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="192.168.0.120" vertex="1">
+          <mxGeometry height="30" width="85" x="75" y="460" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-56" parent="1" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="192.168.0.120 -&amp;gt; 3000" vertex="1">
+          <mxGeometry height="30" width="132.5" x="500" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-57" parent="1" style="whiteSpace=wrap;html=1;" value="SG" vertex="1">
+          <mxGeometry height="40" width="80" x="80" y="600" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-58" parent="1" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="ip home -&amp;gt; 22" vertex="1">
+          <mxGeometry height="30" width="90" x="80" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-59" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="NAT GW" vertex="1">
+          <mxGeometry height="30" width="140" x="120" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-60" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="188.89" y="130" as="sourcePoint" />
+            <mxPoint x="188.89" y="160" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-61" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;fillColor=#e51400;strokeColor=#B20000;strokeWidth=2;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="100" y="100" as="sourcePoint" />
+            <mxPoint x="10" y="100" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-62" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="0.0.0.0/0 =&amp;gt; nat-id" vertex="1">
+          <mxGeometry height="30" width="130" x="665" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-63" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="0.0.0.0/0 =&amp;gt; nat-id" vertex="1">
+          <mxGeometry height="30" width="130" x="670" y="402" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-64" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="private IP" vertex="1">
+          <mxGeometry height="20" width="90" x="730" y="470" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-65" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="private IP" vertex="1">
+          <mxGeometry height="20" width="90" x="730" y="550" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-66" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="NAT IP" vertex="1">
+          <mxGeometry height="30" width="140" x="120" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-68" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;fillColor=#e51400;strokeColor=#B20000;strokeWidth=2;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="880" y="100" as="sourcePoint" />
+            <mxPoint x="280" y="100" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-69" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;strokeWidth=2;strokeColor=#B20000;fillColor=#e51400;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="750" y="450" as="sourcePoint" />
+            <mxPoint x="880" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-70" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;fillColor=#e51400;strokeColor=#B20000;strokeWidth=2;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="880" y="450" as="sourcePoint" />
+            <mxPoint x="880" y="100" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-71" parent="1" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="Google API" vertex="1">
+          <mxGeometry height="30" width="80" x="890" y="420" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-72" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="ssh -L&amp;nbsp; 19092:127.0.0.1:9092 -L 18090:127.0.0.1:8090 ubuntu@123.123.123.123" vertex="1">
+          <mxGeometry height="30" width="470" x="480" y="640" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-73" parent="1" style="whiteSpace=wrap;html=1;" value="listen: 0.0.0.0:9092" vertex="1">
+          <mxGeometry height="40" width="120" x="480" y="720" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-74" parent="1" style="whiteSpace=wrap;html=1;" value="127.0.0.1" vertex="1">
+          <mxGeometry height="20" width="120" x="640" y="720" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-75" parent="1" style="whiteSpace=wrap;html=1;" value="192.168.0.10" vertex="1">
+          <mxGeometry height="20" width="120" x="640" y="760" as="geometry" />
+        </mxCell>
+        <mxCell id="bmiBATCYnSne2LnjSMMy-76" parent="1" style="whiteSpace=wrap;html=1;" value="123.123.123.123" vertex="1">
+          <mxGeometry height="20" width="120" x="640" y="800" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

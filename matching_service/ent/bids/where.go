@@ -171,6 +171,16 @@ func DestinationLng(v float64) predicate.Bids {
 	return predicate.Bids(sql.FieldEQ(FieldDestinationLng, v))
 }
 
+// OfferedPrice applies equality check predicate on the "offered_price" field. It's identical to OfferedPriceEQ.
+func OfferedPrice(v float64) predicate.Bids {
+	return predicate.Bids(sql.FieldEQ(FieldOfferedPrice, v))
+}
+
+// OfferedAskID applies equality check predicate on the "offered_ask_id" field. It's identical to OfferedAskIDEQ.
+func OfferedAskID(v uuid.UUID) predicate.Bids {
+	return predicate.Bids(sql.FieldEQ(FieldOfferedAskID, v))
+}
+
 // Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
 func Status(v int8) predicate.Bids {
 	return predicate.Bids(sql.FieldEQ(FieldStatus, v))
@@ -1216,6 +1226,106 @@ func DestinationLngLTE(v float64) predicate.Bids {
 	return predicate.Bids(sql.FieldLTE(FieldDestinationLng, v))
 }
 
+// OfferedPriceEQ applies the EQ predicate on the "offered_price" field.
+func OfferedPriceEQ(v float64) predicate.Bids {
+	return predicate.Bids(sql.FieldEQ(FieldOfferedPrice, v))
+}
+
+// OfferedPriceNEQ applies the NEQ predicate on the "offered_price" field.
+func OfferedPriceNEQ(v float64) predicate.Bids {
+	return predicate.Bids(sql.FieldNEQ(FieldOfferedPrice, v))
+}
+
+// OfferedPriceIn applies the In predicate on the "offered_price" field.
+func OfferedPriceIn(vs ...float64) predicate.Bids {
+	return predicate.Bids(sql.FieldIn(FieldOfferedPrice, vs...))
+}
+
+// OfferedPriceNotIn applies the NotIn predicate on the "offered_price" field.
+func OfferedPriceNotIn(vs ...float64) predicate.Bids {
+	return predicate.Bids(sql.FieldNotIn(FieldOfferedPrice, vs...))
+}
+
+// OfferedPriceGT applies the GT predicate on the "offered_price" field.
+func OfferedPriceGT(v float64) predicate.Bids {
+	return predicate.Bids(sql.FieldGT(FieldOfferedPrice, v))
+}
+
+// OfferedPriceGTE applies the GTE predicate on the "offered_price" field.
+func OfferedPriceGTE(v float64) predicate.Bids {
+	return predicate.Bids(sql.FieldGTE(FieldOfferedPrice, v))
+}
+
+// OfferedPriceLT applies the LT predicate on the "offered_price" field.
+func OfferedPriceLT(v float64) predicate.Bids {
+	return predicate.Bids(sql.FieldLT(FieldOfferedPrice, v))
+}
+
+// OfferedPriceLTE applies the LTE predicate on the "offered_price" field.
+func OfferedPriceLTE(v float64) predicate.Bids {
+	return predicate.Bids(sql.FieldLTE(FieldOfferedPrice, v))
+}
+
+// OfferedPriceIsNil applies the IsNil predicate on the "offered_price" field.
+func OfferedPriceIsNil() predicate.Bids {
+	return predicate.Bids(sql.FieldIsNull(FieldOfferedPrice))
+}
+
+// OfferedPriceNotNil applies the NotNil predicate on the "offered_price" field.
+func OfferedPriceNotNil() predicate.Bids {
+	return predicate.Bids(sql.FieldNotNull(FieldOfferedPrice))
+}
+
+// OfferedAskIDEQ applies the EQ predicate on the "offered_ask_id" field.
+func OfferedAskIDEQ(v uuid.UUID) predicate.Bids {
+	return predicate.Bids(sql.FieldEQ(FieldOfferedAskID, v))
+}
+
+// OfferedAskIDNEQ applies the NEQ predicate on the "offered_ask_id" field.
+func OfferedAskIDNEQ(v uuid.UUID) predicate.Bids {
+	return predicate.Bids(sql.FieldNEQ(FieldOfferedAskID, v))
+}
+
+// OfferedAskIDIn applies the In predicate on the "offered_ask_id" field.
+func OfferedAskIDIn(vs ...uuid.UUID) predicate.Bids {
+	return predicate.Bids(sql.FieldIn(FieldOfferedAskID, vs...))
+}
+
+// OfferedAskIDNotIn applies the NotIn predicate on the "offered_ask_id" field.
+func OfferedAskIDNotIn(vs ...uuid.UUID) predicate.Bids {
+	return predicate.Bids(sql.FieldNotIn(FieldOfferedAskID, vs...))
+}
+
+// OfferedAskIDGT applies the GT predicate on the "offered_ask_id" field.
+func OfferedAskIDGT(v uuid.UUID) predicate.Bids {
+	return predicate.Bids(sql.FieldGT(FieldOfferedAskID, v))
+}
+
+// OfferedAskIDGTE applies the GTE predicate on the "offered_ask_id" field.
+func OfferedAskIDGTE(v uuid.UUID) predicate.Bids {
+	return predicate.Bids(sql.FieldGTE(FieldOfferedAskID, v))
+}
+
+// OfferedAskIDLT applies the LT predicate on the "offered_ask_id" field.
+func OfferedAskIDLT(v uuid.UUID) predicate.Bids {
+	return predicate.Bids(sql.FieldLT(FieldOfferedAskID, v))
+}
+
+// OfferedAskIDLTE applies the LTE predicate on the "offered_ask_id" field.
+func OfferedAskIDLTE(v uuid.UUID) predicate.Bids {
+	return predicate.Bids(sql.FieldLTE(FieldOfferedAskID, v))
+}
+
+// OfferedAskIDIsNil applies the IsNil predicate on the "offered_ask_id" field.
+func OfferedAskIDIsNil() predicate.Bids {
+	return predicate.Bids(sql.FieldIsNull(FieldOfferedAskID))
+}
+
+// OfferedAskIDNotNil applies the NotNil predicate on the "offered_ask_id" field.
+func OfferedAskIDNotNil() predicate.Bids {
+	return predicate.Bids(sql.FieldNotNull(FieldOfferedAskID))
+}
+
 // StatusEQ applies the EQ predicate on the "status" field.
 func StatusEQ(v int8) predicate.Bids {
 	return predicate.Bids(sql.FieldEQ(FieldStatus, v))
@@ -1294,6 +1404,16 @@ func ExpiresAtLT(v time.Time) predicate.Bids {
 // ExpiresAtLTE applies the LTE predicate on the "expires_at" field.
 func ExpiresAtLTE(v time.Time) predicate.Bids {
 	return predicate.Bids(sql.FieldLTE(FieldExpiresAt, v))
+}
+
+// ExpiresAtIsNil applies the IsNil predicate on the "expires_at" field.
+func ExpiresAtIsNil() predicate.Bids {
+	return predicate.Bids(sql.FieldIsNull(FieldExpiresAt))
+}
+
+// ExpiresAtNotNil applies the NotNil predicate on the "expires_at" field.
+func ExpiresAtNotNil() predicate.Bids {
+	return predicate.Bids(sql.FieldNotNull(FieldExpiresAt))
 }
 
 // HasMatches applies the HasEdge predicate on the "matches" edge.

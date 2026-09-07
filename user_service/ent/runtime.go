@@ -4,10 +4,12 @@ package ent
 
 import (
 	"time"
+	"user_service/ent/address"
 	"user_service/ent/driverprofile"
 	"user_service/ent/schema"
 	"user_service/ent/shipperprofile"
 	"user_service/ent/user"
+	"user_service/ent/userdevice"
 
 	"github.com/google/uuid"
 )
@@ -16,18 +18,50 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	addressFields := schema.Address{}.Fields()
+	_ = addressFields
+	// addressDescLatitude is the schema descriptor for latitude field.
+	addressDescLatitude := addressFields[9].Descriptor()
+	// address.DefaultLatitude holds the default value on creation for the latitude field.
+	address.DefaultLatitude = addressDescLatitude.Default.(float64)
+	// addressDescLongitude is the schema descriptor for longitude field.
+	addressDescLongitude := addressFields[10].Descriptor()
+	// address.DefaultLongitude holds the default value on creation for the longitude field.
+	address.DefaultLongitude = addressDescLongitude.Default.(float64)
+	// addressDescIsDefault is the schema descriptor for is_default field.
+	addressDescIsDefault := addressFields[12].Descriptor()
+	// address.DefaultIsDefault holds the default value on creation for the is_default field.
+	address.DefaultIsDefault = addressDescIsDefault.Default.(bool)
+	// addressDescCreatedAt is the schema descriptor for created_at field.
+	addressDescCreatedAt := addressFields[13].Descriptor()
+	// address.DefaultCreatedAt holds the default value on creation for the created_at field.
+	address.DefaultCreatedAt = addressDescCreatedAt.Default.(func() time.Time)
+	// addressDescUpdatedAt is the schema descriptor for updated_at field.
+	addressDescUpdatedAt := addressFields[14].Descriptor()
+	// address.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	address.DefaultUpdatedAt = addressDescUpdatedAt.Default.(func() time.Time)
+	// address.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	address.UpdateDefaultUpdatedAt = addressDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// addressDescID is the schema descriptor for id field.
+	addressDescID := addressFields[0].Descriptor()
+	// address.DefaultID holds the default value on creation for the id field.
+	address.DefaultID = addressDescID.Default.(func() uuid.UUID)
 	driverprofileFields := schema.DriverProfile{}.Fields()
 	_ = driverprofileFields
 	// driverprofileDescRating is the schema descriptor for rating field.
-	driverprofileDescRating := driverprofileFields[3].Descriptor()
+	driverprofileDescRating := driverprofileFields[4].Descriptor()
 	// driverprofile.DefaultRating holds the default value on creation for the rating field.
 	driverprofile.DefaultRating = driverprofileDescRating.Default.(float64)
+	// driverprofileDescTotalTrips is the schema descriptor for total_trips field.
+	driverprofileDescTotalTrips := driverprofileFields[5].Descriptor()
+	// driverprofile.DefaultTotalTrips holds the default value on creation for the total_trips field.
+	driverprofile.DefaultTotalTrips = driverprofileDescTotalTrips.Default.(int)
 	// driverprofileDescCreatedAt is the schema descriptor for created_at field.
-	driverprofileDescCreatedAt := driverprofileFields[5].Descriptor()
+	driverprofileDescCreatedAt := driverprofileFields[10].Descriptor()
 	// driverprofile.DefaultCreatedAt holds the default value on creation for the created_at field.
 	driverprofile.DefaultCreatedAt = driverprofileDescCreatedAt.Default.(func() time.Time)
 	// driverprofileDescUpdatedAt is the schema descriptor for updated_at field.
-	driverprofileDescUpdatedAt := driverprofileFields[6].Descriptor()
+	driverprofileDescUpdatedAt := driverprofileFields[11].Descriptor()
 	// driverprofile.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	driverprofile.DefaultUpdatedAt = driverprofileDescUpdatedAt.Default.(func() time.Time)
 	// driverprofile.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -38,12 +72,16 @@ func init() {
 	driverprofile.DefaultID = driverprofileDescID.Default.(func() uuid.UUID)
 	shipperprofileFields := schema.ShipperProfile{}.Fields()
 	_ = shipperprofileFields
+	// shipperprofileDescTotalOrders is the schema descriptor for total_orders field.
+	shipperprofileDescTotalOrders := shipperprofileFields[5].Descriptor()
+	// shipperprofile.DefaultTotalOrders holds the default value on creation for the total_orders field.
+	shipperprofile.DefaultTotalOrders = shipperprofileDescTotalOrders.Default.(int)
 	// shipperprofileDescCreatedAt is the schema descriptor for created_at field.
-	shipperprofileDescCreatedAt := shipperprofileFields[3].Descriptor()
+	shipperprofileDescCreatedAt := shipperprofileFields[6].Descriptor()
 	// shipperprofile.DefaultCreatedAt holds the default value on creation for the created_at field.
 	shipperprofile.DefaultCreatedAt = shipperprofileDescCreatedAt.Default.(func() time.Time)
 	// shipperprofileDescUpdatedAt is the schema descriptor for updated_at field.
-	shipperprofileDescUpdatedAt := shipperprofileFields[4].Descriptor()
+	shipperprofileDescUpdatedAt := shipperprofileFields[7].Descriptor()
 	// shipperprofile.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	shipperprofile.DefaultUpdatedAt = shipperprofileDescUpdatedAt.Default.(func() time.Time)
 	// shipperprofile.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -55,11 +93,11 @@ func init() {
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescCreatedAt is the schema descriptor for created_at field.
-	userDescCreatedAt := userFields[6].Descriptor()
+	userDescCreatedAt := userFields[9].Descriptor()
 	// user.DefaultCreatedAt holds the default value on creation for the created_at field.
 	user.DefaultCreatedAt = userDescCreatedAt.Default.(func() time.Time)
 	// userDescUpdatedAt is the schema descriptor for updated_at field.
-	userDescUpdatedAt := userFields[7].Descriptor()
+	userDescUpdatedAt := userFields[10].Descriptor()
 	// user.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	user.DefaultUpdatedAt = userDescUpdatedAt.Default.(func() time.Time)
 	// user.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -68,4 +106,24 @@ func init() {
 	userDescID := userFields[0].Descriptor()
 	// user.DefaultID holds the default value on creation for the id field.
 	user.DefaultID = userDescID.Default.(func() uuid.UUID)
+	userdeviceFields := schema.UserDevice{}.Fields()
+	_ = userdeviceFields
+	// userdeviceDescIsActive is the schema descriptor for is_active field.
+	userdeviceDescIsActive := userdeviceFields[5].Descriptor()
+	// userdevice.DefaultIsActive holds the default value on creation for the is_active field.
+	userdevice.DefaultIsActive = userdeviceDescIsActive.Default.(bool)
+	// userdeviceDescLastSeenAt is the schema descriptor for last_seen_at field.
+	userdeviceDescLastSeenAt := userdeviceFields[6].Descriptor()
+	// userdevice.DefaultLastSeenAt holds the default value on creation for the last_seen_at field.
+	userdevice.DefaultLastSeenAt = userdeviceDescLastSeenAt.Default.(func() time.Time)
+	// userdevice.UpdateDefaultLastSeenAt holds the default value on update for the last_seen_at field.
+	userdevice.UpdateDefaultLastSeenAt = userdeviceDescLastSeenAt.UpdateDefault.(func() time.Time)
+	// userdeviceDescCreatedAt is the schema descriptor for created_at field.
+	userdeviceDescCreatedAt := userdeviceFields[7].Descriptor()
+	// userdevice.DefaultCreatedAt holds the default value on creation for the created_at field.
+	userdevice.DefaultCreatedAt = userdeviceDescCreatedAt.Default.(func() time.Time)
+	// userdeviceDescID is the schema descriptor for id field.
+	userdeviceDescID := userdeviceFields[0].Descriptor()
+	// userdevice.DefaultID holds the default value on creation for the id field.
+	userdevice.DefaultID = userdeviceDescID.Default.(func() uuid.UUID)
 }

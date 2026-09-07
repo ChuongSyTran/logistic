@@ -56,6 +56,11 @@ func IDLTE(id uuid.UUID) predicate.DriverProfile {
 	return predicate.DriverProfile(sql.FieldLTE(FieldID, id))
 }
 
+// UserID applies equality check predicate on the "user_id" field. It's identical to UserIDEQ.
+func UserID(v uuid.UUID) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldEQ(FieldUserID, v))
+}
+
 // LicenseNumber applies equality check predicate on the "license_number" field. It's identical to LicenseNumberEQ.
 func LicenseNumber(v string) predicate.DriverProfile {
 	return predicate.DriverProfile(sql.FieldEQ(FieldLicenseNumber, v))
@@ -71,6 +76,26 @@ func Rating(v float64) predicate.DriverProfile {
 	return predicate.DriverProfile(sql.FieldEQ(FieldRating, v))
 }
 
+// TotalTrips applies equality check predicate on the "total_trips" field. It's identical to TotalTripsEQ.
+func TotalTrips(v int) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldEQ(FieldTotalTrips, v))
+}
+
+// KycNote applies equality check predicate on the "kyc_note" field. It's identical to KycNoteEQ.
+func KycNote(v string) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldEQ(FieldKycNote, v))
+}
+
+// KycReviewedBy applies equality check predicate on the "kyc_reviewed_by" field. It's identical to KycReviewedByEQ.
+func KycReviewedBy(v uuid.UUID) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldEQ(FieldKycReviewedBy, v))
+}
+
+// KycReviewedAt applies equality check predicate on the "kyc_reviewed_at" field. It's identical to KycReviewedAtEQ.
+func KycReviewedAt(v time.Time) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldEQ(FieldKycReviewedAt, v))
+}
+
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.DriverProfile {
 	return predicate.DriverProfile(sql.FieldEQ(FieldCreatedAt, v))
@@ -79,6 +104,26 @@ func CreatedAt(v time.Time) predicate.DriverProfile {
 // UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
 func UpdatedAt(v time.Time) predicate.DriverProfile {
 	return predicate.DriverProfile(sql.FieldEQ(FieldUpdatedAt, v))
+}
+
+// UserIDEQ applies the EQ predicate on the "user_id" field.
+func UserIDEQ(v uuid.UUID) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldEQ(FieldUserID, v))
+}
+
+// UserIDNEQ applies the NEQ predicate on the "user_id" field.
+func UserIDNEQ(v uuid.UUID) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldNEQ(FieldUserID, v))
+}
+
+// UserIDIn applies the In predicate on the "user_id" field.
+func UserIDIn(vs ...uuid.UUID) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldIn(FieldUserID, vs...))
+}
+
+// UserIDNotIn applies the NotIn predicate on the "user_id" field.
+func UserIDNotIn(vs ...uuid.UUID) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldNotIn(FieldUserID, vs...))
 }
 
 // LicenseNumberEQ applies the EQ predicate on the "license_number" field.
@@ -134,6 +179,16 @@ func LicenseNumberHasPrefix(v string) predicate.DriverProfile {
 // LicenseNumberHasSuffix applies the HasSuffix predicate on the "license_number" field.
 func LicenseNumberHasSuffix(v string) predicate.DriverProfile {
 	return predicate.DriverProfile(sql.FieldHasSuffix(FieldLicenseNumber, v))
+}
+
+// LicenseNumberIsNil applies the IsNil predicate on the "license_number" field.
+func LicenseNumberIsNil() predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldIsNull(FieldLicenseNumber))
+}
+
+// LicenseNumberNotNil applies the NotNil predicate on the "license_number" field.
+func LicenseNumberNotNil() predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldNotNull(FieldLicenseNumber))
 }
 
 // LicenseNumberEqualFold applies the EqualFold predicate on the "license_number" field.
@@ -201,6 +256,16 @@ func IDCardHasSuffix(v string) predicate.DriverProfile {
 	return predicate.DriverProfile(sql.FieldHasSuffix(FieldIDCard, v))
 }
 
+// IDCardIsNil applies the IsNil predicate on the "id_card" field.
+func IDCardIsNil() predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldIsNull(FieldIDCard))
+}
+
+// IDCardNotNil applies the NotNil predicate on the "id_card" field.
+func IDCardNotNil() predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldNotNull(FieldIDCard))
+}
+
 // IDCardEqualFold applies the EqualFold predicate on the "id_card" field.
 func IDCardEqualFold(v string) predicate.DriverProfile {
 	return predicate.DriverProfile(sql.FieldEqualFold(FieldIDCard, v))
@@ -251,6 +316,46 @@ func RatingLTE(v float64) predicate.DriverProfile {
 	return predicate.DriverProfile(sql.FieldLTE(FieldRating, v))
 }
 
+// TotalTripsEQ applies the EQ predicate on the "total_trips" field.
+func TotalTripsEQ(v int) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldEQ(FieldTotalTrips, v))
+}
+
+// TotalTripsNEQ applies the NEQ predicate on the "total_trips" field.
+func TotalTripsNEQ(v int) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldNEQ(FieldTotalTrips, v))
+}
+
+// TotalTripsIn applies the In predicate on the "total_trips" field.
+func TotalTripsIn(vs ...int) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldIn(FieldTotalTrips, vs...))
+}
+
+// TotalTripsNotIn applies the NotIn predicate on the "total_trips" field.
+func TotalTripsNotIn(vs ...int) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldNotIn(FieldTotalTrips, vs...))
+}
+
+// TotalTripsGT applies the GT predicate on the "total_trips" field.
+func TotalTripsGT(v int) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldGT(FieldTotalTrips, v))
+}
+
+// TotalTripsGTE applies the GTE predicate on the "total_trips" field.
+func TotalTripsGTE(v int) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldGTE(FieldTotalTrips, v))
+}
+
+// TotalTripsLT applies the LT predicate on the "total_trips" field.
+func TotalTripsLT(v int) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldLT(FieldTotalTrips, v))
+}
+
+// TotalTripsLTE applies the LTE predicate on the "total_trips" field.
+func TotalTripsLTE(v int) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldLTE(FieldTotalTrips, v))
+}
+
 // KycStatusEQ applies the EQ predicate on the "kyc_status" field.
 func KycStatusEQ(v KycStatus) predicate.DriverProfile {
 	return predicate.DriverProfile(sql.FieldEQ(FieldKycStatus, v))
@@ -269,6 +374,181 @@ func KycStatusIn(vs ...KycStatus) predicate.DriverProfile {
 // KycStatusNotIn applies the NotIn predicate on the "kyc_status" field.
 func KycStatusNotIn(vs ...KycStatus) predicate.DriverProfile {
 	return predicate.DriverProfile(sql.FieldNotIn(FieldKycStatus, vs...))
+}
+
+// KycNoteEQ applies the EQ predicate on the "kyc_note" field.
+func KycNoteEQ(v string) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldEQ(FieldKycNote, v))
+}
+
+// KycNoteNEQ applies the NEQ predicate on the "kyc_note" field.
+func KycNoteNEQ(v string) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldNEQ(FieldKycNote, v))
+}
+
+// KycNoteIn applies the In predicate on the "kyc_note" field.
+func KycNoteIn(vs ...string) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldIn(FieldKycNote, vs...))
+}
+
+// KycNoteNotIn applies the NotIn predicate on the "kyc_note" field.
+func KycNoteNotIn(vs ...string) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldNotIn(FieldKycNote, vs...))
+}
+
+// KycNoteGT applies the GT predicate on the "kyc_note" field.
+func KycNoteGT(v string) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldGT(FieldKycNote, v))
+}
+
+// KycNoteGTE applies the GTE predicate on the "kyc_note" field.
+func KycNoteGTE(v string) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldGTE(FieldKycNote, v))
+}
+
+// KycNoteLT applies the LT predicate on the "kyc_note" field.
+func KycNoteLT(v string) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldLT(FieldKycNote, v))
+}
+
+// KycNoteLTE applies the LTE predicate on the "kyc_note" field.
+func KycNoteLTE(v string) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldLTE(FieldKycNote, v))
+}
+
+// KycNoteContains applies the Contains predicate on the "kyc_note" field.
+func KycNoteContains(v string) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldContains(FieldKycNote, v))
+}
+
+// KycNoteHasPrefix applies the HasPrefix predicate on the "kyc_note" field.
+func KycNoteHasPrefix(v string) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldHasPrefix(FieldKycNote, v))
+}
+
+// KycNoteHasSuffix applies the HasSuffix predicate on the "kyc_note" field.
+func KycNoteHasSuffix(v string) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldHasSuffix(FieldKycNote, v))
+}
+
+// KycNoteIsNil applies the IsNil predicate on the "kyc_note" field.
+func KycNoteIsNil() predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldIsNull(FieldKycNote))
+}
+
+// KycNoteNotNil applies the NotNil predicate on the "kyc_note" field.
+func KycNoteNotNil() predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldNotNull(FieldKycNote))
+}
+
+// KycNoteEqualFold applies the EqualFold predicate on the "kyc_note" field.
+func KycNoteEqualFold(v string) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldEqualFold(FieldKycNote, v))
+}
+
+// KycNoteContainsFold applies the ContainsFold predicate on the "kyc_note" field.
+func KycNoteContainsFold(v string) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldContainsFold(FieldKycNote, v))
+}
+
+// KycReviewedByEQ applies the EQ predicate on the "kyc_reviewed_by" field.
+func KycReviewedByEQ(v uuid.UUID) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldEQ(FieldKycReviewedBy, v))
+}
+
+// KycReviewedByNEQ applies the NEQ predicate on the "kyc_reviewed_by" field.
+func KycReviewedByNEQ(v uuid.UUID) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldNEQ(FieldKycReviewedBy, v))
+}
+
+// KycReviewedByIn applies the In predicate on the "kyc_reviewed_by" field.
+func KycReviewedByIn(vs ...uuid.UUID) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldIn(FieldKycReviewedBy, vs...))
+}
+
+// KycReviewedByNotIn applies the NotIn predicate on the "kyc_reviewed_by" field.
+func KycReviewedByNotIn(vs ...uuid.UUID) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldNotIn(FieldKycReviewedBy, vs...))
+}
+
+// KycReviewedByGT applies the GT predicate on the "kyc_reviewed_by" field.
+func KycReviewedByGT(v uuid.UUID) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldGT(FieldKycReviewedBy, v))
+}
+
+// KycReviewedByGTE applies the GTE predicate on the "kyc_reviewed_by" field.
+func KycReviewedByGTE(v uuid.UUID) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldGTE(FieldKycReviewedBy, v))
+}
+
+// KycReviewedByLT applies the LT predicate on the "kyc_reviewed_by" field.
+func KycReviewedByLT(v uuid.UUID) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldLT(FieldKycReviewedBy, v))
+}
+
+// KycReviewedByLTE applies the LTE predicate on the "kyc_reviewed_by" field.
+func KycReviewedByLTE(v uuid.UUID) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldLTE(FieldKycReviewedBy, v))
+}
+
+// KycReviewedByIsNil applies the IsNil predicate on the "kyc_reviewed_by" field.
+func KycReviewedByIsNil() predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldIsNull(FieldKycReviewedBy))
+}
+
+// KycReviewedByNotNil applies the NotNil predicate on the "kyc_reviewed_by" field.
+func KycReviewedByNotNil() predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldNotNull(FieldKycReviewedBy))
+}
+
+// KycReviewedAtEQ applies the EQ predicate on the "kyc_reviewed_at" field.
+func KycReviewedAtEQ(v time.Time) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldEQ(FieldKycReviewedAt, v))
+}
+
+// KycReviewedAtNEQ applies the NEQ predicate on the "kyc_reviewed_at" field.
+func KycReviewedAtNEQ(v time.Time) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldNEQ(FieldKycReviewedAt, v))
+}
+
+// KycReviewedAtIn applies the In predicate on the "kyc_reviewed_at" field.
+func KycReviewedAtIn(vs ...time.Time) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldIn(FieldKycReviewedAt, vs...))
+}
+
+// KycReviewedAtNotIn applies the NotIn predicate on the "kyc_reviewed_at" field.
+func KycReviewedAtNotIn(vs ...time.Time) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldNotIn(FieldKycReviewedAt, vs...))
+}
+
+// KycReviewedAtGT applies the GT predicate on the "kyc_reviewed_at" field.
+func KycReviewedAtGT(v time.Time) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldGT(FieldKycReviewedAt, v))
+}
+
+// KycReviewedAtGTE applies the GTE predicate on the "kyc_reviewed_at" field.
+func KycReviewedAtGTE(v time.Time) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldGTE(FieldKycReviewedAt, v))
+}
+
+// KycReviewedAtLT applies the LT predicate on the "kyc_reviewed_at" field.
+func KycReviewedAtLT(v time.Time) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldLT(FieldKycReviewedAt, v))
+}
+
+// KycReviewedAtLTE applies the LTE predicate on the "kyc_reviewed_at" field.
+func KycReviewedAtLTE(v time.Time) predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldLTE(FieldKycReviewedAt, v))
+}
+
+// KycReviewedAtIsNil applies the IsNil predicate on the "kyc_reviewed_at" field.
+func KycReviewedAtIsNil() predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldIsNull(FieldKycReviewedAt))
+}
+
+// KycReviewedAtNotNil applies the NotNil predicate on the "kyc_reviewed_at" field.
+func KycReviewedAtNotNil() predicate.DriverProfile {
+	return predicate.DriverProfile(sql.FieldNotNull(FieldKycReviewedAt))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

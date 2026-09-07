@@ -7,9 +7,11 @@ import (
 	"errors"
 	"fmt"
 	"time"
+	"user_service/ent/address"
 	"user_service/ent/driverprofile"
 	"user_service/ent/shipperprofile"
 	"user_service/ent/user"
+	"user_service/ent/userdevice"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -29,6 +31,14 @@ func (_c *UserCreate) SetPhone(v string) *UserCreate {
 	return _c
 }
 
+// SetNillablePhone sets the "phone" field if the given value is not nil.
+func (_c *UserCreate) SetNillablePhone(v *string) *UserCreate {
+	if v != nil {
+		_c.SetPhone(*v)
+	}
+	return _c
+}
+
 // SetEmail sets the "email" field.
 func (_c *UserCreate) SetEmail(v string) *UserCreate {
 	_c.mutation.SetEmail(v)
@@ -39,6 +49,34 @@ func (_c *UserCreate) SetEmail(v string) *UserCreate {
 func (_c *UserCreate) SetNillableEmail(v *string) *UserCreate {
 	if v != nil {
 		_c.SetEmail(*v)
+	}
+	return _c
+}
+
+// SetFullName sets the "full_name" field.
+func (_c *UserCreate) SetFullName(v string) *UserCreate {
+	_c.mutation.SetFullName(v)
+	return _c
+}
+
+// SetNillableFullName sets the "full_name" field if the given value is not nil.
+func (_c *UserCreate) SetNillableFullName(v *string) *UserCreate {
+	if v != nil {
+		_c.SetFullName(*v)
+	}
+	return _c
+}
+
+// SetAvatarURL sets the "avatar_url" field.
+func (_c *UserCreate) SetAvatarURL(v string) *UserCreate {
+	_c.mutation.SetAvatarURL(v)
+	return _c
+}
+
+// SetNillableAvatarURL sets the "avatar_url" field if the given value is not nil.
+func (_c *UserCreate) SetNillableAvatarURL(v *string) *UserCreate {
+	if v != nil {
+		_c.SetAvatarURL(*v)
 	}
 	return _c
 }
@@ -65,6 +103,20 @@ func (_c *UserCreate) SetStatus(v user.Status) *UserCreate {
 func (_c *UserCreate) SetNillableStatus(v *user.Status) *UserCreate {
 	if v != nil {
 		_c.SetStatus(*v)
+	}
+	return _c
+}
+
+// SetStatusReason sets the "status_reason" field.
+func (_c *UserCreate) SetStatusReason(v string) *UserCreate {
+	_c.mutation.SetStatusReason(v)
+	return _c
+}
+
+// SetNillableStatusReason sets the "status_reason" field if the given value is not nil.
+func (_c *UserCreate) SetNillableStatusReason(v *string) *UserCreate {
+	if v != nil {
+		_c.SetStatusReason(*v)
 	}
 	return _c
 }
@@ -149,6 +201,36 @@ func (_c *UserCreate) SetShipperProfile(v *ShipperProfile) *UserCreate {
 	return _c.SetShipperProfileID(v.ID)
 }
 
+// AddAddressIDs adds the "addresses" edge to the Address entity by IDs.
+func (_c *UserCreate) AddAddressIDs(ids ...uuid.UUID) *UserCreate {
+	_c.mutation.AddAddressIDs(ids...)
+	return _c
+}
+
+// AddAddresses adds the "addresses" edges to the Address entity.
+func (_c *UserCreate) AddAddresses(v ...*Address) *UserCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddAddressIDs(ids...)
+}
+
+// AddDeviceIDs adds the "devices" edge to the UserDevice entity by IDs.
+func (_c *UserCreate) AddDeviceIDs(ids ...uuid.UUID) *UserCreate {
+	_c.mutation.AddDeviceIDs(ids...)
+	return _c
+}
+
+// AddDevices adds the "devices" edges to the UserDevice entity.
+func (_c *UserCreate) AddDevices(v ...*UserDevice) *UserCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddDeviceIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_c *UserCreate) Mutation() *UserMutation {
 	return _c.mutation
@@ -204,9 +286,6 @@ func (_c *UserCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_c *UserCreate) check() error {
-	if _, ok := _c.mutation.Phone(); !ok {
-		return &ValidationError{Name: "phone", err: errors.New(`ent: missing required field "User.phone"`)}
-	}
 	if _, ok := _c.mutation.PasswordHash(); !ok {
 		return &ValidationError{Name: "password_hash", err: errors.New(`ent: missing required field "User.password_hash"`)}
 	}
@@ -275,6 +354,14 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
 		_node.Email = value
 	}
+	if value, ok := _c.mutation.FullName(); ok {
+		_spec.SetField(user.FieldFullName, field.TypeString, value)
+		_node.FullName = value
+	}
+	if value, ok := _c.mutation.AvatarURL(); ok {
+		_spec.SetField(user.FieldAvatarURL, field.TypeString, value)
+		_node.AvatarURL = value
+	}
 	if value, ok := _c.mutation.PasswordHash(); ok {
 		_spec.SetField(user.FieldPasswordHash, field.TypeString, value)
 		_node.PasswordHash = value
@@ -286,6 +373,10 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(user.FieldStatus, field.TypeEnum, value)
 		_node.Status = value
+	}
+	if value, ok := _c.mutation.StatusReason(); ok {
+		_spec.SetField(user.FieldStatusReason, field.TypeString, value)
+		_node.StatusReason = value
 	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(user.FieldCreatedAt, field.TypeTime, value)
@@ -320,6 +411,38 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(shipperprofile.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.AddressesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AddressesTable,
+			Columns: []string{user.AddressesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(address.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.DevicesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.DevicesTable,
+			Columns: []string{user.DevicesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userdevice.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

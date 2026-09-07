@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
 )
 
@@ -23,6 +24,8 @@ const (
 	FieldBrand = "brand"
 	// FieldModel holds the string denoting the model field in the database.
 	FieldModel = "model"
+	// FieldManufactureYear holds the string denoting the manufacture_year field in the database.
+	FieldManufactureYear = "manufacture_year"
 	// FieldVehicleType holds the string denoting the vehicle_type field in the database.
 	FieldVehicleType = "vehicle_type"
 	// FieldCapacityWeightKg holds the string denoting the capacity_weight_kg field in the database.
@@ -31,12 +34,47 @@ const (
 	FieldCapacityVolumeCbm = "capacity_volume_cbm"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
+	// FieldVerificationStatus holds the string denoting the verification_status field in the database.
+	FieldVerificationStatus = "verification_status"
+	// FieldVerificationNote holds the string denoting the verification_note field in the database.
+	FieldVerificationNote = "verification_note"
+	// FieldVerifiedBy holds the string denoting the verified_by field in the database.
+	FieldVerifiedBy = "verified_by"
+	// FieldVerifiedAt holds the string denoting the verified_at field in the database.
+	FieldVerifiedAt = "verified_at"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// EdgeDocuments holds the string denoting the documents edge name in mutations.
+	EdgeDocuments = "documents"
+	// EdgeLocation holds the string denoting the location edge name in mutations.
+	EdgeLocation = "location"
+	// EdgeAvailability holds the string denoting the availability edge name in mutations.
+	EdgeAvailability = "availability"
 	// Table holds the table name of the vehicle in the database.
 	Table = "vehicles"
+	// DocumentsTable is the table that holds the documents relation/edge.
+	DocumentsTable = "vehicle_documents"
+	// DocumentsInverseTable is the table name for the VehicleDocument entity.
+	// It exists in this package in order to avoid circular dependency with the "vehicledocument" package.
+	DocumentsInverseTable = "vehicle_documents"
+	// DocumentsColumn is the table column denoting the documents relation/edge.
+	DocumentsColumn = "vehicle_id"
+	// LocationTable is the table that holds the location relation/edge.
+	LocationTable = "vehicle_locations"
+	// LocationInverseTable is the table name for the VehicleLocation entity.
+	// It exists in this package in order to avoid circular dependency with the "vehiclelocation" package.
+	LocationInverseTable = "vehicle_locations"
+	// LocationColumn is the table column denoting the location relation/edge.
+	LocationColumn = "vehicle_id"
+	// AvailabilityTable is the table that holds the availability relation/edge.
+	AvailabilityTable = "driver_availabilities"
+	// AvailabilityInverseTable is the table name for the DriverAvailability entity.
+	// It exists in this package in order to avoid circular dependency with the "driveravailability" package.
+	AvailabilityInverseTable = "driver_availabilities"
+	// AvailabilityColumn is the table column denoting the availability relation/edge.
+	AvailabilityColumn = "vehicle_id"
 )
 
 // Columns holds all SQL columns for vehicle fields.
@@ -46,10 +84,15 @@ var Columns = []string{
 	FieldLicensePlate,
 	FieldBrand,
 	FieldModel,
+	FieldManufactureYear,
 	FieldVehicleType,
 	FieldCapacityWeightKg,
 	FieldCapacityVolumeCbm,
 	FieldStatus,
+	FieldVerificationStatus,
+	FieldVerificationNote,
+	FieldVerifiedBy,
+	FieldVerifiedAt,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -84,9 +127,11 @@ type VehicleType string
 
 // VehicleType values.
 const (
-	VehicleTypeTruck VehicleType = "truck"
-	VehicleTypeVan   VehicleType = "van"
-	VehicleTypeBike  VehicleType = "bike"
+	VehicleTypeTruck     VehicleType = "truck"
+	VehicleTypeVan       VehicleType = "van"
+	VehicleTypeBike      VehicleType = "bike"
+	VehicleTypeContainer VehicleType = "container"
+	VehicleTypeTrailer   VehicleType = "trailer"
 )
 
 func (vt VehicleType) String() string {
@@ -96,7 +141,7 @@ func (vt VehicleType) String() string {
 // VehicleTypeValidator is a validator for the "vehicle_type" field enum values. It is called by the builders before save.
 func VehicleTypeValidator(vt VehicleType) error {
 	switch vt {
-	case VehicleTypeTruck, VehicleTypeVan, VehicleTypeBike:
+	case VehicleTypeTruck, VehicleTypeVan, VehicleTypeBike, VehicleTypeContainer, VehicleTypeTrailer:
 		return nil
 	default:
 		return fmt.Errorf("vehicle: invalid enum value for vehicle_type field: %q", vt)
@@ -113,6 +158,7 @@ const DefaultStatus = StatusActive
 const (
 	StatusActive      Status = "active"
 	StatusMaintenance Status = "maintenance"
+	StatusInactive    Status = "inactive"
 )
 
 func (s Status) String() string {
@@ -122,10 +168,37 @@ func (s Status) String() string {
 // StatusValidator is a validator for the "status" field enum values. It is called by the builders before save.
 func StatusValidator(s Status) error {
 	switch s {
-	case StatusActive, StatusMaintenance:
+	case StatusActive, StatusMaintenance, StatusInactive:
 		return nil
 	default:
 		return fmt.Errorf("vehicle: invalid enum value for status field: %q", s)
+	}
+}
+
+// VerificationStatus defines the type for the "verification_status" enum field.
+type VerificationStatus string
+
+// VerificationStatusPending is the default value of the VerificationStatus enum.
+const DefaultVerificationStatus = VerificationStatusPending
+
+// VerificationStatus values.
+const (
+	VerificationStatusPending  VerificationStatus = "pending"
+	VerificationStatusVerified VerificationStatus = "verified"
+	VerificationStatusRejected VerificationStatus = "rejected"
+)
+
+func (vs VerificationStatus) String() string {
+	return string(vs)
+}
+
+// VerificationStatusValidator is a validator for the "verification_status" field enum values. It is called by the builders before save.
+func VerificationStatusValidator(vs VerificationStatus) error {
+	switch vs {
+	case VerificationStatusPending, VerificationStatusVerified, VerificationStatusRejected:
+		return nil
+	default:
+		return fmt.Errorf("vehicle: invalid enum value for verification_status field: %q", vs)
 	}
 }
 
@@ -157,6 +230,11 @@ func ByModel(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldModel, opts...).ToFunc()
 }
 
+// ByManufactureYear orders the results by the manufacture_year field.
+func ByManufactureYear(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldManufactureYear, opts...).ToFunc()
+}
+
 // ByVehicleType orders the results by the vehicle_type field.
 func ByVehicleType(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldVehicleType, opts...).ToFunc()
@@ -177,6 +255,26 @@ func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStatus, opts...).ToFunc()
 }
 
+// ByVerificationStatus orders the results by the verification_status field.
+func ByVerificationStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVerificationStatus, opts...).ToFunc()
+}
+
+// ByVerificationNote orders the results by the verification_note field.
+func ByVerificationNote(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVerificationNote, opts...).ToFunc()
+}
+
+// ByVerifiedBy orders the results by the verified_by field.
+func ByVerifiedBy(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVerifiedBy, opts...).ToFunc()
+}
+
+// ByVerifiedAt orders the results by the verified_at field.
+func ByVerifiedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVerifiedAt, opts...).ToFunc()
+}
+
 // ByCreatedAt orders the results by the created_at field.
 func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
@@ -185,4 +283,53 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByDocumentsCount orders the results by documents count.
+func ByDocumentsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newDocumentsStep(), opts...)
+	}
+}
+
+// ByDocuments orders the results by documents terms.
+func ByDocuments(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newDocumentsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByLocationField orders the results by location field.
+func ByLocationField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newLocationStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByAvailabilityField orders the results by availability field.
+func ByAvailabilityField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAvailabilityStep(), sql.OrderByField(field, opts...))
+	}
+}
+func newDocumentsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(DocumentsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, DocumentsTable, DocumentsColumn),
+	)
+}
+func newLocationStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(LocationInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2O, false, LocationTable, LocationColumn),
+	)
+}
+func newAvailabilityStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AvailabilityInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2O, false, AvailabilityTable, AvailabilityColumn),
+	)
 }

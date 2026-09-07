@@ -5,43 +5,74 @@ import (
 
 	"auth_service/ent"
 	"auth_service/internal/entity"
+
 	pb "github.com/logistic/api/logistic/auth_service/v1"
 
+	"github.com/logistic/pkg/uuidx"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// goverter:converter
-// goverter:useZeroValueOnPointerInconsistency
-// goverter:ignoreUnexported
-//
-//go:generate go run github.com/jmattheis/goverter/cmd/goverter@latest gen ./
 type AuthMapper interface {
-	// goverter:map ID Id | IntToInt64
-	// goverter:map CreatedAt CreatedAt | TimeToTimePtr
-	// goverter:map UpdatedAt UpdatedAt | TimeToTimePtr
 	ToUserProfile(source *ent.Users) *entity.UserProfile
-
-	// goverter:map CreatedAt CreatedAt | TimeToTimestamp
-	// goverter:map UpdatedAt UpdatedAt | TimeToTimestamp
 	ToUserProfileProto(source *entity.UserProfile) *pb.UserProfile
-
 	ToAuthTokenPairProto(source *entity.AuthTokenPair) *pb.AuthTokenPair
 }
 
-func TimeToTimestamp(t *time.Time) *timestamppb.Timestamp {
+type authMapper struct{}
+
+func NewAuthMapper() AuthMapper { return authMapper{} }
+
+func (authMapper) ToUserProfile(source *ent.Users) *entity.UserProfile {
+	if source == nil {
+		return nil
+	}
+	return &entity.UserProfile{
+		Id:        source.ID,
+		Email:     source.Email,
+		FullName:  source.FullName,
+		Avatar:    source.Avatar,
+		Role:      string(source.Role),
+		CreatedAt: timePtr(source.CreatedAt),
+		UpdatedAt: timePtr(source.UpdatedAt),
+	}
+}
+
+func (authMapper) ToUserProfileProto(source *entity.UserProfile) *pb.UserProfile {
+	if source == nil {
+		return nil
+	}
+	return &pb.UserProfile{
+		Id:        uuidx.ToBytes(source.Id),
+		Email:     source.Email,
+		FullName:  source.FullName,
+		Avatar:    source.Avatar,
+		Role:      source.Role,
+		CreatedAt: toTimestamp(source.CreatedAt),
+		UpdatedAt: toTimestamp(source.UpdatedAt),
+	}
+}
+
+func (authMapper) ToAuthTokenPairProto(source *entity.AuthTokenPair) *pb.AuthTokenPair {
+	if source == nil {
+		return nil
+	}
+	return &pb.AuthTokenPair{
+		AccessToken:  source.AccessToken,
+		RefreshToken: source.RefreshToken,
+		ExpiresAt:    source.ExpiresAt,
+	}
+}
+
+func toTimestamp(t *time.Time) *timestamppb.Timestamp {
 	if t == nil || t.IsZero() {
 		return nil
 	}
 	return timestamppb.New(*t)
 }
 
-func TimeToTimePtr(t time.Time) *time.Time {
+func timePtr(t time.Time) *time.Time {
 	if t.IsZero() {
 		return nil
 	}
 	return &t
-}
-
-func IntToInt64(i int) int64 {
-	return int64(i)
 }

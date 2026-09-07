@@ -11,6 +11,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 )
 
 // UsersCreate is the builder for creating a Users entity.
@@ -110,6 +111,20 @@ func (_c *UsersCreate) SetNillableGoogleID(v *string) *UsersCreate {
 	return _c
 }
 
+// SetRole sets the "role" field.
+func (_c *UsersCreate) SetRole(v users.Role) *UsersCreate {
+	_c.mutation.SetRole(v)
+	return _c
+}
+
+// SetNillableRole sets the "role" field if the given value is not nil.
+func (_c *UsersCreate) SetNillableRole(v *users.Role) *UsersCreate {
+	if v != nil {
+		_c.SetRole(*v)
+	}
+	return _c
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_c *UsersCreate) SetCreatedAt(v time.Time) *UsersCreate {
 	_c.mutation.SetCreatedAt(v)
@@ -134,6 +149,20 @@ func (_c *UsersCreate) SetUpdatedAt(v time.Time) *UsersCreate {
 func (_c *UsersCreate) SetNillableUpdatedAt(v *time.Time) *UsersCreate {
 	if v != nil {
 		_c.SetUpdatedAt(*v)
+	}
+	return _c
+}
+
+// SetID sets the "id" field.
+func (_c *UsersCreate) SetID(v uuid.UUID) *UsersCreate {
+	_c.mutation.SetID(v)
+	return _c
+}
+
+// SetNillableID sets the "id" field if the given value is not nil.
+func (_c *UsersCreate) SetNillableID(v *uuid.UUID) *UsersCreate {
+	if v != nil {
+		_c.SetID(*v)
 	}
 	return _c
 }
@@ -175,6 +204,10 @@ func (_c *UsersCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (_c *UsersCreate) defaults() error {
+	if _, ok := _c.mutation.Role(); !ok {
+		v := users.DefaultRole
+		_c.mutation.SetRole(v)
+	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		if users.DefaultCreatedAt == nil {
 			return fmt.Errorf("ent: uninitialized users.DefaultCreatedAt (forgotten import ent/runtime?)")
@@ -189,6 +222,13 @@ func (_c *UsersCreate) defaults() error {
 		v := users.DefaultUpdatedAt()
 		_c.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := _c.mutation.ID(); !ok {
+		if users.DefaultID == nil {
+			return fmt.Errorf("ent: uninitialized users.DefaultID (forgotten import ent/runtime?)")
+		}
+		v := users.DefaultID()
+		_c.mutation.SetID(v)
+	}
 	return nil
 }
 
@@ -196,6 +236,14 @@ func (_c *UsersCreate) defaults() error {
 func (_c *UsersCreate) check() error {
 	if _, ok := _c.mutation.Email(); !ok {
 		return &ValidationError{Name: "email", err: errors.New(`ent: missing required field "Users.email"`)}
+	}
+	if _, ok := _c.mutation.Role(); !ok {
+		return &ValidationError{Name: "role", err: errors.New(`ent: missing required field "Users.role"`)}
+	}
+	if v, ok := _c.mutation.Role(); ok {
+		if err := users.RoleValidator(v); err != nil {
+			return &ValidationError{Name: "role", err: fmt.Errorf(`ent: validator failed for field "Users.role": %w`, err)}
+		}
 	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Users.created_at"`)}
@@ -217,8 +265,13 @@ func (_c *UsersCreate) sqlSave(ctx context.Context) (*Users, error) {
 		}
 		return nil, err
 	}
-	id := _spec.ID.Value.(int64)
-	_node.ID = int(id)
+	if _spec.ID.Value != nil {
+		if id, ok := _spec.ID.Value.(*uuid.UUID); ok {
+			_node.ID = *id
+		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
+			return nil, err
+		}
+	}
 	_c.mutation.id = &_node.ID
 	_c.mutation.done = true
 	return _node, nil
@@ -227,8 +280,12 @@ func (_c *UsersCreate) sqlSave(ctx context.Context) (*Users, error) {
 func (_c *UsersCreate) createSpec() (*Users, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Users{config: _c.config}
-		_spec = sqlgraph.NewCreateSpec(users.Table, sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt))
+		_spec = sqlgraph.NewCreateSpec(users.Table, sqlgraph.NewFieldSpec(users.FieldID, field.TypeUUID))
 	)
+	if id, ok := _c.mutation.ID(); ok {
+		_node.ID = id
+		_spec.ID.Value = &id
+	}
 	if value, ok := _c.mutation.DeletedAt(); ok {
 		_spec.SetField(users.FieldDeletedAt, field.TypeTime, value)
 		_node.DeletedAt = value
@@ -256,6 +313,10 @@ func (_c *UsersCreate) createSpec() (*Users, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.GoogleID(); ok {
 		_spec.SetField(users.FieldGoogleID, field.TypeString, value)
 		_node.GoogleID = &value
+	}
+	if value, ok := _c.mutation.Role(); ok {
+		_spec.SetField(users.FieldRole, field.TypeEnum, value)
+		_node.Role = value
 	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(users.FieldCreatedAt, field.TypeTime, value)
@@ -313,10 +374,6 @@ func (_c *UsersCreateBulk) Save(ctx context.Context) ([]*Users, error) {
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
-				if specs[i].ID.Value != nil {
-					id := specs[i].ID.Value.(int64)
-					nodes[i].ID = int(id)
-				}
 				mutation.done = true
 				return nodes[i], nil
 			})

@@ -1,13 +1,17 @@
 package repo
 
 import (
+	"context"
+	"fmt"
+
 	"auth_service/ent"
 	"auth_service/ent/users"
 	"auth_service/internal/biz"
 	"auth_service/internal/entity"
 	"auth_service/internal/mapper"
-	"context"
-	"fmt"
+
+	"github.com/google/uuid"
+	"github.com/logistic/pkg/authn"
 )
 
 type authRepoImpl struct {
@@ -44,19 +48,44 @@ func (r *authRepoImpl) FindByEmail(ctx context.Context, email string) (*entity.U
 	return profile, hashedPassword, nil
 }
 
+func (r *authRepoImpl) FindByID(ctx context.Context, id uuid.UUID) (*entity.UserProfile, error) {
+	u, err := r.client.Users.Get(ctx, id)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("repo findByID: %w", biz.ErrInvalidCredentials)
+		}
+		return nil, fmt.Errorf("repo findByID: unexpected db error: %w", err)
+	}
+	return r.mapper.ToUserProfile(u), nil
+}
+
+var roleFromAuthn = map[string]users.Role{
+	authn.RoleDriver:  users.RoleDriver,
+	authn.RoleShipper: users.RoleShipper,
+	authn.RoleAdmin:   users.RoleAdmin,
+}
+
 func (r *authRepoImpl) Save(ctx context.Context, user entity.UserRegister, hashedPassword string) (*entity.UserProfile, error) {
+	if user.Role == "" {
+		user.Role = authn.RoleShipper
+	}
+	role, ok := roleFromAuthn[user.Role]
+	if !ok {
+		return nil, fmt.Errorf("repo save: vai trò %q không hợp lệ", user.Role)
+	}
+
 	createBuilder := r.client.Users.
 		Create().
 		SetEmail(user.Email).
 		SetFullName(user.FullName).
-		SetPassword(hashedPassword)
+		SetPassword(hashedPassword).
+		SetRole(role)
 
 	if user.GoogleID != "" {
 		createBuilder.SetGoogleID(user.GoogleID)
 	}
 
 	u, err := createBuilder.Save(ctx)
-
 	if err != nil {
 		if ent.IsConstraintError(err) {
 			return nil, fmt.Errorf("repo save: %w", biz.ErrEmailAlreadyExists)

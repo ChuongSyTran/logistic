@@ -6,7 +6,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// Transaction represents a core business entity for wallet transactions.
 type Transaction struct {
 	ID              uuid.UUID
 	WalletID        uuid.UUID

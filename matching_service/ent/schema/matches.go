@@ -7,6 +7,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/logistic/pkg/uuidx"
 )
 
 type Match struct {
@@ -15,11 +16,11 @@ type Match struct {
 
 func (Match) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.UUID{}).Default(func() uuid.UUID { return uuid.Must(uuid.NewV7()) }),
+		field.UUID("id", uuid.UUID{}).Default(uuidx.New),
 		field.UUID("bid_id", uuid.UUID{}).Comment("Logical FK point to Bids"),
 		field.UUID("ask_id", uuid.UUID{}).Comment("Logical FK point to Asks"),
 		field.Float("agreed_price"),
-		field.Int("status").Default(1), // 1: Proposed, 2: Accepted, 3: Rejected
+		field.Int("status").Default(1),
 		field.Float("consensus_price"),
 		field.Float("consensus_deposit"),
 		field.String("shipper_signature"),

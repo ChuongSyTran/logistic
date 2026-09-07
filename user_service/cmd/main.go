@@ -22,7 +22,10 @@ func main() {
 	}
 
 	log.Println("Starting user_service...")
-	app := NewApp(cfg)
+	app, err := NewApp(cfg)
+	if err != nil {
+		log.Fatalf("Failed to initialize user_service: %v", err)
+	}
 
 	go func() {
 		if err := app.Run(); err != nil {

@@ -78,9 +78,7 @@ func (n *natsPublisher) Publish(ctx context.Context, msg *biz.EventMessage) erro
 	return nil
 }
 
-// parseNatsError phân loại các lỗi đặc thù của NATS thành các lỗi Biz chuẩn
 func parseNatsError(err error) error {
-	// 1. Nhóm lỗi mạng, Timeout, Đứt kết nối -> Có thể thử lại sau (Retry)
 	if errors.Is(err, nats.ErrTimeout) ||
 		errors.Is(err, nats.ErrConnectionClosed) ||
 		errors.Is(err, nats.ErrNoServers) ||
@@ -90,8 +88,6 @@ func parseNatsError(err error) error {
 		return fmt.Errorf("%w: %v", biz.ErrRetryWithDelay, err)
 	}
 
-	// 2. Nhóm lỗi logic, Cấu hình, Quá tải -> Tuyệt đối cấm Retry (Sẽ kẹt hệ thống)
-	// (Ví dụ: Sai Topic, Gói tin to hơn mức cho phép, Lỗi xác thực, Stream bị xóa...)
 	if errors.Is(err, nats.ErrMaxPayload) ||
 		errors.Is(err, nats.ErrNoResponders) ||
 		errors.Is(err, nats.ErrBadSubject) ||
@@ -100,13 +96,10 @@ func parseNatsError(err error) error {
 		return fmt.Errorf("%w: %v", biz.ErrNonRetryable, err)
 	}
 
-	// 3. JetStream API Errors (Lỗi đặc thù của JetStream)
-	// Các lỗi JetStream thường trả về kiểu *nats.APIError, ta check theo error string hoặc type
 	if apiErr, ok := errors.AsType[*nats.APIError](err); ok {
 		log.Printf("NATS JetStream API Error, do not retry: %v", apiErr)
 		return fmt.Errorf("%w: %v", biz.ErrNonRetryable, apiErr)
 	}
 
-	// Mặc định: Trả về lỗi yêu cầu Retry để an toàn
 	return fmt.Errorf("%w: unknown NATS error: %v", biz.ErrRetryWithDelay, err)
 }

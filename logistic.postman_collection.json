@@ -1,0 +1,4598 @@
+{
+  "info": {
+    "_postman_id": "8f2c41d0-6b3a-4e19-9d77-0a5c1e2b7f34",
+    "name": "Logistics OS — Gateway API",
+    "description": "Bộ sưu tập đầy đủ cho gateway của Logistics OS: 69 endpoint dưới /api/v1 cộng health check, kèm 5 request kiểm thử bảo mật.\n\n## Chuẩn bị\n\n1. Import cả file này và file environment \"Logistics OS — Local\".\n2. Chọn environment ở góc trên bên phải Postman.\n3. Chạy nhóm \"01 — Auth \u003e Đăng nhập\" một lần: access_token và refresh_token được lưu tự động, mọi request sau tự đính kèm.\n\n## Thứ tự chạy\n\nCác nhóm được đánh số theo đúng trình tự nghiệp vụ, và request sau dùng biến do request trước lưu lại (user_id, vehicle_id, bid_id...). Chạy tuần tự từ 00 tới 99 bằng Collection Runner là đi hết một vòng nghiệp vụ.\n\nNhóm \"11 — Admin\" cần biến admin_access_token — đăng nhập bằng một tài khoản có role admin rồi gán tay, vì API công khai không tạo được tài khoản admin.\n\n## Mỗi request kiểm gì\n\n- Mã trạng thái đúng như thiết kế (kể cả các mã lỗi có chủ đích ở nhóm 99).\n- Phản hồi đúng khuôn: thành công có \"data\", lỗi có \"error.code\".\n- Có header X-Request-ID — mã này chính là trace_id trên Jaeger.\n\nFile này được SINH RA từ tools/postman. Sửa endpoint thì sửa ở đó rồi chạy \"make postman\", đừng sửa tay file JSON.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const required = ['base_url'];",
+          "required.forEach(function (key) {",
+          "    if (!pm.variables.get(key)) {",
+          "        throw new Error('Thiếu biến ' + key + '. Chọn environment \"Logistics OS — Local\" trước khi chạy.');",
+          "    }",
+          "});"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "00 — Sức khoẻ hệ thống",
+      "description": "Không cần token. Dùng để kiểm tra gateway đã lên chưa trước khi chạy các nhóm còn lại.",
+      "item": [
+        {
+          "name": "Health check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test('trạng thái ok', function () {",
+                  "    pm.expect(pm.response.json().status).to.eql('ok');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/healthz",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "healthz"
+              ]
+            },
+            "description": "Không cần token. Docker healthcheck và load balancer gọi endpoint này.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Swagger UI",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test('trả về trang HTML', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('text/html');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/swagger/index.html",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "swagger",
+                "index.html"
+              ]
+            },
+            "description": "Tài liệu API sinh từ annotation trong controller. Mở bằng trình duyệt để xem đầy đủ.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 — Auth",
+      "description": "Nhóm CÔNG KHAI duy nhất — đây là nơi cấp token.\n\nauth_service giữ private key và ký token; gateway chỉ có public key nên verify được mà không ký được.\n\nChạy \"Đăng nhập\" trước tiên: nó lưu access_token, refresh_token và user_id vào environment.",
+      "item": [
+        {
+          "name": "Đăng ký tài khoản",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});",
+                  "",
+                  "if (pm.response.code \u003c 400) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.data \u0026\u0026 json.data.user \u0026\u0026 json.data.user.id) { pm.environment.set('user_id', json.data \u0026\u0026 json.data.user \u0026\u0026 json.data.user.id); }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"{{test_email}}\",\n    \"full_name\": \"Nguyễn Văn Chủ Hàng\",\n    \"password\": \"{{test_password}}\",\n    \"role\": \"shipper\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Công khai. Vai trò chỉ nhận driver hoặc shipper — admin không tạo được qua API.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Đăng nhập",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});",
+                  "",
+                  "if (pm.response.code \u003c 400) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.data \u0026\u0026 json.data.access_token) { pm.environment.set('access_token', json.data \u0026\u0026 json.data.access_token); }",
+                  "    if (json.data \u0026\u0026 json.data.refresh_token) { pm.environment.set('refresh_token', json.data \u0026\u0026 json.data.refresh_token); }",
+                  "    if (json.data \u0026\u0026 json.data.user \u0026\u0026 json.data.user.id) { pm.environment.set('user_id', json.data \u0026\u0026 json.data.user \u0026\u0026 json.data.user.id); }",
+                  "}",
+                  "",
+                  "pm.test('token là JWT ba phần', function () {",
+                  "    const token = pm.response.json().data.access_token;",
+                  "    pm.expect(token.split('.')).to.have.lengthOf(3);",
+                  "});",
+                  "",
+                  "pm.test('expires_at là mốc thời gian trong tương lai', function () {",
+                  "    const exp = pm.response.json().data.expires_at;",
+                  "    pm.expect(exp).to.be.a('number');",
+                  "    pm.expect(exp * 1000).to.be.above(Date.now());",
+                  "});",
+                  "",
+                  "pm.test('không lộ mật khẩu trong phản hồi', function () {",
+                  "    pm.expect(pm.response.text()).to.not.include(pm.environment.get('test_password'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"{{test_email}}\",\n    \"password\": \"{{test_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Lưu access_token và refresh_token vào environment cho mọi request sau.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Thông tin tài khoản hiện tại",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test('id là UUID canonical, không phải base64', function () {",
+                  "    const id = pm.response.json().data.user.id;",
+                  "    pm.expect(id).to.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Cần access token. Trả về profile của chủ nhân token."
+          }
+        },
+        {
+          "name": "Làm mới phiên",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});",
+                  "",
+                  "if (pm.response.code \u003c 400) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.data \u0026\u0026 json.data.access_token) { pm.environment.set('access_token', json.data \u0026\u0026 json.data.access_token); }",
+                  "    if (json.data \u0026\u0026 json.data.refresh_token) { pm.environment.set('refresh_token', json.data \u0026\u0026 json.data.refresh_token); }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"refresh_token\": \"{{refresh_token}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/refresh",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "Refresh token dùng MỘT LẦN. Mỗi lần gọi trả cặp token mới; token cũ hết hiệu lực ngay.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Đăng xuất",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"refresh_token\": \"{{refresh_token}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Thu hồi phiên refresh. Access token đang cầm vẫn sống tới khi hết hạn (tối đa 15 phút)."
+          }
+        },
+        {
+          "name": "Google OAuth2 — lấy URL đăng nhập",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 307', function () {",
+                  "    pm.response.to.have.status(307);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/google/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "google",
+                "login"
+              ]
+            },
+            "description": "Trả redirect 307 sang màn hình consent của Google, kèm cookie oauth_state chống CSRF.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Google OAuth2 — callback",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/google/callback?state=state-khong-hop-le\u0026code=authorization-code-tu-google",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "google",
+                "callback"
+              ],
+              "query": [
+                {
+                  "key": "state",
+                  "value": "state-khong-hop-le",
+                  "description": "Phải khớp cookie oauth_state"
+                },
+                {
+                  "key": "code",
+                  "value": "authorization-code-tu-google"
+                }
+              ]
+            },
+            "description": "Google gọi lại endpoint này. Gọi tay sẽ trả 400 vì thiếu state hợp lệ — đó là hành vi đúng.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 — User",
+      "description": "Hồ sơ người dùng và hồ sơ nghiệp vụ theo vai trò (tài xế / chủ hàng).\n\nMọi endpoint ở đây chỉ thao tác được trên dữ liệu của CHÍNH mình, trừ khi token có vai trò admin.",
+      "item": [
+        {
+          "name": "Đăng ký người dùng (user_service)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});",
+                  "",
+                  "if (pm.response.code \u003c 400) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.data \u0026\u0026 json.data.id) { pm.environment.set('user_id', json.data \u0026\u0026 json.data.id); }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"phone\": \"{{test_phone}}\",\n    \"email\": \"{{test_email}}\",\n    \"password\": \"{{test_password}}\",\n    \"role\": \"shipper\",\n    \"full_name\": \"Nguyễn Văn Chủ Hàng\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "register"
+              ]
+            },
+            "description": "Công khai. Khác /auth/register: tạo hồ sơ nghiệp vụ kèm số điện thoại và vai trò.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Xem hồ sơ",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/{{user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{user_id}}"
+              ]
+            },
+            "description": "Chỉ xem được hồ sơ của chính mình, trừ khi là admin."
+          }
+        },
+        {
+          "name": "Cập nhật hồ sơ",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"full_name\": \"Nguyễn Văn Chủ Hàng (đã sửa)\",\n    \"email\": \"{{test_email}}\",\n    \"avatar_url\": \"https://cdn.logistic.vn/avatar/demo.png\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/{{user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{user_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Xem hồ sơ tài xế",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/{{user_id}}/driver-profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{user_id}}",
+                "driver-profile"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cập nhật hồ sơ tài xế",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"license_number\": \"79B1-234567\",\n    \"id_card\": \"079201001234\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/{{user_id}}/driver-profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{user_id}}",
+                "driver-profile"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Xem hồ sơ chủ hàng",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/{{user_id}}/shipper-profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{user_id}}",
+                "shipper-profile"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cập nhật hồ sơ chủ hàng",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"company_name\": \"Công ty TNHH Vận Tải Demo\",\n    \"tax_code\": \"0312345678\",\n    \"business_address\": \"12 Nguyễn Văn Linh, Quận 7, TP.HCM\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/{{user_id}}/shipper-profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{user_id}}",
+                "shipper-profile"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Nộp hồ sơ KYC",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"kyc_status\": \"pending\",\n    \"note\": \"Đã nộp ảnh GPLX hai mặt\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/{{user_id}}/kyc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{user_id}}",
+                "kyc"
+              ]
+            },
+            "description": "Tài xế nộp hồ sơ của chính mình. Việc DUYỆT nằm ở nhóm Admin và cần vai trò admin."
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 — Sổ địa chỉ",
+      "description": "Sổ địa chỉ lấy hàng / giao hàng. Có sẵn toạ độ nên lúc tạo đơn không phải geocode lại.",
+      "item": [
+        {
+          "name": "Thêm địa chỉ",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});",
+                  "",
+                  "if (pm.response.code \u003c 400) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.data \u0026\u0026 json.data.address \u0026\u0026 json.data.address.id) { pm.environment.set('address_id', json.data \u0026\u0026 json.data.address \u0026\u0026 json.data.address.id); }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"label\": \"Kho Quận 7\",\n    \"contact_name\": \"Trần Thị Kho\",\n    \"contact_phone\": \"0900000002\",\n    \"line1\": \"Lô A2, KCN Tân Thuận\",\n    \"ward\": \"Tân Thuận Đông\",\n    \"district\": \"Quận 7\",\n    \"city\": \"TP.HCM\",\n    \"latitude\": 10.7379,\n    \"longitude\": 106.7226,\n    \"address_type\": \"pickup\",\n    \"is_default\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/{{user_id}}/addresses",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{user_id}}",
+                "addresses"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Danh sách địa chỉ",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/{{user_id}}/addresses?address_type=pickup\u0026page=1\u0026page_size=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{user_id}}",
+                "addresses"
+              ],
+              "query": [
+                {
+                  "key": "address_type",
+                  "value": "pickup",
+                  "description": "pickup | delivery | both"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "page_size",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cập nhật địa chỉ",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"label\": \"Kho Quận 7 (mới)\",\n    \"contact_name\": \"Trần Thị Kho\",\n    \"contact_phone\": \"0900000002\",\n    \"line1\": \"Lô A5, KCN Tân Thuận\",\n    \"ward\": \"Tân Thuận Đông\",\n    \"district\": \"Quận 7\",\n    \"city\": \"TP.HCM\",\n    \"latitude\": 10.7381,\n    \"longitude\": 106.7231,\n    \"address_type\": \"both\",\n    \"is_default\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/addresses/{{address_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "addresses",
+                "{{address_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Xoá địa chỉ",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/addresses/{{address_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "addresses",
+                "{{address_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 — Thiết bị nhận push",
+      "description": "Thiết bị nhận push. notification_service đọc bảng này để biết đẩy thông báo tới đâu.",
+      "item": [
+        {
+          "name": "Đăng ký thiết bị nhận push",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});",
+                  "",
+                  "if (pm.response.code \u003c 400) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.data \u0026\u0026 json.data.device \u0026\u0026 json.data.device.id) { pm.environment.set('device_id', json.data \u0026\u0026 json.data.device \u0026\u0026 json.data.device.id); }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"device_token\": \"fcm-token-demo-0001\",\n    \"platform\": \"android\",\n    \"device_name\": \"Samsung A54 của tài xế\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/{{user_id}}/devices",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{user_id}}",
+                "devices"
+              ]
+            },
+            "description": "Chỉ đăng ký được thiết bị cho chính mình — nếu không, người khác nhận được push của bạn."
+          }
+        },
+        {
+          "name": "Danh sách thiết bị",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/{{user_id}}/devices",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{user_id}}",
+                "devices"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Xoá thiết bị",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/devices/{{device_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "devices",
+                "{{device_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 — Phương tiện",
+      "description": "Phương tiện của tài xế.\n\ndriver_id luôn lấy từ token, không nhận từ body — không ai đăng ký được xe đứng tên người khác.",
+      "item": [
+        {
+          "name": "Đăng ký phương tiện",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});",
+                  "",
+                  "if (pm.response.code \u003c 400) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.data \u0026\u0026 json.data.id) { pm.environment.set('vehicle_id', json.data \u0026\u0026 json.data.id); }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"license_plate\": \"51C-999.88\",\n    \"brand\": \"Hyundai\",\n    \"model\": \"Mighty EX8\",\n    \"manufacture_year\": 2022,\n    \"vehicle_type\": \"truck\",\n    \"capacity_weight_kg\": 8000,\n    \"capacity_volume_cbm\": 24.5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/vehicles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "vehicles"
+              ]
+            },
+            "description": "driver_id lấy từ token, không nhận từ body — không ai đăng ký xe đứng tên người khác được."
+          }
+        },
+        {
+          "name": "Danh sách phương tiện",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/vehicles?status=active\u0026vehicle_type=truck\u0026page=1\u0026page_size=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "vehicles"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "active",
+                  "description": "active | maintenance | inactive"
+                },
+                {
+                  "key": "vehicle_type",
+                  "value": "truck"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "page_size",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Chi tiết phương tiện",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/vehicles/{{vehicle_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "vehicles",
+                "{{vehicle_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cập nhật phương tiện",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"brand\": \"Hyundai\",\n    \"model\": \"Mighty EX8 GTL\",\n    \"manufacture_year\": 2023,\n    \"vehicle_type\": \"truck\",\n    \"capacity_weight_kg\": 8500,\n    \"capacity_volume_cbm\": 26\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/vehicles/{{vehicle_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "vehicles",
+                "{{vehicle_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Đổi trạng thái phương tiện",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"status\": \"maintenance\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/vehicles/{{vehicle_id}}/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "vehicles",
+                "{{vehicle_id}}",
+                "status"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Tìm xe gần một điểm",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"latitude\": 10.7769,\n    \"longitude\": 106.7009,\n    \"radius_km\": 10,\n    \"min_weight_kg\": 1000,\n    \"min_volume_cbm\": 5,\n    \"vehicle_type\": \"truck\",\n    \"limit\": 20\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/vehicles/nearby",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "vehicles",
+                "nearby"
+              ]
+            },
+            "description": "Chạy trên chỉ mục Redis GEO. Đây cũng là API matching_service dùng nội bộ."
+          }
+        },
+        {
+          "name": "Xoá phương tiện",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/vehicles/{{vehicle_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "vehicles",
+                "{{vehicle_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 — Giấy tờ xe",
+      "description": "Đăng kiểm, bảo hiểm, giấy phép. Xe chỉ được verified khi mọi giấy tờ bắt buộc đã approved và còn hạn.",
+      "item": [
+        {
+          "name": "Tải lên giấy tờ xe",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});",
+                  "",
+                  "if (pm.response.code \u003c 400) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.data \u0026\u0026 json.data.document \u0026\u0026 json.data.document.id) { pm.environment.set('document_id', json.data \u0026\u0026 json.data.document \u0026\u0026 json.data.document.id); }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"document_type\": \"registration\",\n    \"document_number\": \"DK-51C-99988\",\n    \"file_url\": \"https://cdn.logistic.vn/docs/dangky-51c99988.pdf\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/vehicles/{{vehicle_id}}/documents",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "vehicles",
+                "{{vehicle_id}}",
+                "documents"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Danh sách giấy tờ của xe",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/vehicles/{{vehicle_id}}/documents?review_status=pending",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "vehicles",
+                "{{vehicle_id}}",
+                "documents"
+              ],
+              "query": [
+                {
+                  "key": "review_status",
+                  "value": "pending",
+                  "description": "pending | approved | rejected"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Xoá giấy tờ xe",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/vehicle-documents/{{document_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "vehicle-documents",
+                "{{document_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 — Vị trí \u0026 nhận đơn",
+      "description": "Báo vị trí GPS và bật/tắt nhận đơn.\n\nCác RPC vị trí dùng hạn chờ ngắn hơn mức chung (2s thay vì 5s): bản tin GPS tới muộn thì đã vô nghĩa vì xe đã ở chỗ khác.",
+      "item": [
+        {
+          "name": "Tài xế báo vị trí GPS",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"latitude\": 10.7769,\n    \"longitude\": 106.7009,\n    \"heading\": 135.5,\n    \"speed_kph\": 42.3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/vehicles/{{vehicle_id}}/location",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "vehicles",
+                "{{vehicle_id}}",
+                "location"
+              ]
+            },
+            "description": "App tài xế gọi định kỳ. Hạn chờ ngắn hơn mức chung (2s) vì bản tin GPS mau hỏng."
+          }
+        },
+        {
+          "name": "Vị trí hiện tại của xe",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/vehicles/{{vehicle_id}}/location",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "vehicles",
+                "{{vehicle_id}}",
+                "location"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Bật/tắt nhận đơn",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"vehicle_id\": \"{{vehicle_id}}\",\n    \"is_online\": true,\n    \"available_weight_kg\": 6000,\n    \"available_volume_cbm\": 18,\n    \"current_lat\": 10.7769,\n    \"current_lng\": 106.7009\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/drivers/{{user_id}}/availability",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "drivers",
+                "{{user_id}}",
+                "availability"
+              ]
+            },
+            "description": "Bật thì xe vào chỉ mục tìm kiếm của matching; tắt thì gỡ ra."
+          }
+        },
+        {
+          "name": "Trạng thái nhận đơn của tài xế",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/drivers/{{user_id}}/availability",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "drivers",
+                "{{user_id}}",
+                "availability"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 — Matching",
+      "description": "Lõi ghép đơn theo mô hình Bid/Ask.\n\nTrình tự: chủ hàng đăng Bid → tài xế đăng Ask → tài xế báo giá (Offer) → chủ hàng chốt hoặc từ chối.\n\nChốt xong, matching_service phát sự kiện qua RabbitMQ và notification_service báo cho cả hai bên.",
+      "item": [
+        {
+          "name": "Chủ hàng đăng đơn cần xe (Bid)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});",
+                  "",
+                  "if (pm.response.code \u003c 400) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.data \u0026\u0026 json.data.bid_id) { pm.environment.set('bid_id', json.data \u0026\u0026 json.data.bid_id); }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"shipper_id\": \"{{user_id}}\",\n    \"shipper_phone\": \"{{test_phone}}\",\n    \"shipper_mail\": \"{{test_email}}\",\n    \"consignee_id\": \"\",\n    \"consignee_phone\": \"0900000003\",\n    \"consignee_mail\": \"nguoinhan@logistic.vn\",\n    \"origin\": {\n        \"latitude\": 10.7769,\n        \"longitude\": 106.7009,\n        \"zone_id\": \"hcm-q1\"\n    },\n    \"destination\": {\n        \"latitude\": 10.9804,\n        \"longitude\": 106.6519,\n        \"zone_id\": \"binhduong-thuandau\"\n    },\n    \"volume_m3\": 12.5,\n    \"weight_kg\": 3200,\n    \"max_price\": 4500000,\n    \"cargo_value\": 120000000,\n    \"required_deposit\": 500000,\n    \"desired_deposit\": 300000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/matching/bids",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "matching",
+                "bids"
+              ]
+            },
+            "description": "Sau khi lưu, matching_service tìm tài xế phù hợp và phát sự kiện qua RabbitMQ."
+          }
+        },
+        {
+          "name": "Tài xế đăng chuyến còn chỗ (Ask)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});",
+                  "",
+                  "if (pm.response.code \u003c 400) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.data \u0026\u0026 json.data.ask_id) { pm.environment.set('ask_id', json.data \u0026\u0026 json.data.ask_id); }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"driver_id\": \"{{user_id}}\",\n    \"driver_phone\": \"0900000004\",\n    \"driver_mail\": \"taixe@logistic.vn\",\n    \"vehicle_id\": \"{{vehicle_id}}\",\n    \"current_location\": {\n        \"latitude\": 10.7769,\n        \"longitude\": 106.7009,\n        \"zone_id\": \"hcm-q1\"\n    },\n    \"destination\": {\n        \"latitude\": 10.9804,\n        \"longitude\": 106.6519,\n        \"zone_id\": \"binhduong-thuandau\"\n    },\n    \"available_volume_m3\": 20,\n    \"available_weight_kg\": 6000,\n    \"min_price\": 3800000,\n    \"desired_deposit\": 300000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/matching/asks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "matching",
+                "asks"
+              ]
+            },
+            "description": "Cần token của tài xế. Dùng biến driver_id nếu chạy bằng tài khoản khác."
+          }
+        },
+        {
+          "name": "Tài xế báo giá",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"bid_id\": \"{{bid_id}}\",\n    \"ask_id\": \"{{ask_id}}\",\n    \"desired_price\": 4200000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/matching/offers",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "matching",
+                "offers"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Chủ hàng từ chối báo giá",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"bid_id\": \"{{bid_id}}\",\n    \"ask_id\": \"{{ask_id}}\",\n    \"reason\": \"Giá cao hơn ngân sách\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/matching/offers/reject",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "matching",
+                "offers",
+                "reject"
+              ]
+            },
+            "description": "Đơn quay lại trạng thái PENDING, các tài xế khác tiếp tục báo giá được."
+          }
+        },
+        {
+          "name": "Chủ hàng chốt xe",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"bid_id\": \"{{bid_id}}\",\n    \"ask_id\": \"{{ask_id}}\",\n    \"consensus_price\": 4200000,\n    \"consensus_deposit\": 400000,\n    \"shipper_signature\": \"chu-ky-so-demo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/matching/matches/accept",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "matching",
+                "matches",
+                "accept"
+              ]
+            },
+            "description": "Chốt xong, matching_service phát matching.match.found; notification_service báo cho cả hai bên."
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 — Thông báo",
+      "description": "Hộp thư thông báo. Thông báo do consumer RabbitMQ sinh ra, không có endpoint tạo cho client.",
+      "item": [
+        {
+          "name": "Hộp thư thông báo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});",
+                  "",
+                  "if (pm.response.code \u003c 400) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.data \u0026\u0026 json.data.notifications \u0026\u0026 json.data.notifications.length \u003e 0 \u0026\u0026 json.data.notifications[0].id) { pm.environment.set('notification_id', json.data \u0026\u0026 json.data.notifications \u0026\u0026 json.data.notifications.length \u003e 0 \u0026\u0026 json.data.notifications[0].id); }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/{{user_id}}/notifications?unread_only=false\u0026page=1\u0026page_size=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{user_id}}",
+                "notifications"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "",
+                  "description": "match_found | driver_candidate | offer_received...",
+                  "disabled": true
+                },
+                {
+                  "key": "unread_only",
+                  "value": "false"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "page_size",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Số thông báo chưa đọc",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/{{user_id}}/notifications/unread-count",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{user_id}}",
+                "notifications",
+                "unread-count"
+              ]
+            },
+            "description": "App gọi ở mọi màn hình để vẽ chấm đỏ; con số này được cache trên Redis."
+          }
+        },
+        {
+          "name": "Chi tiết một thông báo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/notifications/{{notification_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notifications",
+                "{{notification_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Đánh dấu đã đọc",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/api/v1/notifications/{{notification_id}}/read",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notifications",
+                "{{notification_id}}",
+                "read"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Đánh dấu tất cả đã đọc",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/{{user_id}}/notifications/read-all",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{user_id}}",
+                "notifications",
+                "read-all"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Xoá thông báo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/notifications/{{notification_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notifications",
+                "{{notification_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Xem cài đặt nhận thông báo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/{{user_id}}/notification-preferences",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{user_id}}",
+                "notification-preferences"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cập nhật cài đặt nhận thông báo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"in_app_enabled\": true,\n    \"push_enabled\": true,\n    \"email_enabled\": false,\n    \"sms_enabled\": false,\n    \"match_events_enabled\": true,\n    \"promotion_enabled\": false,\n    \"quiet_hours_start\": \"22:00\",\n    \"quiet_hours_end\": \"07:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/{{user_id}}/notification-preferences",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{user_id}}",
+                "notification-preferences"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 — Media",
+      "description": "Tải file lên Cloudinary. Nhớ chọn file thật ở tab Body \u003e form-data trước khi gửi.",
+      "item": [
+        {
+          "name": "Tải file lên",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});",
+                  "",
+                  "if (pm.response.code \u003c 400) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.data \u0026\u0026 json.data.public_id) { pm.environment.set('public_id', json.data \u0026\u0026 json.data.public_id); }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "description": "Ảnh giấy tờ hoặc avatar"
+                },
+                {
+                  "key": "folder",
+                  "type": "text",
+                  "value": "vehicle-documents"
+                },
+                {
+                  "key": "prefix",
+                  "type": "text",
+                  "value": "demo"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/media/upload",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "media",
+                "upload"
+              ]
+            },
+            "description": "Chọn file thật ở tab Body \u003e form-data trước khi gửi. Trả về public_id dùng cho lệnh xoá."
+          }
+        },
+        {
+          "name": "Xoá file",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/media/files/{{public_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "media",
+                "files",
+                "{{public_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 — Admin",
+      "description": "Toàn bộ nhóm này yêu cầu token có vai trò admin.\n\nĐặt biến admin_access_token trước khi chạy. Tài khoản admin không tạo được qua API công khai — dùng công cụ nội bộ hoặc sửa trực tiếp cột role trong database.",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{admin_access_token}}",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "Người dùng",
+          "item": [
+            {
+              "name": "Danh sách người dùng",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('mã trạng thái là 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                      "    const json = pm.response.json();",
+                      "    if (pm.response.code \u003e= 400) {",
+                      "        pm.expect(json).to.have.property('error');",
+                      "        pm.expect(json.error).to.have.property('code');",
+                      "    } else {",
+                      "        pm.expect(json).to.be.an('object');",
+                      "    }",
+                      "});",
+                      "",
+                      "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                      "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users?page=1\u0026page_size=20",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users"
+                  ],
+                  "query": [
+                    {
+                      "key": "role",
+                      "value": "",
+                      "description": "driver | shipper | admin",
+                      "disabled": true
+                    },
+                    {
+                      "key": "status",
+                      "value": "",
+                      "description": "active | banned | suspended",
+                      "disabled": true
+                    },
+                    {
+                      "key": "keyword",
+                      "value": "",
+                      "description": "tìm theo phone/email/tên",
+                      "disabled": true
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "20"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Thống kê người dùng",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('mã trạng thái là 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                      "    const json = pm.response.json();",
+                      "    if (pm.response.code \u003e= 400) {",
+                      "        pm.expect(json).to.have.property('error');",
+                      "        pm.expect(json.error).to.have.property('code');",
+                      "    } else {",
+                      "        pm.expect(json).to.be.an('object');",
+                      "    }",
+                      "});",
+                      "",
+                      "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                      "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users/stats",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users",
+                    "stats"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Khoá / mở tài khoản",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('mã trạng thái là 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                      "    const json = pm.response.json();",
+                      "    if (pm.response.code \u003e= 400) {",
+                      "        pm.expect(json).to.have.property('error');",
+                      "        pm.expect(json.error).to.have.property('code');",
+                      "    } else {",
+                      "        pm.expect(json).to.be.an('object');",
+                      "    }",
+                      "});",
+                      "",
+                      "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                      "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"status\": \"suspended\",\n    \"reason\": \"Nghi ngờ gian lận cước\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users/{{user_id}}/status",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users",
+                    "{{user_id}}",
+                    "status"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Xoá người dùng",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('mã trạng thái là 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                      "    const json = pm.response.json();",
+                      "    if (pm.response.code \u003e= 400) {",
+                      "        pm.expect(json).to.have.property('error');",
+                      "        pm.expect(json.error).to.have.property('code');",
+                      "    } else {",
+                      "        pm.expect(json).to.be.an('object');",
+                      "    }",
+                      "});",
+                      "",
+                      "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                      "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/users/{{user_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users",
+                    "{{user_id}}"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "KYC",
+          "item": [
+            {
+              "name": "Hàng đợi duyệt KYC",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('mã trạng thái là 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                      "    const json = pm.response.json();",
+                      "    if (pm.response.code \u003e= 400) {",
+                      "        pm.expect(json).to.have.property('error');",
+                      "        pm.expect(json.error).to.have.property('code');",
+                      "    } else {",
+                      "        pm.expect(json).to.be.an('object');",
+                      "    }",
+                      "});",
+                      "",
+                      "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                      "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/kyc/pending?page=1\u0026page_size=20",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "kyc",
+                    "pending"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "20"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Duyệt / từ chối KYC",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('mã trạng thái là 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                      "    const json = pm.response.json();",
+                      "    if (pm.response.code \u003e= 400) {",
+                      "        pm.expect(json).to.have.property('error');",
+                      "        pm.expect(json.error).to.have.property('code');",
+                      "    } else {",
+                      "        pm.expect(json).to.be.an('object');",
+                      "    }",
+                      "});",
+                      "",
+                      "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                      "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"approved\": true,\n    \"note\": \"Giấy tờ hợp lệ, ảnh rõ nét\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/kyc/{{user_id}}/review",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "kyc",
+                    "{{user_id}}",
+                    "review"
+                  ]
+                },
+                "description": "reviewer_id lấy từ token của admin đang đăng nhập, không nhận từ body."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Phương tiện",
+          "item": [
+            {
+              "name": "Danh sách toàn bộ phương tiện",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('mã trạng thái là 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                      "    const json = pm.response.json();",
+                      "    if (pm.response.code \u003e= 400) {",
+                      "        pm.expect(json).to.have.property('error');",
+                      "        pm.expect(json.error).to.have.property('code');",
+                      "    } else {",
+                      "        pm.expect(json).to.be.an('object');",
+                      "    }",
+                      "});",
+                      "",
+                      "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                      "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/vehicles?verification_status=pending\u0026page=1\u0026page_size=20",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "vehicles"
+                  ],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "",
+                      "disabled": true
+                    },
+                    {
+                      "key": "verification_status",
+                      "value": "pending",
+                      "description": "pending | verified | rejected"
+                    },
+                    {
+                      "key": "vehicle_type",
+                      "value": "",
+                      "disabled": true
+                    },
+                    {
+                      "key": "keyword",
+                      "value": "",
+                      "disabled": true
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "20"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Thống kê phương tiện",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('mã trạng thái là 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                      "    const json = pm.response.json();",
+                      "    if (pm.response.code \u003e= 400) {",
+                      "        pm.expect(json).to.have.property('error');",
+                      "        pm.expect(json.error).to.have.property('code');",
+                      "    } else {",
+                      "        pm.expect(json).to.be.an('object');",
+                      "    }",
+                      "});",
+                      "",
+                      "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                      "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/vehicles/stats",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "vehicles",
+                    "stats"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Duyệt phương tiện",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('mã trạng thái là 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                      "    const json = pm.response.json();",
+                      "    if (pm.response.code \u003e= 400) {",
+                      "        pm.expect(json).to.have.property('error');",
+                      "        pm.expect(json.error).to.have.property('code');",
+                      "    } else {",
+                      "        pm.expect(json).to.be.an('object');",
+                      "    }",
+                      "});",
+                      "",
+                      "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                      "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"approved\": true,\n    \"note\": \"Đủ giấy tờ, đăng kiểm còn hạn\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/vehicles/{{vehicle_id}}/verify",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "vehicles",
+                    "{{vehicle_id}}",
+                    "verify"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Giấy tờ xe",
+          "item": [
+            {
+              "name": "Hàng đợi duyệt giấy tờ",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('mã trạng thái là 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                      "    const json = pm.response.json();",
+                      "    if (pm.response.code \u003e= 400) {",
+                      "        pm.expect(json).to.have.property('error');",
+                      "        pm.expect(json.error).to.have.property('code');",
+                      "    } else {",
+                      "        pm.expect(json).to.be.an('object');",
+                      "    }",
+                      "});",
+                      "",
+                      "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                      "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/vehicle-documents/pending?page=1\u0026page_size=20",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "vehicle-documents",
+                    "pending"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "20"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Duyệt giấy tờ xe",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('mã trạng thái là 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                      "    const json = pm.response.json();",
+                      "    if (pm.response.code \u003e= 400) {",
+                      "        pm.expect(json).to.have.property('error');",
+                      "        pm.expect(json.error).to.have.property('code');",
+                      "    } else {",
+                      "        pm.expect(json).to.be.an('object');",
+                      "    }",
+                      "});",
+                      "",
+                      "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                      "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"approved\": true,\n    \"note\": \"Đăng ký xe khớp biển số\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/vehicle-documents/{{document_id}}/review",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "vehicle-documents",
+                    "{{document_id}}",
+                    "review"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Thông báo",
+          "item": [
+            {
+              "name": "Danh sách toàn bộ thông báo",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('mã trạng thái là 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                      "    const json = pm.response.json();",
+                      "    if (pm.response.code \u003e= 400) {",
+                      "        pm.expect(json).to.have.property('error');",
+                      "        pm.expect(json.error).to.have.property('code');",
+                      "    } else {",
+                      "        pm.expect(json).to.be.an('object');",
+                      "    }",
+                      "});",
+                      "",
+                      "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                      "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/notifications?page=1\u0026page_size=20",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "notifications"
+                  ],
+                  "query": [
+                    {
+                      "key": "user_id",
+                      "value": "",
+                      "description": "lọc theo người nhận",
+                      "disabled": true
+                    },
+                    {
+                      "key": "type",
+                      "value": "",
+                      "disabled": true
+                    },
+                    {
+                      "key": "status",
+                      "value": "",
+                      "description": "pending | sent | failed | read",
+                      "disabled": true
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "20"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Thống kê thông báo",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('mã trạng thái là 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                      "    const json = pm.response.json();",
+                      "    if (pm.response.code \u003e= 400) {",
+                      "        pm.expect(json).to.have.property('error');",
+                      "        pm.expect(json.error).to.have.property('code');",
+                      "    } else {",
+                      "        pm.expect(json).to.be.an('object');",
+                      "    }",
+                      "});",
+                      "",
+                      "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                      "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/notifications/stats",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "notifications",
+                    "stats"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Gửi thông báo thủ công",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('mã trạng thái là 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                      "    const json = pm.response.json();",
+                      "    if (pm.response.code \u003e= 400) {",
+                      "        pm.expect(json).to.have.property('error');",
+                      "        pm.expect(json.error).to.have.property('code');",
+                      "    } else {",
+                      "        pm.expect(json).to.be.an('object');",
+                      "    }",
+                      "});",
+                      "",
+                      "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                      "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"user_ids\": [\"{{user_id}}\"],\n    \"broadcast_role\": \"\",\n    \"type\": \"system_announcement\",\n    \"channel\": \"in_app\",\n    \"title\": \"Bảo trì hệ thống\",\n    \"body\": \"Hệ thống bảo trì từ 23:00 đến 01:00 ngày mai.\",\n    \"data\": \"{\\\"deep_link\\\":\\\"/notifications\\\"}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/notifications/send",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "notifications",
+                    "send"
+                  ]
+                },
+                "description": "Để trống user_ids và đặt broadcast_role thì gửi cho toàn bộ người dùng thuộc vai trò đó."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mẫu thông báo",
+          "item": [
+            {
+              "name": "Danh sách mẫu thông báo",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('mã trạng thái là 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                      "    const json = pm.response.json();",
+                      "    if (pm.response.code \u003e= 400) {",
+                      "        pm.expect(json).to.have.property('error');",
+                      "        pm.expect(json.error).to.have.property('code');",
+                      "    } else {",
+                      "        pm.expect(json).to.be.an('object');",
+                      "    }",
+                      "});",
+                      "",
+                      "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                      "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/notification-templates?locale=vi",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "notification-templates"
+                  ],
+                  "query": [
+                    {
+                      "key": "channel",
+                      "value": "",
+                      "description": "in_app | push | email | sms",
+                      "disabled": true
+                    },
+                    {
+                      "key": "locale",
+                      "value": "vi"
+                    }
+                  ]
+                },
+                "description": "Mẫu quyết định câu chữ thông báo gửi cho người dùng, sửa được mà không cần deploy lại."
+              }
+            },
+            {
+              "name": "Tạo mẫu thông báo",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('mã trạng thái là 201', function () {",
+                      "    pm.response.to.have.status(201);",
+                      "});",
+                      "",
+                      "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                      "    const json = pm.response.json();",
+                      "    if (pm.response.code \u003e= 400) {",
+                      "        pm.expect(json).to.have.property('error');",
+                      "        pm.expect(json.error).to.have.property('code');",
+                      "    } else {",
+                      "        pm.expect(json).to.be.an('object');",
+                      "    }",
+                      "});",
+                      "",
+                      "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                      "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                      "});",
+                      "",
+                      "if (pm.response.code \u003c 400) {",
+                      "    const json = pm.response.json();",
+                      "    if (json.data \u0026\u0026 json.data.template \u0026\u0026 json.data.template.id) { pm.environment.set('template_id', json.data \u0026\u0026 json.data.template \u0026\u0026 json.data.template.id); }",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"code\": \"MATCH_FOUND_SHIPPER\",\n    \"name\": \"Chủ hàng — đã tìm được xe\",\n    \"channel\": \"in_app\",\n    \"locale\": \"vi\",\n    \"title_template\": \"Đã tìm được xe cho đơn hàng của bạn\",\n    \"body_template\": \"Tài xế {{driver_name}} nhận đơn với giá {{price}} đ. Biển số {{license_plate}}.\",\n    \"is_active\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/notification-templates",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "notification-templates"
+                  ]
+                },
+                "description": "Placeholder dạng {{driver_name}} được thay bằng dữ liệu thật lúc gửi."
+              }
+            },
+            {
+              "name": "Sửa mẫu thông báo",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('mã trạng thái là 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                      "    const json = pm.response.json();",
+                      "    if (pm.response.code \u003e= 400) {",
+                      "        pm.expect(json).to.have.property('error');",
+                      "        pm.expect(json.error).to.have.property('code');",
+                      "    } else {",
+                      "        pm.expect(json).to.be.an('object');",
+                      "    }",
+                      "});",
+                      "",
+                      "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                      "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"name\": \"Chủ hàng — đã tìm được xe (bản 2)\",\n    \"title_template\": \"Xe đã nhận đơn {{bid_code}}\",\n    \"body_template\": \"Tài xế {{driver_name}} ({{license_plate}}) nhận đơn với giá {{price}} đ.\",\n    \"is_active\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/notification-templates/{{template_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "notification-templates",
+                    "{{template_id}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Xoá mẫu thông báo",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('mã trạng thái là 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                      "    const json = pm.response.json();",
+                      "    if (pm.response.code \u003e= 400) {",
+                      "        pm.expect(json).to.have.property('error');",
+                      "        pm.expect(json.error).to.have.property('code');",
+                      "    } else {",
+                      "        pm.expect(json).to.be.an('object');",
+                      "    }",
+                      "});",
+                      "",
+                      "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                      "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/notification-templates/{{template_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "notification-templates",
+                    "{{template_id}}"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "99 — Kiểm thử bảo mật",
+      "description": "Các request CỐ TÌNH sai, dùng để chứng minh lớp bảo vệ hoạt động.\n\nMọi request ở đây PHẢI thất bại. Nếu có cái nào trả 200 thì đó là lỗ hổng thật.\n\nChạy nhóm này sau khi đã đăng nhập bằng tài khoản thường (không phải admin).",
+      "item": [
+        {
+          "name": "Header vai trò tự khai KHÔNG vào được khu admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test('bị từ chối bằng mã UNAUTHENTICATED', function () {",
+                  "    pm.expect(pm.response.json().error.code).to.eql('UNAUTHENTICATED');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users"
+              ]
+            },
+            "description": "Gửi X-User-Role: admin mà không có token. Phải trả 401 — gateway xoá header danh tính do client gửi.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Token rác bị từ chối",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/vehicles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "vehicles"
+              ]
+            },
+            "description": "Token không phải JWT hợp lệ. Phải trả 401, không được coi như khách vãng lai.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Không có token thì không vào được endpoint người dùng",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/{{user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{user_id}}"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Token người dùng thường KHÔNG vào được khu admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 403', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test('bị từ chối bằng mã PERMISSION_DENIED', function () {",
+                  "    pm.expect(pm.response.json().error.code).to.eql('PERMISSION_DENIED');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/users/stats",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users",
+                "stats"
+              ]
+            },
+            "description": "Dùng access_token của tài khoản shipper/driver. Phải trả 403 PERMISSION_DENIED."
+          }
+        },
+        {
+          "name": "ID sai định dạng bị chặn tại gateway",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test('báo lỗi INVALID_ID', function () {",
+                  "    pm.expect(pm.response.json().error.code).to.eql('INVALID_ID');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/vehicles/khong-phai-uuid",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "vehicles",
+                "khong-phai-uuid"
+              ]
+            },
+            "description": "Gateway parse UUID trước khi gọi xuống gRPC, nên id rác dừng ngay tại biên."
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "admin_access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "address_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "device_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "vehicle_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "document_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "notification_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "template_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "bid_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ask_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "driver_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "public_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "test_email",
+      "value": "shipper.demo@logistic.vn",
+      "type": "string"
+    },
+    {
+      "key": "test_password",
+      "value": "Matkhau@12345",
+      "type": "string"
+    },
+    {
+      "key": "test_phone",
+      "value": "0900000001",
+      "type": "string"
+    }
+  ]
+}

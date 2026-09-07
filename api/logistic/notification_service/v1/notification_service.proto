@@ -1,0 +1,96 @@
+syntax = "proto3";
+
+package logistic.notification_service.v1;
+option go_package = "github.com/logistic/api/logistic/notification_service/v1;notificationv1";
+
+import "logistic/notification_service/v1/notification_messages.proto";
+import "google/api/annotations.proto";
+
+// NotificationService là ĐẦU RA của luồng sự kiện.
+//
+// Nó không có API "tạo thông báo" cho client: thông báo được sinh ra bởi
+// consumer RabbitMQ khi matching_service phát event. gRPC ở đây chỉ phục vụ
+// việc ĐỌC (inbox của người dùng) và quản trị (template, gửi thủ công).
+service NotificationService {
+  // ======================= CLIENT =======================
+
+  rpc ListNotifications(ListNotificationsRequest) returns (ListNotificationsResponse) {
+    option (google.api.http) = {get: "/v1/users/{user_id}/notifications"};
+  }
+
+  rpc GetNotification(GetNotificationRequest) returns (GetNotificationResponse) {
+    option (google.api.http) = {get: "/v1/notifications/{id}"};
+  }
+
+  rpc MarkAsRead(MarkAsReadRequest) returns (MarkAsReadResponse) {
+    option (google.api.http) = {
+      put: "/v1/notifications/{id}/read"
+      body: "*"
+    };
+  }
+
+  rpc MarkAllAsRead(MarkAllAsReadRequest) returns (MarkAllAsReadResponse) {
+    option (google.api.http) = {
+      put: "/v1/users/{user_id}/notifications/read-all"
+      body: "*"
+    };
+  }
+
+  rpc DeleteNotification(DeleteNotificationRequest) returns (DeleteNotificationResponse) {
+    option (google.api.http) = {delete: "/v1/notifications/{id}"};
+  }
+
+  rpc GetUnreadCount(GetUnreadCountRequest) returns (GetUnreadCountResponse) {
+    option (google.api.http) = {get: "/v1/users/{user_id}/notifications/unread-count"};
+  }
+
+  rpc GetPreferences(GetPreferencesRequest) returns (GetPreferencesResponse) {
+    option (google.api.http) = {get: "/v1/users/{user_id}/notification-preferences"};
+  }
+
+  rpc UpdatePreferences(UpdatePreferencesRequest) returns (UpdatePreferencesResponse) {
+    option (google.api.http) = {
+      put: "/v1/users/{user_id}/notification-preferences"
+      body: "*"
+    };
+  }
+
+  // ======================= ADMIN =======================
+
+  rpc AdminSendNotification(AdminSendNotificationRequest) returns (AdminSendNotificationResponse) {
+    option (google.api.http) = {
+      post: "/v1/admin/notifications/send"
+      body: "*"
+    };
+  }
+
+  rpc AdminListNotifications(AdminListNotificationsRequest) returns (AdminListNotificationsResponse) {
+    option (google.api.http) = {get: "/v1/admin/notifications"};
+  }
+
+  rpc AdminListTemplates(AdminListTemplatesRequest) returns (AdminListTemplatesResponse) {
+    option (google.api.http) = {get: "/v1/admin/notification-templates"};
+  }
+
+  rpc AdminCreateTemplate(AdminCreateTemplateRequest) returns (AdminCreateTemplateResponse) {
+    option (google.api.http) = {
+      post: "/v1/admin/notification-templates"
+      body: "*"
+    };
+  }
+
+  rpc AdminUpdateTemplate(AdminUpdateTemplateRequest) returns (AdminUpdateTemplateResponse) {
+    option (google.api.http) = {
+      put: "/v1/admin/notification-templates/{id}"
+      body: "*"
+    };
+  }
+
+  rpc AdminDeleteTemplate(AdminDeleteTemplateRequest) returns (AdminDeleteTemplateResponse) {
+    option (google.api.http) = {delete: "/v1/admin/notification-templates/{id}"};
+  }
+
+  rpc AdminGetNotificationStats(AdminGetNotificationStatsRequest) returns (AdminGetNotificationStatsResponse) {
+    option (google.api.http) = {get: "/v1/admin/notifications/stats"};
+  }
+}

@@ -7,6 +7,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/logistic/pkg/uuidx"
 )
 
 type Bids_Requirements struct {
@@ -15,7 +16,7 @@ type Bids_Requirements struct {
 
 func (Bids_Requirements) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.UUID{}).Default(func() uuid.UUID { return uuid.Must(uuid.NewV7()) }),
+		field.UUID("id", uuid.UUID{}).Default(uuidx.New),
 		field.UUID("bids_id", uuid.UUID{}),
 		field.UUID("requirements_id", uuid.UUID{}),
 	}

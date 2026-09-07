@@ -8,6 +8,18 @@ import (
 	"user_service/ent"
 )
 
+// The AddressFunc type is an adapter to allow the use of ordinary
+// function as Address mutator.
+type AddressFunc func(context.Context, *ent.AddressMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AddressFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AddressMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AddressMutation", m)
+}
+
 // The DriverProfileFunc type is an adapter to allow the use of ordinary
 // function as DriverProfile mutator.
 type DriverProfileFunc func(context.Context, *ent.DriverProfileMutation) (ent.Value, error)
@@ -42,6 +54,18 @@ func (f UserFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error)
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserMutation", m)
+}
+
+// The UserDeviceFunc type is an adapter to allow the use of ordinary
+// function as UserDevice mutator.
+type UserDeviceFunc func(context.Context, *ent.UserDeviceMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f UserDeviceFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.UserDeviceMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserDeviceMutation", m)
 }
 
 // Condition is a hook condition function.

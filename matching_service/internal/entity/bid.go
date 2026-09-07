@@ -19,6 +19,8 @@ type Bid struct {
 	VolumeM3        float64   `json:"volume_m3"`
 	WeightKg        float64   `json:"weight_kg"`
 	MaxPrice        float64   `json:"max_price"`
+	OfferedPrice    float64   `json:"offered_price"`
+	OfferedAskID    uuid.UUID `json:"offered_ask_id"`
 	Status          int8      `json:"status"`
 	CargoValue      float64   `json:"cargo_value"`
 	RequiredDeposit float64   `json:"required_deposit"`

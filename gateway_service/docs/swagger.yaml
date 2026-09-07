@@ -1,17 +1,30 @@
 basePath: /
 definitions:
-  internal_controller.AcceptMatchReq:
+  gateway_service_internal_response.Envelope:
     properties:
-      ask_id:
+      data: {}
+      message:
         type: string
-      bid_id:
+      request_id:
         type: string
-      consensus_price:
-        type: number
-    required:
-    - ask_id
-    - bid_id
-    - consensus_price
+    type: object
+  gateway_service_internal_response.ErrorBody:
+    properties:
+      error:
+        $ref: '#/definitions/gateway_service_internal_response.ErrorDetail'
+      request_id:
+        type: string
+    type: object
+  gateway_service_internal_response.ErrorDetail:
+    properties:
+      code:
+        type: string
+      details:
+        additionalProperties:
+          type: string
+        type: object
+      message:
+        type: string
     type: object
   internal_controller.LoginRequest:
     properties:
@@ -23,6 +36,11 @@ definitions:
     - email
     - password
     type: object
+  internal_controller.RefreshRequest:
+    properties:
+      refresh_token:
+        type: string
+    type: object
   internal_controller.RegisterRequest:
     properties:
       email:
@@ -30,7 +48,14 @@ definitions:
       full_name:
         type: string
       password:
-        minLength: 6
+        minLength: 8
+        type: string
+      phone:
+        type: string
+      role:
+        enum:
+        - driver
+        - shipper
         type: string
     required:
     - email
@@ -40,77 +65,52 @@ definitions:
     properties:
       email:
         type: string
+      full_name:
+        type: string
       password:
-        minLength: 6
+        minLength: 8
         type: string
       phone:
         type: string
       role:
+        enum:
+        - driver
+        - shipper
         type: string
     required:
-    - email
     - password
     - phone
     - role
     type: object
-  internal_controller.RegisterVehicleReq:
+  internal_controller.ReviewKYCReq:
     properties:
-      brand:
+      approved:
+        type: boolean
+      note:
         type: string
-      capacity_volume_cbm:
-        type: number
-      capacity_weight_kg:
-        type: number
-      driver_id:
-        type: string
-      license_plate:
-        type: string
-      model:
-        type: string
-      vehicle_type:
-        type: string
-    required:
-    - brand
-    - capacity_volume_cbm
-    - capacity_weight_kg
-    - driver_id
-    - license_plate
-    - model
-    - vehicle_type
     type: object
-  internal_controller.SubmitAskReq:
+  internal_controller.SubmitKYCReq:
     properties:
-      driver_id:
+      id_card_back_url:
         type: string
-      min_price:
-        type: number
-    required:
-    - driver_id
-    - min_price
-    type: object
-  internal_controller.SubmitBidReq:
-    properties:
-      max_price:
-        type: number
-      shipper_id:
+      id_card_front_url:
         type: string
-    required:
-    - max_price
-    - shipper_id
-    type: object
-  internal_controller.UpdateDriverKYCReq:
-    properties:
-      kyc_status:
+      id_card_number:
         type: string
-    required:
-    - kyc_status
-    type: object
-  internal_controller.UpdateVehicleStatusReq:
-    properties:
+      license_back_url:
+        type: string
+      license_front_url:
+        type: string
+      license_number:
+        type: string
+      note:
+        type: string
       status:
+        enum:
+        - pending
+        - approved
+        - rejected
         type: string
-    required:
-    - status
     type: object
 host: localhost:8080
 info:
@@ -120,42 +120,354 @@ info:
 
     **Các service được proxy:**
     - **Auth** (`/api/v1/auth/*`) — Đăng ký, đăng nhập, OAuth2 Google, xác thực token
-    - **User** (`/v1/users/*`) — Quản lý người dùng, profile driver/shipper, KYC (gRPC-Gateway)
-    - **Vehicle** (`/v1/vehicles/*`) — Đăng ký & quản lý phương tiện (gRPC-Gateway)
-    - **Matching** (gRPC only) — Matching engine cho Bid/Ask, chưa expose HTTP
+    - **User** (`/api/v1/users/*`) — Quản lý người dùng, hồ sơ tài xế/chủ hàng, KYC
+    - **Vehicle** (`/api/v1/vehicles/*`) — Đăng ký & quản lý phương tiện, báo GPS, tìm xe gần
+    - **Matching** (`/api/v1/matching/*`) — Ghép đơn theo mô hình Bid/Ask
+    - **Notification** (`/api/v1/notifications/*`) — Hộp thư thông báo
+    - **Media** (`/api/v1/media/*`) — Tải file lên Cloudinary
   title: Logistics OS — Gateway API
   version: "1.0"
 paths:
-  /api/auth/v1/get-info:
-    get:
-      description: Lấy thông tin profile của người dùng hiện tại. Token có thể truyền
-        qua cookie access_token hoặc header Authorization Bearer.
+  /api/v1/addresses/{id}:
+    delete:
       parameters:
-      - description: Bearer token (nếu không dùng cookie)
-        in: header
-        name: Authorization
+      - description: Address ID
+        in: path
+        name: id
+        required: true
         type: string
       produces:
       - application/json
       responses:
         "200":
-          description: Lấy thông tin thành công
+          description: OK
           schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Token không hợp lệ hoặc không tìm thấy
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Lấy thông tin người dùng
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Xoá địa chỉ
       tags:
-      - Auth
-  /api/auth/v1/google/callback:
+      - Address
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Address ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Cập nhật địa chỉ
+      tags:
+      - Address
+  /api/v1/admin/kyc/{user_id}/review:
+    put:
+      consumes:
+      - application/json
+      description: Admin phê duyệt hoặc từ chối hồ sơ KYC
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      - description: Thông tin duyệt KYC
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_controller.ReviewKYCReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: '[Admin] Duyệt/từ chối KYC'
+      tags:
+      - Admin-KYC
+  /api/v1/admin/kyc/count-pending:
     get:
-      description: Xử lý callback từ Google sau khi user đăng nhập. Xác thực state,
-        đổi code lấy token, set cookie access_token và refresh_token, rồi redirect
-        về frontend.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: '[Admin] Đếm số lượng hồ sơ KYC đang chờ duyệt'
+      tags:
+      - Admin-KYC
+  /api/v1/admin/kyc/pending:
+    get:
+      description: Danh sách các hồ sơ KYC đang chờ duyệt
+      parameters:
+      - description: Số trang
+        in: query
+        name: page
+        type: integer
+      - description: Kích thước trang
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: '[Admin] Hàng đợi duyệt KYC'
+      tags:
+      - Admin-KYC
+  /api/v1/admin/notification-templates:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: '[Admin] Danh sách template'
+      tags:
+      - Admin-Notification
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: '[Admin] Tạo template thông báo'
+      tags:
+      - Admin-Notification
+  /api/v1/admin/notification-templates/{id}:
+    delete:
+      parameters:
+      - description: Template ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: '[Admin] Xoá template thông báo'
+      tags:
+      - Admin-Notification
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Template ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: '[Admin] Sửa template thông báo'
+      tags:
+      - Admin-Notification
+  /api/v1/admin/notifications:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: '[Admin] Danh sách toàn bộ thông báo'
+      tags:
+      - Admin-Notification
+  /api/v1/admin/notifications/send:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: '[Admin] Gửi thông báo thủ công'
+      tags:
+      - Admin-Notification
+  /api/v1/admin/notifications/stats:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: '[Admin] Thống kê thông báo'
+      tags:
+      - Admin-Notification
+  /api/v1/admin/users:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: '[Admin] Danh sách người dùng'
+      tags:
+      - Admin-User
+  /api/v1/admin/users/{id}:
+    delete:
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: '[Admin] Xoá người dùng'
+      tags:
+      - Admin-User
+  /api/v1/admin/users/{id}/status:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: '[Admin] Khoá/mở tài khoản'
+      tags:
+      - Admin-User
+  /api/v1/admin/users/stats:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: '[Admin] Thống kê người dùng'
+      tags:
+      - Admin-User
+  /api/v1/admin/vehicle-documents/{id}/review:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: '[Admin] Duyệt giấy tờ xe'
+      tags:
+      - Admin-Vehicle
+  /api/v1/admin/vehicle-documents/pending:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: '[Admin] Hàng đợi duyệt giấy tờ'
+      tags:
+      - Admin-Vehicle
+  /api/v1/admin/vehicles:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: '[Admin] Danh sách toàn bộ phương tiện'
+      tags:
+      - Admin-Vehicle
+  /api/v1/admin/vehicles/{id}/verify:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Vehicle ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: '[Admin] Duyệt phương tiện'
+      tags:
+      - Admin-Vehicle
+  /api/v1/admin/vehicles/stats:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: '[Admin] Thống kê phương tiện'
+      tags:
+      - Admin-Vehicle
+  /api/v1/auth/google/callback:
+    get:
+      description: Xử lý callback từ Google, xác thực state, đổi code lấy token rồi
+        set cookie.
       parameters:
       - description: OAuth state parameter (CSRF protection)
         in: query
@@ -174,23 +486,12 @@ paths:
           description: Redirect về frontend với cookie đã set
           schema:
             type: string
-        "400":
-          description: State không hợp lệ
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Lỗi xử lý callback
-          schema:
-            additionalProperties: true
-            type: object
       summary: Google OAuth2 Callback
       tags:
       - Auth - OAuth2
-  /api/auth/v1/google/login:
+  /api/v1/auth/google/login:
     get:
-      description: Khởi tạo luồng OAuth2 với Google. Redirect người dùng đến trang
-        đăng nhập Google. Tạo state cookie để chống CSRF.
+      description: Khởi tạo luồng OAuth2 với Google. Tạo state cookie để chống CSRF.
       produces:
       - application/json
       responses:
@@ -198,20 +499,15 @@ paths:
           description: Redirect đến Google OAuth consent screen
           schema:
             type: string
-        "500":
-          description: Lỗi khi lấy Google Login URL
-          schema:
-            additionalProperties: true
-            type: object
       summary: Đăng nhập bằng Google OAuth2
       tags:
       - Auth - OAuth2
-  /api/auth/v1/login:
+  /api/v1/auth/login:
     post:
       consumes:
       - application/json
       description: Đăng nhập bằng email và mật khẩu. Trả về access_token, refresh_token
-        và expires_in.
+        và expires_at.
       parameters:
       - description: Thông tin đăng nhập
         in: body
@@ -223,29 +519,83 @@ paths:
       - application/json
       responses:
         "200":
-          description: Đăng nhập thành công, trả về token pair
+          description: Đăng nhập thành công
           schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Lỗi dữ liệu đầu vào
-          schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
         "401":
           description: Sai email hoặc mật khẩu
           schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Lỗi server nội bộ
-          schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/gateway_service_internal_response.ErrorBody'
       summary: Đăng nhập
       tags:
       - Auth
-  /api/auth/v1/register:
+  /api/v1/auth/logout:
+    post:
+      description: Thu hồi refresh token của phiên hiện tại. Access token đang cầm
+        vẫn còn hiệu lực tới khi hết hạn (tối đa 15 phút).
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Đăng xuất
+      tags:
+      - Auth
+  /api/v1/auth/me:
+    get:
+      description: Trả về profile của chủ nhân access token.
+      parameters:
+      - description: Bearer token (nếu không dùng cookie)
+        in: header
+        name: Authorization
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.ErrorBody'
+      summary: Lấy thông tin người dùng hiện tại
+      tags:
+      - Auth
+  /api/v1/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Đổi refresh token lấy cặp token mới. Refresh token dùng MỘT LẦN
+        — mỗi lần gọi trả về refresh token mới, token cũ hết hiệu lực ngay.
+      parameters:
+      - description: Refresh token (nếu không dùng cookie)
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/internal_controller.RefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+        "401":
+          description: Refresh token không hợp lệ
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.ErrorBody'
+        "403":
+          description: Phiên đã bị thu hồi, cần đăng nhập lại
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.ErrorBody'
+      summary: Làm mới phiên đăng nhập
+      tags:
+      - Auth
+  /api/v1/auth/register:
     post:
       consumes:
       - application/json
@@ -264,127 +614,150 @@ paths:
         "201":
           description: Tạo tài khoản thành công
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
         "400":
           description: Lỗi dữ liệu đầu vào
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/gateway_service_internal_response.ErrorBody'
         "409":
           description: Email đã tồn tại
           schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Lỗi server nội bộ
-          schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/gateway_service_internal_response.ErrorBody'
       summary: Đăng ký tài khoản
       tags:
       - Auth
-  /api/matching/v1/accept:
-    post:
-      consumes:
-      - application/json
-      description: Khách hàng hoặc tài xế chấp nhận lệnh ghép chuyến.
+  /api/v1/devices/{id}:
+    delete:
       parameters:
-      - description: Thông tin Match
-        in: body
-        name: request
+      - description: Device ID
+        in: path
+        name: id
         required: true
-        schema:
-          $ref: '#/definitions/internal_controller.AcceptMatchReq'
+        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: Chấp nhận thành công
+          description: OK
           schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Lỗi dữ liệu đầu vào
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Lỗi server nội bộ
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Chấp nhận ghép chuyến
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Xoá thiết bị
       tags:
-      - Matching
-  /api/matching/v1/ask:
-    post:
-      consumes:
-      - application/json
-      description: Tài xế gửi báo giá có xe trống (Ask) để ghép chuyến.
+      - Device
+  /api/v1/drivers/{driver_id}/availability:
+    get:
       parameters:
-      - description: Thông tin Ask
-        in: body
-        name: request
+      - description: Driver ID
+        in: path
+        name: driver_id
         required: true
-        schema:
-          $ref: '#/definitions/internal_controller.SubmitAskReq'
+        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: Gửi Ask thành công
+          description: OK
           schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Lỗi dữ liệu đầu vào
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Lỗi server nội bộ
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Gửi báo giá vận chuyển (Ask)
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Trạng thái nhận đơn của tài xế
       tags:
-      - Matching
-  /api/matching/v1/bid:
+      - Vehicle
     post:
       consumes:
       - application/json
-      description: Khách hàng gửi yêu cầu vận chuyển hàng hóa kèm theo giá cước đề
-        xuất (Bid).
+      description: Bật thì xe được đưa vào chỉ mục tìm kiếm của matching; tắt thì
+        gỡ ra.
       parameters:
-      - description: Thông vị Bid
-        in: body
-        name: request
+      - description: Driver ID
+        in: path
+        name: driver_id
         required: true
-        schema:
-          $ref: '#/definitions/internal_controller.SubmitBidReq'
+        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: Gửi Bid thành công
+          description: OK
           schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Lỗi dữ liệu đầu vào
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Bật/tắt nhận đơn
+      tags:
+      - Vehicle
+  /api/v1/matching/asks:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
           schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Lỗi server nội bộ
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Gửi yêu cầu vận chuyển (Bid)
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Tài xế đăng chuyến còn chỗ trống
       tags:
       - Matching
-  /api/media/v1/delete/{publicID}:
+  /api/v1/matching/bids:
+    post:
+      consumes:
+      - application/json
+      description: Sau khi lưu đơn, matching_service tìm tài xế phù hợp và phát sự
+        kiện qua RabbitMQ để notification_service báo cho từng tài xế.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Chủ hàng đăng đơn cần xe
+      tags:
+      - Matching
+  /api/v1/matching/matches/accept:
+    post:
+      consumes:
+      - application/json
+      description: Chốt xong, matching_service phát matching.match.found; notification_service
+        báo cho cả chủ hàng lẫn tài xế.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Chủ hàng chốt xe
+      tags:
+      - Matching
+  /api/v1/matching/offers:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Tài xế báo giá cho một đơn hàng
+      tags:
+      - Matching
+  /api/v1/matching/offers/reject:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Chủ hàng từ chối báo giá
+      tags:
+      - Matching
+  /api/v1/media/files/{publicID}:
     delete:
       description: Xóa file trên hệ thống lưu trữ thông qua public_id.
       parameters:
@@ -419,7 +792,7 @@ paths:
       summary: Xóa file
       tags:
       - Media
-  /api/media/v1/upload:
+  /api/v1/media/upload:
     post:
       consumes:
       - multipart/form-data
@@ -460,11 +833,10 @@ paths:
       summary: Tải file lên hệ thống
       tags:
       - Media
-  /api/user/v1/{id}:
-    get:
-      description: Lấy thông tin chi tiết của người dùng bằng ID.
+  /api/v1/notifications/{id}:
+    delete:
       parameters:
-      - description: User ID
+      - description: Notification ID
         in: path
         name: id
         required: true
@@ -473,66 +845,375 @@ paths:
       - application/json
       responses:
         "200":
-          description: Thông tin chi tiết người dùng
+          description: OK
           schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Thiếu ID
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Lỗi server nội bộ
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Lấy thông tin User
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Xoá thông báo
       tags:
-      - User
-  /api/user/v1/{user_id}/kyc:
-    put:
-      consumes:
-      - application/json
-      description: Cập nhật trạng thái KYC.
+      - Notification
+    get:
       parameters:
-      - description: User ID của tài xế
+      - description: Notification ID
         in: path
-        name: user_id
+        name: id
         required: true
         type: string
-      - description: Thông tin KYC
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/internal_controller.UpdateDriverKYCReq'
       produces:
       - application/json
       responses:
         "200":
-          description: Cập nhật thành công
+          description: OK
           schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Lỗi dữ liệu đầu vào
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Chi tiết một thông báo
+      tags:
+      - Notification
+  /api/v1/notifications/{id}/read:
+    put:
+      parameters:
+      - description: Notification ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
           schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Lỗi server nội bộ
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Đánh dấu đã đọc
+      tags:
+      - Notification
+  /api/v1/users/{user_id}:
+    get:
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
           schema:
-            additionalProperties: true
-            type: object
-      summary: Cập nhật thông tin KYC của tài xế
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Lấy thông tin người dùng
       tags:
       - User
-  /api/user/v1/register:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Cập nhật thông tin người dùng
+      tags:
+      - User
+  /api/v1/users/{user_id}/addresses:
+    get:
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Danh sách địa chỉ
+      tags:
+      - Address
     post:
       consumes:
       - application/json
-      description: Đăng ký người dùng hoặc tài xế mới vào hệ thống.
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Thêm địa chỉ vào sổ địa chỉ
+      tags:
+      - Address
+  /api/v1/users/{user_id}/devices:
+    get:
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Danh sách thiết bị
+      tags:
+      - Device
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Đăng ký thiết bị nhận push
+      tags:
+      - Device
+  /api/v1/users/{user_id}/driver-profile:
+    get:
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Lấy hồ sơ tài xế
+      tags:
+      - User
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Cập nhật hồ sơ tài xế
+      tags:
+      - User
+  /api/v1/users/{user_id}/kyc:
+    get:
+      description: Tài xế xem hồ sơ KYC của chính mình hoặc admin xem hồ sơ KYC của
+        user.
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Xem hồ sơ KYC
+      tags:
+      - KYC
+    put:
+      consumes:
+      - application/json
+      description: Tài xế nộp/cập nhật hồ sơ KYC của chính mình.
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      - description: Thông tin hồ sơ KYC
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_controller.SubmitKYCReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Nộp/cập nhật hồ sơ KYC
+      tags:
+      - KYC
+  /api/v1/users/{user_id}/notification-preferences:
+    get:
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Cài đặt nhận thông báo
+      tags:
+      - Notification
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Cập nhật cài đặt nhận thông báo
+      tags:
+      - Notification
+  /api/v1/users/{user_id}/notifications:
+    get:
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Hộp thư thông báo
+      tags:
+      - Notification
+  /api/v1/users/{user_id}/notifications/read-all:
+    put:
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Đánh dấu tất cả đã đọc
+      tags:
+      - Notification
+  /api/v1/users/{user_id}/notifications/unread-count:
+    get:
+      description: App gọi ở mọi màn hình để vẽ chấm đỏ; con số này được cache trên
+        Redis.
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Số thông báo chưa đọc
+      tags:
+      - Notification
+  /api/v1/users/{user_id}/shipper-profile:
+    get:
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Lấy hồ sơ chủ hàng
+      tags:
+      - User
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Cập nhật hồ sơ chủ hàng
+      tags:
+      - User
+  /api/v1/users/register:
+    post:
+      consumes:
+      - application/json
       parameters:
       - description: Thông tin đăng ký
         in: body
@@ -544,28 +1225,16 @@ paths:
       - application/json
       responses:
         "201":
-          description: Tạo người dùng thành công
+          description: Created
           schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Lỗi dữ liệu đầu vào
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Lỗi server nội bộ
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Đăng ký user mới
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Đăng ký người dùng
       tags:
       - User
-  /api/vehicle/v1/{id}:
-    get:
-      description: Lấy thông tin chi tiết của một phương tiện theo ID.
+  /api/v1/vehicle-documents/{id}:
+    delete:
       parameters:
-      - description: Vehicle ID
+      - description: Document ID
         in: path
         name: id
         required: true
@@ -574,116 +1243,202 @@ paths:
       - application/json
       responses:
         "200":
-          description: Thông tin chi tiết phương tiện
+          description: OK
           schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Thiếu ID
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Lỗi server nội bộ
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Lấy thông tin phương tiện
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Xoá giấy tờ xe
       tags:
       - Vehicle
-  /api/vehicle/v1/{id}/status:
-    put:
-      consumes:
-      - application/json
-      description: Cập nhật trạng thái của phương tiện (Active, Inactive, InTransit...).
-      parameters:
-      - description: Vehicle ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Trạng thái mới
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/internal_controller.UpdateVehicleStatusReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Cập nhật thành công
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Lỗi dữ liệu đầu vào
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Lỗi server nội bộ
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Cập nhật trạng thái
-      tags:
-      - Vehicle
-  /api/vehicle/v1/list:
+  /api/v1/vehicles:
     get:
-      description: Lấy danh sách các phương tiện trong hệ thống của tài xế.
-      parameters:
-      - description: Driver ID để lọc
-        in: query
-        name: driver_id
-        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: Danh sách phương tiện
+          description: OK
           schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Lỗi server nội bộ
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Danh sách phương tiện
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Danh sách phương tiện của tài xế
       tags:
       - Vehicle
-  /api/vehicle/v1/register:
     post:
       consumes:
       - application/json
-      description: Đăng ký thông tin phương tiện (xe tải, xe khách...) cho tài xế.
-      parameters:
-      - description: Thông tin phương tiện
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/internal_controller.RegisterVehicleReq'
+      description: Xe luôn được đăng ký cho CHÍNH tài xế đang đăng nhập.
       produces:
       - application/json
       responses:
         "201":
-          description: Tạo phương tiện thành công
+          description: Created
           schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Lỗi dữ liệu đầu vào
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Lỗi server nội bộ
-          schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
       summary: Đăng ký phương tiện
+      tags:
+      - Vehicle
+  /api/v1/vehicles/{id}:
+    delete:
+      parameters:
+      - description: Vehicle ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Xoá phương tiện
+      tags:
+      - Vehicle
+    get:
+      parameters:
+      - description: Vehicle ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Chi tiết phương tiện
+      tags:
+      - Vehicle
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Vehicle ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Cập nhật phương tiện
+      tags:
+      - Vehicle
+  /api/v1/vehicles/{id}/documents:
+    get:
+      parameters:
+      - description: Vehicle ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Danh sách giấy tờ xe
+      tags:
+      - Vehicle
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Vehicle ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Tải lên giấy tờ xe
+      tags:
+      - Vehicle
+  /api/v1/vehicles/{id}/location:
+    get:
+      parameters:
+      - description: Vehicle ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Vị trí hiện tại của xe
+      tags:
+      - Vehicle
+    post:
+      consumes:
+      - application/json
+      description: App tài xế gọi định kỳ. Vị trí được ghi xuống DB và cập nhật vào
+        chỉ mục Redis GEO.
+      parameters:
+      - description: Vehicle ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Tài xế báo vị trí GPS
+      tags:
+      - Vehicle
+  /api/v1/vehicles/{id}/status:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Vehicle ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Đổi trạng thái phương tiện
+      tags:
+      - Vehicle
+  /api/v1/vehicles/nearby:
+    post:
+      consumes:
+      - application/json
+      description: Chạy trên chỉ mục Redis GEO nên trả về trong vài mili-giây. Đây
+        cũng là API matching_service dùng nội bộ.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway_service_internal_response.Envelope'
+      summary: Tìm xe đang chạy quanh một điểm
       tags:
       - Vehicle
 swagger: "2.0"

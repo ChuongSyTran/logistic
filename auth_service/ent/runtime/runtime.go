@@ -3,15 +3,24 @@
 package runtime
 
 import (
+	"auth_service/ent/refreshtoken"
 	"auth_service/ent/schema"
 	"auth_service/ent/users"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // The init function reads all schema descriptors with runtime code
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	refreshtokenFields := schema.RefreshToken{}.Fields()
+	_ = refreshtokenFields
+	// refreshtokenDescCreatedAt is the schema descriptor for created_at field.
+	refreshtokenDescCreatedAt := refreshtokenFields[7].Descriptor()
+	// refreshtoken.DefaultCreatedAt holds the default value on creation for the created_at field.
+	refreshtoken.DefaultCreatedAt = refreshtokenDescCreatedAt.Default.(func() time.Time)
 	usersMixin := schema.Users{}.Mixin()
 	usersMixinHooks0 := usersMixin[0].Hooks()
 	users.Hooks[0] = usersMixinHooks0[0]
@@ -20,15 +29,19 @@ func init() {
 	usersFields := schema.Users{}.Fields()
 	_ = usersFields
 	// usersDescCreatedAt is the schema descriptor for created_at field.
-	usersDescCreatedAt := usersFields[6].Descriptor()
+	usersDescCreatedAt := usersFields[8].Descriptor()
 	// users.DefaultCreatedAt holds the default value on creation for the created_at field.
 	users.DefaultCreatedAt = usersDescCreatedAt.Default.(func() time.Time)
 	// usersDescUpdatedAt is the schema descriptor for updated_at field.
-	usersDescUpdatedAt := usersFields[7].Descriptor()
+	usersDescUpdatedAt := usersFields[9].Descriptor()
 	// users.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	users.DefaultUpdatedAt = usersDescUpdatedAt.Default.(func() time.Time)
 	// users.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	users.UpdateDefaultUpdatedAt = usersDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// usersDescID is the schema descriptor for id field.
+	usersDescID := usersFields[0].Descriptor()
+	// users.DefaultID holds the default value on creation for the id field.
+	users.DefaultID = usersDescID.Default.(func() uuid.UUID)
 }
 
 const (

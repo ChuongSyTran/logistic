@@ -8,6 +8,37 @@ go 1.26.4
 // 2. Cho phép gọi code chéo nhau cục bộ: Giúp media_service (có go.mod riêng) có thể gọi
 //    hàm từ module gốc (.) như thư mục pkg/i18n mà KHÔNG CẦN đẩy code lên Github
 //    hay viết lệnh 'replace' loằng ngoằng trong file go.mod.
+//
+// ============================================================================
+//  RANH GIỚI: go.work CHỈ DÙNG Ở MÁY LOCAL — KHÔNG DÙNG ĐỂ BUILD
+// ============================================================================
+// Sách "Learning Go" (2nd ed., ch.10 — Using Workspaces to Modify Modules
+// Simultaneously) nói thẳng:
+//     "The go.work file is meant for your local computer only.
+//      Do not commit it to source control!"
+// Mình vẫn giữ file này trong repo vì đây là mono-repo (mọi module đều nằm sẵn
+// trong repo nên đường dẫn ./ không bao giờ sai chỗ) và nó giúp IDE + onboarding.
+// ĐỔI LẠI, phải tuân thủ đúng một luật:
+//
+//   >>> KHÔNG có go.work nào được tham gia vào quá trình build ra image. <<<
+//
+// Cụ thể:
+//   - Dockerfile stage 1 đặt ENV GOWORK=off, và .dockerignore chặn go.work +
+//     go.work.sum không cho lọt vào build context.
+//   - Mỗi service tự đứng được nhờ 2 directive `replace` trong go.mod của nó
+//     (=> ../api, ../pkg) cộng với go.sum RIÊNG của chính nó.
+//
+// Vì sao phải khắt khe vậy? Vì workspace gộp chung module graph của tất cả module
+// rồi ghi hash vào go.work.sum. Ở local thì chạy ngon, nhưng khi build với
+// GOWORK=off Go chỉ đọc go.mod + go.sum riêng — thiếu hash là vỡ ngay với lỗi
+// "missing go.sum entry". Đây đúng là loại lỗi "máy tôi chạy được mà CI đỏ".
+//
+// Cách phòng:
+//   make verify-modules   -> build thử từng module với GOWORK=off (CI chạy y hệt)
+//   make tidy-modules     -> go mod tidy từng module, KHÔNG qua workspace
+//
+// Lưu ý khi thêm dependency mới: đừng chạy `go work sync` rồi push luôn. Hãy chạy
+// `make tidy-modules` để hash được ghi vào đúng go.sum của từng module.
 use (
 	. // Khai báo thư mục gốc (goBackend) là 1 module
 	./api
@@ -20,4 +51,5 @@ use (
 	./user_service
 	./vehicle_service
 	./wallet_service
+	./kyc_service
 )

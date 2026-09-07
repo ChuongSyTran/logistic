@@ -7,6 +7,7 @@ import (
 	"vehicle_service/ent/predicate"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
 )
 
@@ -75,6 +76,11 @@ func Model(v string) predicate.Vehicle {
 	return predicate.Vehicle(sql.FieldEQ(FieldModel, v))
 }
 
+// ManufactureYear applies equality check predicate on the "manufacture_year" field. It's identical to ManufactureYearEQ.
+func ManufactureYear(v int) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldEQ(FieldManufactureYear, v))
+}
+
 // CapacityWeightKg applies equality check predicate on the "capacity_weight_kg" field. It's identical to CapacityWeightKgEQ.
 func CapacityWeightKg(v float64) predicate.Vehicle {
 	return predicate.Vehicle(sql.FieldEQ(FieldCapacityWeightKg, v))
@@ -83,6 +89,21 @@ func CapacityWeightKg(v float64) predicate.Vehicle {
 // CapacityVolumeCbm applies equality check predicate on the "capacity_volume_cbm" field. It's identical to CapacityVolumeCbmEQ.
 func CapacityVolumeCbm(v float64) predicate.Vehicle {
 	return predicate.Vehicle(sql.FieldEQ(FieldCapacityVolumeCbm, v))
+}
+
+// VerificationNote applies equality check predicate on the "verification_note" field. It's identical to VerificationNoteEQ.
+func VerificationNote(v string) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldEQ(FieldVerificationNote, v))
+}
+
+// VerifiedBy applies equality check predicate on the "verified_by" field. It's identical to VerifiedByEQ.
+func VerifiedBy(v uuid.UUID) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldEQ(FieldVerifiedBy, v))
+}
+
+// VerifiedAt applies equality check predicate on the "verified_at" field. It's identical to VerifiedAtEQ.
+func VerifiedAt(v time.Time) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldEQ(FieldVerifiedAt, v))
 }
 
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
@@ -350,6 +371,56 @@ func ModelContainsFold(v string) predicate.Vehicle {
 	return predicate.Vehicle(sql.FieldContainsFold(FieldModel, v))
 }
 
+// ManufactureYearEQ applies the EQ predicate on the "manufacture_year" field.
+func ManufactureYearEQ(v int) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldEQ(FieldManufactureYear, v))
+}
+
+// ManufactureYearNEQ applies the NEQ predicate on the "manufacture_year" field.
+func ManufactureYearNEQ(v int) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldNEQ(FieldManufactureYear, v))
+}
+
+// ManufactureYearIn applies the In predicate on the "manufacture_year" field.
+func ManufactureYearIn(vs ...int) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldIn(FieldManufactureYear, vs...))
+}
+
+// ManufactureYearNotIn applies the NotIn predicate on the "manufacture_year" field.
+func ManufactureYearNotIn(vs ...int) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldNotIn(FieldManufactureYear, vs...))
+}
+
+// ManufactureYearGT applies the GT predicate on the "manufacture_year" field.
+func ManufactureYearGT(v int) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldGT(FieldManufactureYear, v))
+}
+
+// ManufactureYearGTE applies the GTE predicate on the "manufacture_year" field.
+func ManufactureYearGTE(v int) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldGTE(FieldManufactureYear, v))
+}
+
+// ManufactureYearLT applies the LT predicate on the "manufacture_year" field.
+func ManufactureYearLT(v int) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldLT(FieldManufactureYear, v))
+}
+
+// ManufactureYearLTE applies the LTE predicate on the "manufacture_year" field.
+func ManufactureYearLTE(v int) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldLTE(FieldManufactureYear, v))
+}
+
+// ManufactureYearIsNil applies the IsNil predicate on the "manufacture_year" field.
+func ManufactureYearIsNil() predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldIsNull(FieldManufactureYear))
+}
+
+// ManufactureYearNotNil applies the NotNil predicate on the "manufacture_year" field.
+func ManufactureYearNotNil() predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldNotNull(FieldManufactureYear))
+}
+
 // VehicleTypeEQ applies the EQ predicate on the "vehicle_type" field.
 func VehicleTypeEQ(v VehicleType) predicate.Vehicle {
 	return predicate.Vehicle(sql.FieldEQ(FieldVehicleType, v))
@@ -470,6 +541,201 @@ func StatusNotIn(vs ...Status) predicate.Vehicle {
 	return predicate.Vehicle(sql.FieldNotIn(FieldStatus, vs...))
 }
 
+// VerificationStatusEQ applies the EQ predicate on the "verification_status" field.
+func VerificationStatusEQ(v VerificationStatus) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldEQ(FieldVerificationStatus, v))
+}
+
+// VerificationStatusNEQ applies the NEQ predicate on the "verification_status" field.
+func VerificationStatusNEQ(v VerificationStatus) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldNEQ(FieldVerificationStatus, v))
+}
+
+// VerificationStatusIn applies the In predicate on the "verification_status" field.
+func VerificationStatusIn(vs ...VerificationStatus) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldIn(FieldVerificationStatus, vs...))
+}
+
+// VerificationStatusNotIn applies the NotIn predicate on the "verification_status" field.
+func VerificationStatusNotIn(vs ...VerificationStatus) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldNotIn(FieldVerificationStatus, vs...))
+}
+
+// VerificationNoteEQ applies the EQ predicate on the "verification_note" field.
+func VerificationNoteEQ(v string) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldEQ(FieldVerificationNote, v))
+}
+
+// VerificationNoteNEQ applies the NEQ predicate on the "verification_note" field.
+func VerificationNoteNEQ(v string) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldNEQ(FieldVerificationNote, v))
+}
+
+// VerificationNoteIn applies the In predicate on the "verification_note" field.
+func VerificationNoteIn(vs ...string) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldIn(FieldVerificationNote, vs...))
+}
+
+// VerificationNoteNotIn applies the NotIn predicate on the "verification_note" field.
+func VerificationNoteNotIn(vs ...string) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldNotIn(FieldVerificationNote, vs...))
+}
+
+// VerificationNoteGT applies the GT predicate on the "verification_note" field.
+func VerificationNoteGT(v string) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldGT(FieldVerificationNote, v))
+}
+
+// VerificationNoteGTE applies the GTE predicate on the "verification_note" field.
+func VerificationNoteGTE(v string) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldGTE(FieldVerificationNote, v))
+}
+
+// VerificationNoteLT applies the LT predicate on the "verification_note" field.
+func VerificationNoteLT(v string) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldLT(FieldVerificationNote, v))
+}
+
+// VerificationNoteLTE applies the LTE predicate on the "verification_note" field.
+func VerificationNoteLTE(v string) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldLTE(FieldVerificationNote, v))
+}
+
+// VerificationNoteContains applies the Contains predicate on the "verification_note" field.
+func VerificationNoteContains(v string) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldContains(FieldVerificationNote, v))
+}
+
+// VerificationNoteHasPrefix applies the HasPrefix predicate on the "verification_note" field.
+func VerificationNoteHasPrefix(v string) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldHasPrefix(FieldVerificationNote, v))
+}
+
+// VerificationNoteHasSuffix applies the HasSuffix predicate on the "verification_note" field.
+func VerificationNoteHasSuffix(v string) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldHasSuffix(FieldVerificationNote, v))
+}
+
+// VerificationNoteIsNil applies the IsNil predicate on the "verification_note" field.
+func VerificationNoteIsNil() predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldIsNull(FieldVerificationNote))
+}
+
+// VerificationNoteNotNil applies the NotNil predicate on the "verification_note" field.
+func VerificationNoteNotNil() predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldNotNull(FieldVerificationNote))
+}
+
+// VerificationNoteEqualFold applies the EqualFold predicate on the "verification_note" field.
+func VerificationNoteEqualFold(v string) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldEqualFold(FieldVerificationNote, v))
+}
+
+// VerificationNoteContainsFold applies the ContainsFold predicate on the "verification_note" field.
+func VerificationNoteContainsFold(v string) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldContainsFold(FieldVerificationNote, v))
+}
+
+// VerifiedByEQ applies the EQ predicate on the "verified_by" field.
+func VerifiedByEQ(v uuid.UUID) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldEQ(FieldVerifiedBy, v))
+}
+
+// VerifiedByNEQ applies the NEQ predicate on the "verified_by" field.
+func VerifiedByNEQ(v uuid.UUID) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldNEQ(FieldVerifiedBy, v))
+}
+
+// VerifiedByIn applies the In predicate on the "verified_by" field.
+func VerifiedByIn(vs ...uuid.UUID) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldIn(FieldVerifiedBy, vs...))
+}
+
+// VerifiedByNotIn applies the NotIn predicate on the "verified_by" field.
+func VerifiedByNotIn(vs ...uuid.UUID) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldNotIn(FieldVerifiedBy, vs...))
+}
+
+// VerifiedByGT applies the GT predicate on the "verified_by" field.
+func VerifiedByGT(v uuid.UUID) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldGT(FieldVerifiedBy, v))
+}
+
+// VerifiedByGTE applies the GTE predicate on the "verified_by" field.
+func VerifiedByGTE(v uuid.UUID) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldGTE(FieldVerifiedBy, v))
+}
+
+// VerifiedByLT applies the LT predicate on the "verified_by" field.
+func VerifiedByLT(v uuid.UUID) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldLT(FieldVerifiedBy, v))
+}
+
+// VerifiedByLTE applies the LTE predicate on the "verified_by" field.
+func VerifiedByLTE(v uuid.UUID) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldLTE(FieldVerifiedBy, v))
+}
+
+// VerifiedByIsNil applies the IsNil predicate on the "verified_by" field.
+func VerifiedByIsNil() predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldIsNull(FieldVerifiedBy))
+}
+
+// VerifiedByNotNil applies the NotNil predicate on the "verified_by" field.
+func VerifiedByNotNil() predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldNotNull(FieldVerifiedBy))
+}
+
+// VerifiedAtEQ applies the EQ predicate on the "verified_at" field.
+func VerifiedAtEQ(v time.Time) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldEQ(FieldVerifiedAt, v))
+}
+
+// VerifiedAtNEQ applies the NEQ predicate on the "verified_at" field.
+func VerifiedAtNEQ(v time.Time) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldNEQ(FieldVerifiedAt, v))
+}
+
+// VerifiedAtIn applies the In predicate on the "verified_at" field.
+func VerifiedAtIn(vs ...time.Time) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldIn(FieldVerifiedAt, vs...))
+}
+
+// VerifiedAtNotIn applies the NotIn predicate on the "verified_at" field.
+func VerifiedAtNotIn(vs ...time.Time) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldNotIn(FieldVerifiedAt, vs...))
+}
+
+// VerifiedAtGT applies the GT predicate on the "verified_at" field.
+func VerifiedAtGT(v time.Time) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldGT(FieldVerifiedAt, v))
+}
+
+// VerifiedAtGTE applies the GTE predicate on the "verified_at" field.
+func VerifiedAtGTE(v time.Time) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldGTE(FieldVerifiedAt, v))
+}
+
+// VerifiedAtLT applies the LT predicate on the "verified_at" field.
+func VerifiedAtLT(v time.Time) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldLT(FieldVerifiedAt, v))
+}
+
+// VerifiedAtLTE applies the LTE predicate on the "verified_at" field.
+func VerifiedAtLTE(v time.Time) predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldLTE(FieldVerifiedAt, v))
+}
+
+// VerifiedAtIsNil applies the IsNil predicate on the "verified_at" field.
+func VerifiedAtIsNil() predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldIsNull(FieldVerifiedAt))
+}
+
+// VerifiedAtNotNil applies the NotNil predicate on the "verified_at" field.
+func VerifiedAtNotNil() predicate.Vehicle {
+	return predicate.Vehicle(sql.FieldNotNull(FieldVerifiedAt))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Vehicle {
 	return predicate.Vehicle(sql.FieldEQ(FieldCreatedAt, v))
@@ -548,6 +814,75 @@ func UpdatedAtLT(v time.Time) predicate.Vehicle {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.Vehicle {
 	return predicate.Vehicle(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
+// HasDocuments applies the HasEdge predicate on the "documents" edge.
+func HasDocuments() predicate.Vehicle {
+	return predicate.Vehicle(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, DocumentsTable, DocumentsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasDocumentsWith applies the HasEdge predicate on the "documents" edge with a given conditions (other predicates).
+func HasDocumentsWith(preds ...predicate.VehicleDocument) predicate.Vehicle {
+	return predicate.Vehicle(func(s *sql.Selector) {
+		step := newDocumentsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasLocation applies the HasEdge predicate on the "location" edge.
+func HasLocation() predicate.Vehicle {
+	return predicate.Vehicle(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, false, LocationTable, LocationColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasLocationWith applies the HasEdge predicate on the "location" edge with a given conditions (other predicates).
+func HasLocationWith(preds ...predicate.VehicleLocation) predicate.Vehicle {
+	return predicate.Vehicle(func(s *sql.Selector) {
+		step := newLocationStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasAvailability applies the HasEdge predicate on the "availability" edge.
+func HasAvailability() predicate.Vehicle {
+	return predicate.Vehicle(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, false, AvailabilityTable, AvailabilityColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAvailabilityWith applies the HasEdge predicate on the "availability" edge with a given conditions (other predicates).
+func HasAvailabilityWith(preds ...predicate.DriverAvailability) predicate.Vehicle {
+	return predicate.Vehicle(func(s *sql.Selector) {
+		step := newAvailabilityStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

@@ -4,7 +4,7 @@ package logistic.matching_service.v1;
 
 import "google/protobuf/timestamp.proto";
 
-option go_package = "logistic_project/api/logistic/matching/v1";
+option go_package = "github.com/logistic/api/logistic/matching_service/v1;matchingv1";
 
 // Location represents a geographic point and a logical zone for simplified matching
 message Location {
@@ -134,4 +134,31 @@ message AcceptMatchResponse {
 
   google.protobuf.Timestamp agreed_at = 9;
   google.protobuf.Timestamp created_at = 10;
+}
+
+// SubmitOfferRequest: tài xế ra giá cho một đơn hàng cụ thể.
+// Đây là bước giữa của vòng thương lượng: bid (chủ hàng) -> offer (tài xế)
+// -> accept/reject (chủ hàng).
+message SubmitOfferRequest {
+  bytes bid_id = 1;
+  bytes ask_id = 2;
+  double desired_price = 3;
+}
+
+message SubmitOfferResponse {
+  string status = 1;
+  string message = 2;
+}
+
+// RejectOfferRequest: chủ hàng từ chối báo giá, đơn quay lại trạng thái PENDING
+// để các tài xế khác tiếp tục ra giá.
+message RejectOfferRequest {
+  bytes bid_id = 1;
+  bytes ask_id = 2;
+  string reason = 3;
+}
+
+message RejectOfferResponse {
+  string status = 1;
+  string message = 2;
 }

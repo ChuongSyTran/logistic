@@ -13,6 +13,72 @@ import (
 
 type AppMapperImpl struct{}
 
+func (c *AppMapperImpl) EntAvailabilityListToEntityList(source []*ent.DriverAvailability) []entity.DriverAvailability {
+	var entityDriverAvailabilityList []entity.DriverAvailability
+	if source != nil {
+		entityDriverAvailabilityList = make([]entity.DriverAvailability, len(source))
+		for i := 0; i < len(source); i++ {
+			entityDriverAvailabilityList[i] = c.EntAvailabilityToEntity(source[i])
+		}
+	}
+	return entityDriverAvailabilityList
+}
+func (c *AppMapperImpl) EntAvailabilityToEntity(source *ent.DriverAvailability) entity.DriverAvailability {
+	var entityDriverAvailability entity.DriverAvailability
+	if source != nil {
+		entityDriverAvailability.ID = c.uuidUUIDToUuidUUID((*source).ID)
+		entityDriverAvailability.DriverID = c.uuidUUIDToUuidUUID((*source).DriverID)
+		entityDriverAvailability.VehicleID = c.uuidUUIDToUuidUUID((*source).VehicleID)
+		entityDriverAvailability.IsOnline = (*source).IsOnline
+		entityDriverAvailability.AvailableWeightKg = (*source).AvailableWeightKg
+		entityDriverAvailability.AvailableVolumeCbm = (*source).AvailableVolumeCbm
+		entityDriverAvailability.CurrentLat = (*source).CurrentLat
+		entityDriverAvailability.CurrentLng = (*source).CurrentLng
+		entityDriverAvailability.ZoneID = (*source).ZoneID
+		entityDriverAvailability.UpdatedAt = mapper.IdentityTime((*source).UpdatedAt)
+	}
+	return entityDriverAvailability
+}
+func (c *AppMapperImpl) EntDocumentListToEntityList(source []*ent.VehicleDocument) []entity.VehicleDocument {
+	var entityVehicleDocumentList []entity.VehicleDocument
+	if source != nil {
+		entityVehicleDocumentList = make([]entity.VehicleDocument, len(source))
+		for i := 0; i < len(source); i++ {
+			entityVehicleDocumentList[i] = c.EntDocumentToEntityDocument(source[i])
+		}
+	}
+	return entityVehicleDocumentList
+}
+func (c *AppMapperImpl) EntDocumentToEntityDocument(source *ent.VehicleDocument) entity.VehicleDocument {
+	var entityVehicleDocument entity.VehicleDocument
+	if source != nil {
+		entityVehicleDocument.ID = c.uuidUUIDToUuidUUID((*source).ID)
+		entityVehicleDocument.VehicleID = c.uuidUUIDToUuidUUID((*source).VehicleID)
+		entityVehicleDocument.DocumentType = mapper.EntDocumentTypeToString((*source).DocumentType)
+		entityVehicleDocument.DocumentNumber = (*source).DocumentNumber
+		entityVehicleDocument.FileURL = (*source).FileURL
+		entityVehicleDocument.IssuedAt = mapper.TimePtrToTime((*source).IssuedAt)
+		entityVehicleDocument.ExpiresAt = mapper.TimePtrToTime((*source).ExpiresAt)
+		entityVehicleDocument.ReviewStatus = mapper.EntReviewStatusToString((*source).ReviewStatus)
+		entityVehicleDocument.ReviewNote = (*source).ReviewNote
+		entityVehicleDocument.CreatedAt = mapper.IdentityTime((*source).CreatedAt)
+	}
+	return entityVehicleDocument
+}
+func (c *AppMapperImpl) EntLocationToEntityLocation(source *ent.VehicleLocation) entity.VehicleLocation {
+	var entityVehicleLocation entity.VehicleLocation
+	if source != nil {
+		entityVehicleLocation.VehicleID = c.uuidUUIDToUuidUUID((*source).VehicleID)
+		entityVehicleLocation.DriverID = c.uuidUUIDToUuidUUID((*source).DriverID)
+		entityVehicleLocation.Latitude = (*source).Latitude
+		entityVehicleLocation.Longitude = (*source).Longitude
+		entityVehicleLocation.Heading = (*source).Heading
+		entityVehicleLocation.SpeedKph = (*source).SpeedKph
+		entityVehicleLocation.ZoneID = (*source).ZoneID
+		entityVehicleLocation.RecordedAt = mapper.IdentityTime((*source).RecordedAt)
+	}
+	return entityVehicleLocation
+}
 func (c *AppMapperImpl) EntVehicleListToEntityVehicleList(source []*ent.Vehicle) []entity.Vehicle {
 	var entityVehicleList []entity.Vehicle
 	if source != nil {
@@ -31,14 +97,98 @@ func (c *AppMapperImpl) EntVehicleToEntityVehicle(source *ent.Vehicle) entity.Ve
 		entityVehicle.LicensePlate = (*source).LicensePlate
 		entityVehicle.Brand = (*source).Brand
 		entityVehicle.Model = (*source).Model
+		entityVehicle.ManufactureYear = (*source).ManufactureYear
 		entityVehicle.VehicleType = mapper.EntVehicleTypeToString((*source).VehicleType)
 		entityVehicle.CapacityWeightKg = (*source).CapacityWeightKg
 		entityVehicle.CapacityVolumeCbm = (*source).CapacityVolumeCbm
-		entityVehicle.Status = string((*source).Status)
+		entityVehicle.Status = mapper.EntVehicleStatusToString((*source).Status)
+		entityVehicle.VerificationStatus = mapper.EntVerificationStatusToString((*source).VerificationStatus)
+		entityVehicle.VerificationNote = (*source).VerificationNote
 		entityVehicle.CreatedAt = mapper.IdentityTime((*source).CreatedAt)
 		entityVehicle.UpdatedAt = mapper.IdentityTime((*source).UpdatedAt)
 	}
 	return entityVehicle
+}
+func (c *AppMapperImpl) EntityAvailabilityToPb(source entity.DriverAvailability) *v1.DriverAvailability {
+	var vehiclev1DriverAvailability v1.DriverAvailability
+	vehiclev1DriverAvailability.Id = mapper.UUIDToBytes(source.ID)
+	vehiclev1DriverAvailability.DriverId = mapper.UUIDToBytes(source.DriverID)
+	vehiclev1DriverAvailability.VehicleId = mapper.UUIDToBytes(source.VehicleID)
+	vehiclev1DriverAvailability.IsOnline = source.IsOnline
+	vehiclev1DriverAvailability.AvailableWeightKg = source.AvailableWeightKg
+	vehiclev1DriverAvailability.AvailableVolumeCbm = source.AvailableVolumeCbm
+	vehiclev1DriverAvailability.CurrentLat = source.CurrentLat
+	vehiclev1DriverAvailability.CurrentLng = source.CurrentLng
+	vehiclev1DriverAvailability.ZoneId = source.ZoneID
+	vehiclev1DriverAvailability.UpdatedAt = mapper.TimeToTimestamp(source.UpdatedAt)
+	return &vehiclev1DriverAvailability
+}
+func (c *AppMapperImpl) EntityDocumentListToPbList(source []entity.VehicleDocument) []*v1.VehicleDocument {
+	var pVehiclev1VehicleDocumentList []*v1.VehicleDocument
+	if source != nil {
+		pVehiclev1VehicleDocumentList = make([]*v1.VehicleDocument, len(source))
+		for i := 0; i < len(source); i++ {
+			pVehiclev1VehicleDocumentList[i] = c.EntityDocumentToPb(source[i])
+		}
+	}
+	return pVehiclev1VehicleDocumentList
+}
+func (c *AppMapperImpl) EntityDocumentToPb(source entity.VehicleDocument) *v1.VehicleDocument {
+	var vehiclev1VehicleDocument v1.VehicleDocument
+	vehiclev1VehicleDocument.Id = mapper.UUIDToBytes(source.ID)
+	vehiclev1VehicleDocument.VehicleId = mapper.UUIDToBytes(source.VehicleID)
+	vehiclev1VehicleDocument.DocumentType = source.DocumentType
+	vehiclev1VehicleDocument.DocumentNumber = source.DocumentNumber
+	vehiclev1VehicleDocument.FileUrl = source.FileURL
+	vehiclev1VehicleDocument.IssuedAt = mapper.TimeToTimestamp(source.IssuedAt)
+	vehiclev1VehicleDocument.ExpiresAt = mapper.TimeToTimestamp(source.ExpiresAt)
+	vehiclev1VehicleDocument.ReviewStatus = source.ReviewStatus
+	vehiclev1VehicleDocument.ReviewNote = source.ReviewNote
+	vehiclev1VehicleDocument.CreatedAt = mapper.TimeToTimestamp(source.CreatedAt)
+	return &vehiclev1VehicleDocument
+}
+func (c *AppMapperImpl) EntityLocationToPb(source entity.VehicleLocation) *v1.VehicleLocation {
+	var vehiclev1VehicleLocation v1.VehicleLocation
+	vehiclev1VehicleLocation.VehicleId = mapper.UUIDToBytes(source.VehicleID)
+	vehiclev1VehicleLocation.DriverId = mapper.UUIDToBytes(source.DriverID)
+	vehiclev1VehicleLocation.Latitude = source.Latitude
+	vehiclev1VehicleLocation.Longitude = source.Longitude
+	vehiclev1VehicleLocation.Heading = source.Heading
+	vehiclev1VehicleLocation.SpeedKph = source.SpeedKph
+	vehiclev1VehicleLocation.ZoneId = source.ZoneID
+	vehiclev1VehicleLocation.RecordedAt = mapper.TimeToTimestamp(source.RecordedAt)
+	return &vehiclev1VehicleLocation
+}
+func (c *AppMapperImpl) EntityNearbyListToPbList(source []entity.NearbyVehicle) []*v1.NearbyVehicle {
+	var pVehiclev1NearbyVehicleList []*v1.NearbyVehicle
+	if source != nil {
+		pVehiclev1NearbyVehicleList = make([]*v1.NearbyVehicle, len(source))
+		for i := 0; i < len(source); i++ {
+			pVehiclev1NearbyVehicleList[i] = c.EntityNearbyToPb(source[i])
+		}
+	}
+	return pVehiclev1NearbyVehicleList
+}
+func (c *AppMapperImpl) EntityNearbyToPb(source entity.NearbyVehicle) *v1.NearbyVehicle {
+	var vehiclev1NearbyVehicle v1.NearbyVehicle
+	vehiclev1NearbyVehicle.VehicleId = mapper.UUIDToBytes(source.VehicleID)
+	vehiclev1NearbyVehicle.DriverId = mapper.UUIDToBytes(source.DriverID)
+	vehiclev1NearbyVehicle.LicensePlate = source.LicensePlate
+	vehiclev1NearbyVehicle.VehicleType = source.VehicleType
+	vehiclev1NearbyVehicle.DistanceKm = source.DistanceKm
+	vehiclev1NearbyVehicle.AvailableWeightKg = source.AvailableWeightKg
+	vehiclev1NearbyVehicle.AvailableVolumeCbm = source.AvailableVolumeCbm
+	vehiclev1NearbyVehicle.Latitude = source.Latitude
+	vehiclev1NearbyVehicle.Longitude = source.Longitude
+	return &vehiclev1NearbyVehicle
+}
+func (c *AppMapperImpl) EntityPaginationToPb(source entity.Pagination) *v1.Pagination {
+	var vehiclev1Pagination v1.Pagination
+	vehiclev1Pagination.Page = mapper.IntToInt32(source.Page)
+	vehiclev1Pagination.PageSize = mapper.IntToInt32(source.PageSize)
+	vehiclev1Pagination.TotalItems = source.TotalItems
+	vehiclev1Pagination.TotalPages = mapper.IntToInt32(source.TotalPages)
+	return &vehiclev1Pagination
 }
 func (c *AppMapperImpl) EntityVehicleListToPbVehicleList(source []entity.Vehicle) []*v1.Vehicle {
 	var pVehiclev1VehicleList []*v1.Vehicle
@@ -57,34 +207,200 @@ func (c *AppMapperImpl) EntityVehicleToPbVehicle(source entity.Vehicle) *v1.Vehi
 	vehiclev1Vehicle.LicensePlate = source.LicensePlate
 	vehiclev1Vehicle.Brand = source.Brand
 	vehiclev1Vehicle.Model = source.Model
+	vehiclev1Vehicle.ManufactureYear = mapper.IntToInt32(source.ManufactureYear)
 	vehiclev1Vehicle.VehicleType = source.VehicleType
-	vehiclev1Vehicle.CapacityWeightKg = mapper.Float64ToFloat32(source.CapacityWeightKg)
-	vehiclev1Vehicle.CapacityVolumeCbm = mapper.Float64ToFloat32(source.CapacityVolumeCbm)
+	vehiclev1Vehicle.CapacityWeightKg = source.CapacityWeightKg
+	vehiclev1Vehicle.CapacityVolumeCbm = source.CapacityVolumeCbm
 	vehiclev1Vehicle.Status = source.Status
+	vehiclev1Vehicle.VerificationStatus = source.VerificationStatus
+	vehiclev1Vehicle.CreatedAt = mapper.TimeToTimestamp(source.CreatedAt)
+	vehiclev1Vehicle.UpdatedAt = mapper.TimeToTimestamp(source.UpdatedAt)
 	return &vehiclev1Vehicle
 }
-func (c *AppMapperImpl) PbVehicleToEntity(source *v1.Vehicle) (entity.Vehicle, error) {
-	var entityVehicle entity.Vehicle
+func (c *AppMapperImpl) PbAdminListVehiclesToParam(source *v1.AdminListVehiclesRequest) entity.AdminListVehiclesParam {
+	var entityAdminListVehiclesParam entity.AdminListVehiclesParam
+	if source != nil {
+		entityAdminListVehiclesParam.Status = (*source).Status
+		entityAdminListVehiclesParam.VerificationStatus = (*source).VerificationStatus
+		entityAdminListVehiclesParam.VehicleType = (*source).VehicleType
+		entityAdminListVehiclesParam.Keyword = (*source).Keyword
+		entityAdminListVehiclesParam.Page = mapper.Int32ToInt((*source).Page)
+		entityAdminListVehiclesParam.PageSize = mapper.Int32ToInt((*source).PageSize)
+	}
+	return entityAdminListVehiclesParam
+}
+func (c *AppMapperImpl) PbListDocumentsToParam(source *v1.ListVehicleDocumentsRequest) (entity.ListDocumentsParam, error) {
+	var entityListDocumentsParam entity.ListDocumentsParam
+	if source != nil {
+		uuidUUID, err := mapper.BytesToUUID((*source).VehicleId)
+		if err != nil {
+			return entityListDocumentsParam, err
+		}
+		entityListDocumentsParam.VehicleID = uuidUUID
+		uuidUUID2, err := mapper.BytesToUUID((*source).DriverId)
+		if err != nil {
+			return entityListDocumentsParam, err
+		}
+		entityListDocumentsParam.DriverID = uuidUUID2
+		entityListDocumentsParam.ReviewStatus = (*source).ReviewStatus
+	}
+	return entityListDocumentsParam, nil
+}
+func (c *AppMapperImpl) PbListVehiclesToParam(source *v1.ListVehiclesRequest) (entity.ListVehiclesParam, error) {
+	var entityListVehiclesParam entity.ListVehiclesParam
+	if source != nil {
+		uuidUUID, err := mapper.BytesToUUID((*source).DriverId)
+		if err != nil {
+			return entityListVehiclesParam, err
+		}
+		entityListVehiclesParam.DriverID = uuidUUID
+		entityListVehiclesParam.Status = (*source).Status
+		entityListVehiclesParam.VehicleType = (*source).VehicleType
+		entityListVehiclesParam.Page = mapper.Int32ToInt((*source).Page)
+		entityListVehiclesParam.PageSize = mapper.Int32ToInt((*source).PageSize)
+	}
+	return entityListVehiclesParam, nil
+}
+func (c *AppMapperImpl) PbRegisterVehicleToParam(source *v1.RegisterVehicleRequest) (entity.RegisterVehicleParam, error) {
+	var entityRegisterVehicleParam entity.RegisterVehicleParam
+	if source != nil {
+		uuidUUID, err := mapper.BytesToUUID((*source).DriverId)
+		if err != nil {
+			return entityRegisterVehicleParam, err
+		}
+		entityRegisterVehicleParam.DriverID = uuidUUID
+		entityRegisterVehicleParam.LicensePlate = (*source).LicensePlate
+		entityRegisterVehicleParam.Brand = (*source).Brand
+		entityRegisterVehicleParam.Model = (*source).Model
+		entityRegisterVehicleParam.ManufactureYear = mapper.Int32ToInt((*source).ManufactureYear)
+		entityRegisterVehicleParam.VehicleType = (*source).VehicleType
+		entityRegisterVehicleParam.CapacityWeightKg = (*source).CapacityWeightKg
+		entityRegisterVehicleParam.CapacityVolumeCbm = (*source).CapacityVolumeCbm
+	}
+	return entityRegisterVehicleParam, nil
+}
+func (c *AppMapperImpl) PbReportLocationToParam(source *v1.ReportLocationRequest) (entity.ReportLocationParam, error) {
+	var entityReportLocationParam entity.ReportLocationParam
+	if source != nil {
+		uuidUUID, err := mapper.BytesToUUID((*source).VehicleId)
+		if err != nil {
+			return entityReportLocationParam, err
+		}
+		entityReportLocationParam.VehicleID = uuidUUID
+		uuidUUID2, err := mapper.BytesToUUID((*source).DriverId)
+		if err != nil {
+			return entityReportLocationParam, err
+		}
+		entityReportLocationParam.DriverID = uuidUUID2
+		entityReportLocationParam.Latitude = (*source).Latitude
+		entityReportLocationParam.Longitude = (*source).Longitude
+		entityReportLocationParam.Heading = (*source).Heading
+		entityReportLocationParam.SpeedKph = (*source).SpeedKph
+	}
+	return entityReportLocationParam, nil
+}
+func (c *AppMapperImpl) PbReviewDocumentToParam(source *v1.AdminReviewDocumentRequest) (entity.ReviewDocumentParam, error) {
+	var entityReviewDocumentParam entity.ReviewDocumentParam
 	if source != nil {
 		uuidUUID, err := mapper.BytesToUUID((*source).Id)
 		if err != nil {
-			return entityVehicle, err
+			return entityReviewDocumentParam, err
 		}
-		entityVehicle.ID = uuidUUID
+		entityReviewDocumentParam.ID = uuidUUID
+		entityReviewDocumentParam.Approved = (*source).Approved
+		entityReviewDocumentParam.Note = (*source).Note
+	}
+	return entityReviewDocumentParam, nil
+}
+func (c *AppMapperImpl) PbSearchNearbyToParam(source *v1.SearchNearbyVehiclesRequest) entity.SearchNearbyParam {
+	var entitySearchNearbyParam entity.SearchNearbyParam
+	if source != nil {
+		entitySearchNearbyParam.Latitude = (*source).Latitude
+		entitySearchNearbyParam.Longitude = (*source).Longitude
+		entitySearchNearbyParam.RadiusKm = (*source).RadiusKm
+		entitySearchNearbyParam.MinWeightKg = (*source).MinWeightKg
+		entitySearchNearbyParam.MinVolumeCbm = (*source).MinVolumeCbm
+		entitySearchNearbyParam.VehicleType = (*source).VehicleType
+		entitySearchNearbyParam.Limit = mapper.Int32ToInt((*source).Limit)
+	}
+	return entitySearchNearbyParam
+}
+func (c *AppMapperImpl) PbSetAvailabilityToParam(source *v1.SetDriverAvailabilityRequest) (entity.SetAvailabilityParam, error) {
+	var entitySetAvailabilityParam entity.SetAvailabilityParam
+	if source != nil {
+		uuidUUID, err := mapper.BytesToUUID((*source).DriverId)
+		if err != nil {
+			return entitySetAvailabilityParam, err
+		}
+		entitySetAvailabilityParam.DriverID = uuidUUID
+		uuidUUID2, err := mapper.BytesToUUID((*source).VehicleId)
+		if err != nil {
+			return entitySetAvailabilityParam, err
+		}
+		entitySetAvailabilityParam.VehicleID = uuidUUID2
+		entitySetAvailabilityParam.IsOnline = (*source).IsOnline
+		entitySetAvailabilityParam.AvailableWeightKg = (*source).AvailableWeightKg
+		entitySetAvailabilityParam.AvailableVolumeCbm = (*source).AvailableVolumeCbm
+		entitySetAvailabilityParam.CurrentLat = (*source).CurrentLat
+		entitySetAvailabilityParam.CurrentLng = (*source).CurrentLng
+	}
+	return entitySetAvailabilityParam, nil
+}
+func (c *AppMapperImpl) PbUpdateVehicleToParam(source *v1.UpdateVehicleRequest) (entity.UpdateVehicleParam, error) {
+	var entityUpdateVehicleParam entity.UpdateVehicleParam
+	if source != nil {
+		uuidUUID, err := mapper.BytesToUUID((*source).Id)
+		if err != nil {
+			return entityUpdateVehicleParam, err
+		}
+		entityUpdateVehicleParam.ID = uuidUUID
 		uuidUUID2, err := mapper.BytesToUUID((*source).DriverId)
 		if err != nil {
-			return entityVehicle, err
+			return entityUpdateVehicleParam, err
 		}
-		entityVehicle.DriverID = uuidUUID2
-		entityVehicle.LicensePlate = (*source).LicensePlate
-		entityVehicle.Brand = (*source).Brand
-		entityVehicle.Model = (*source).Model
-		entityVehicle.VehicleType = (*source).VehicleType
-		entityVehicle.CapacityWeightKg = mapper.Float32ToFloat64((*source).CapacityWeightKg)
-		entityVehicle.CapacityVolumeCbm = mapper.Float32ToFloat64((*source).CapacityVolumeCbm)
-		entityVehicle.Status = (*source).Status
+		entityUpdateVehicleParam.DriverID = uuidUUID2
+		entityUpdateVehicleParam.Brand = (*source).Brand
+		entityUpdateVehicleParam.Model = (*source).Model
+		entityUpdateVehicleParam.ManufactureYear = mapper.Int32ToInt((*source).ManufactureYear)
+		entityUpdateVehicleParam.VehicleType = (*source).VehicleType
+		entityUpdateVehicleParam.CapacityWeightKg = (*source).CapacityWeightKg
+		entityUpdateVehicleParam.CapacityVolumeCbm = (*source).CapacityVolumeCbm
 	}
-	return entityVehicle, nil
+	return entityUpdateVehicleParam, nil
+}
+func (c *AppMapperImpl) PbUploadDocumentToParam(source *v1.UploadVehicleDocumentRequest) (entity.UploadDocumentParam, error) {
+	var entityUploadDocumentParam entity.UploadDocumentParam
+	if source != nil {
+		uuidUUID, err := mapper.BytesToUUID((*source).VehicleId)
+		if err != nil {
+			return entityUploadDocumentParam, err
+		}
+		entityUploadDocumentParam.VehicleID = uuidUUID
+		uuidUUID2, err := mapper.BytesToUUID((*source).DriverId)
+		if err != nil {
+			return entityUploadDocumentParam, err
+		}
+		entityUploadDocumentParam.DriverID = uuidUUID2
+		entityUploadDocumentParam.DocumentType = (*source).DocumentType
+		entityUploadDocumentParam.DocumentNumber = (*source).DocumentNumber
+		entityUploadDocumentParam.FileURL = (*source).FileUrl
+		entityUploadDocumentParam.IssuedAt = mapper.TimestampToTime((*source).IssuedAt)
+		entityUploadDocumentParam.ExpiresAt = mapper.TimestampToTime((*source).ExpiresAt)
+	}
+	return entityUploadDocumentParam, nil
+}
+func (c *AppMapperImpl) PbVerifyVehicleToParam(source *v1.AdminVerifyVehicleRequest) (entity.VerifyVehicleParam, error) {
+	var entityVerifyVehicleParam entity.VerifyVehicleParam
+	if source != nil {
+		uuidUUID, err := mapper.BytesToUUID((*source).Id)
+		if err != nil {
+			return entityVerifyVehicleParam, err
+		}
+		entityVerifyVehicleParam.ID = uuidUUID
+		entityVerifyVehicleParam.Approved = (*source).Approved
+		entityVerifyVehicleParam.Note = (*source).Note
+	}
+	return entityVerifyVehicleParam, nil
 }
 func (c *AppMapperImpl) uuidUUIDToUuidUUID(source uuid.UUID) uuid.UUID {
 	var uuidUUID uuid.UUID

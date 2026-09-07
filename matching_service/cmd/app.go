@@ -10,6 +10,7 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/logistic/pkg/middleware"
 	"github.com/logistic/pkg/tracer"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
@@ -19,6 +20,7 @@ type App struct {
 	grpcServer *grpc.Server
 	listener   net.Listener
 	cfg        *conf.Config
+	container  *di.Container
 	shutdown   func(context.Context) error
 }
 
@@ -35,9 +37,10 @@ func NewApp(cfg *conf.Config) (*App, error) {
 
 	grpcServer := grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
+		middleware.ChainForService("matching_service"),
 	)
 
-	err = di.Injection(grpcServer, cfg)
+	container, err := di.Injection(grpcServer, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -46,6 +49,7 @@ func NewApp(cfg *conf.Config) (*App, error) {
 		grpcServer: grpcServer,
 		listener:   lis,
 		cfg:        cfg,
+		container:  container,
 		shutdown:   shutdownTracer,
 	}, nil
 }
@@ -57,6 +61,7 @@ func (a *App) Start() error {
 func (a *App) Stop() {
 	log.Println("Stopping Matching Service (gRPC) gracefully...")
 	a.grpcServer.GracefulStop()
+	a.container.Close()
 
 	if a.shutdown != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

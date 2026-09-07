@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"vehicle_service/ent/driveravailability"
 	"vehicle_service/ent/vehicle"
+	"vehicle_service/ent/vehiclelocation"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
@@ -26,6 +28,8 @@ type Vehicle struct {
 	Brand string `json:"brand,omitempty"`
 	// Model holds the value of the "model" field.
 	Model string `json:"model,omitempty"`
+	// ManufactureYear holds the value of the "manufacture_year" field.
+	ManufactureYear int `json:"manufacture_year,omitempty"`
 	// VehicleType holds the value of the "vehicle_type" field.
 	VehicleType vehicle.VehicleType `json:"vehicle_type,omitempty"`
 	// CapacityWeightKg holds the value of the "capacity_weight_kg" field.
@@ -34,11 +38,66 @@ type Vehicle struct {
 	CapacityVolumeCbm float64 `json:"capacity_volume_cbm,omitempty"`
 	// Status holds the value of the "status" field.
 	Status vehicle.Status `json:"status,omitempty"`
+	// VerificationStatus holds the value of the "verification_status" field.
+	VerificationStatus vehicle.VerificationStatus `json:"verification_status,omitempty"`
+	// VerificationNote holds the value of the "verification_note" field.
+	VerificationNote string `json:"verification_note,omitempty"`
+	// VerifiedBy holds the value of the "verified_by" field.
+	VerifiedBy *uuid.UUID `json:"verified_by,omitempty"`
+	// VerifiedAt holds the value of the "verified_at" field.
+	VerifiedAt *time.Time `json:"verified_at,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
-	UpdatedAt    time.Time `json:"updated_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the VehicleQuery when eager-loading is set.
+	Edges        VehicleEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// VehicleEdges holds the relations/edges for other nodes in the graph.
+type VehicleEdges struct {
+	// Documents holds the value of the documents edge.
+	Documents []*VehicleDocument `json:"documents,omitempty"`
+	// Location holds the value of the location edge.
+	Location *VehicleLocation `json:"location,omitempty"`
+	// Availability holds the value of the availability edge.
+	Availability *DriverAvailability `json:"availability,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [3]bool
+}
+
+// DocumentsOrErr returns the Documents value or an error if the edge
+// was not loaded in eager-loading.
+func (e VehicleEdges) DocumentsOrErr() ([]*VehicleDocument, error) {
+	if e.loadedTypes[0] {
+		return e.Documents, nil
+	}
+	return nil, &NotLoadedError{edge: "documents"}
+}
+
+// LocationOrErr returns the Location value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e VehicleEdges) LocationOrErr() (*VehicleLocation, error) {
+	if e.Location != nil {
+		return e.Location, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: vehiclelocation.Label}
+	}
+	return nil, &NotLoadedError{edge: "location"}
+}
+
+// AvailabilityOrErr returns the Availability value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e VehicleEdges) AvailabilityOrErr() (*DriverAvailability, error) {
+	if e.Availability != nil {
+		return e.Availability, nil
+	} else if e.loadedTypes[2] {
+		return nil, &NotFoundError{label: driveravailability.Label}
+	}
+	return nil, &NotLoadedError{edge: "availability"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -46,11 +105,15 @@ func (*Vehicle) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case vehicle.FieldVerifiedBy:
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case vehicle.FieldCapacityWeightKg, vehicle.FieldCapacityVolumeCbm:
 			values[i] = new(sql.NullFloat64)
-		case vehicle.FieldLicensePlate, vehicle.FieldBrand, vehicle.FieldModel, vehicle.FieldVehicleType, vehicle.FieldStatus:
+		case vehicle.FieldManufactureYear:
+			values[i] = new(sql.NullInt64)
+		case vehicle.FieldLicensePlate, vehicle.FieldBrand, vehicle.FieldModel, vehicle.FieldVehicleType, vehicle.FieldStatus, vehicle.FieldVerificationStatus, vehicle.FieldVerificationNote:
 			values[i] = new(sql.NullString)
-		case vehicle.FieldCreatedAt, vehicle.FieldUpdatedAt:
+		case vehicle.FieldVerifiedAt, vehicle.FieldCreatedAt, vehicle.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case vehicle.FieldID, vehicle.FieldDriverID:
 			values[i] = new(uuid.UUID)
@@ -99,6 +162,12 @@ func (_m *Vehicle) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Model = value.String
 			}
+		case vehicle.FieldManufactureYear:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field manufacture_year", values[i])
+			} else if value.Valid {
+				_m.ManufactureYear = int(value.Int64)
+			}
 		case vehicle.FieldVehicleType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field vehicle_type", values[i])
@@ -123,6 +192,32 @@ func (_m *Vehicle) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Status = vehicle.Status(value.String)
 			}
+		case vehicle.FieldVerificationStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field verification_status", values[i])
+			} else if value.Valid {
+				_m.VerificationStatus = vehicle.VerificationStatus(value.String)
+			}
+		case vehicle.FieldVerificationNote:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field verification_note", values[i])
+			} else if value.Valid {
+				_m.VerificationNote = value.String
+			}
+		case vehicle.FieldVerifiedBy:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field verified_by", values[i])
+			} else if value.Valid {
+				_m.VerifiedBy = new(uuid.UUID)
+				*_m.VerifiedBy = *value.S.(*uuid.UUID)
+			}
+		case vehicle.FieldVerifiedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field verified_at", values[i])
+			} else if value.Valid {
+				_m.VerifiedAt = new(time.Time)
+				*_m.VerifiedAt = value.Time
+			}
 		case vehicle.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
@@ -146,6 +241,21 @@ func (_m *Vehicle) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (_m *Vehicle) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
+}
+
+// QueryDocuments queries the "documents" edge of the Vehicle entity.
+func (_m *Vehicle) QueryDocuments() *VehicleDocumentQuery {
+	return NewVehicleClient(_m.config).QueryDocuments(_m)
+}
+
+// QueryLocation queries the "location" edge of the Vehicle entity.
+func (_m *Vehicle) QueryLocation() *VehicleLocationQuery {
+	return NewVehicleClient(_m.config).QueryLocation(_m)
+}
+
+// QueryAvailability queries the "availability" edge of the Vehicle entity.
+func (_m *Vehicle) QueryAvailability() *DriverAvailabilityQuery {
+	return NewVehicleClient(_m.config).QueryAvailability(_m)
 }
 
 // Update returns a builder for updating this Vehicle.
@@ -183,6 +293,9 @@ func (_m *Vehicle) String() string {
 	builder.WriteString("model=")
 	builder.WriteString(_m.Model)
 	builder.WriteString(", ")
+	builder.WriteString("manufacture_year=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ManufactureYear))
+	builder.WriteString(", ")
 	builder.WriteString("vehicle_type=")
 	builder.WriteString(fmt.Sprintf("%v", _m.VehicleType))
 	builder.WriteString(", ")
@@ -194,6 +307,22 @@ func (_m *Vehicle) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Status))
+	builder.WriteString(", ")
+	builder.WriteString("verification_status=")
+	builder.WriteString(fmt.Sprintf("%v", _m.VerificationStatus))
+	builder.WriteString(", ")
+	builder.WriteString("verification_note=")
+	builder.WriteString(_m.VerificationNote)
+	builder.WriteString(", ")
+	if v := _m.VerifiedBy; v != nil {
+		builder.WriteString("verified_by=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.VerifiedAt; v != nil {
+		builder.WriteString("verified_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))

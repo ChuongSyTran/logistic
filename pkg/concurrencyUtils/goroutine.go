@@ -5,7 +5,6 @@ import (
 	"log"
 )
 
-// Gom N tín hiệu hủy thành tín hiệu hủy tổng
 func OrChannel(cancelSignal ...<-chan struct{}) <-chan struct{} {
 	switch len(cancelSignal) {
 	case 0:
@@ -36,7 +35,6 @@ func OrChannel(cancelSignal ...<-chan struct{}) <-chan struct{} {
 	return finalCancelSignal
 }
 
-// Đọc một channels hỗ trợ khả năng ngắt ngang
 func OrDone[T any](done <-chan struct{}, channel <-chan T) <-chan T {
 	valStream := make(chan T)
 	go func() {
@@ -61,7 +59,6 @@ func OrDone[T any](done <-chan struct{}, channel <-chan T) <-chan T {
 	return valStream
 }
 
-// Định nghĩa Bridge để duỗi thẳng các chan trong chan thành 1 chan data
 func Bridge[T any](ctx context.Context, channels <-chan <-chan T) <-chan T {
 	valStream := make(chan T)
 	go func() {
@@ -138,7 +135,6 @@ func primeFinder(ctx context.Context, intStream <-chan int) <-chan int {
 	go func() {
 		defer close(primeStream)
 		for integer := range intStream {
-			// Thuật toán kiểm tra số nguyên tố ngây ngô và cực chậm
 			prime := true
 			for i := 2; i < integer; i++ {
 				if integer%i == 0 {
@@ -147,7 +143,6 @@ func primeFinder(ctx context.Context, intStream <-chan int) <-chan int {
 				}
 			}
 
-			// Nếu là số nguyên tố, đẩy vào ống đầu ra
 			if prime {
 				select {
 				case <-ctx.Done():
@@ -215,52 +210,6 @@ func take(ctx context.Context, valueStream <-chan string, num int) <-chan string
 	return takeStream
 }
 
-// func FanIn()
-
-// func FanOutFanIn(ctx context.Context) {
-// 	randFn := func() any {
-// 		return rand.IntN(50000000)
-// 	}
-
-// 	start := time.Now()
-// 	numFinders := runtime.NumCPU()
-
-// 	fmt.Printf("Spinning up %d prime finders.\n", numFinders)
-// 	finders := make([]<-chan interface{}, numFinders)
-// 	fmt.Println("Primes:")
-
-// 	for i := 0; i < numFinders; i++ {
-// 		finders[i] = primeFinder(done, randIntStream)
-// 	}
-
-// 	for prime := range take(done, fanIn(done, finders...), 10) {
-// 		fmt.Printf("\t%d\n", prime)
-// 	}
-// 	fmt.Printf("Search took: %v", time.Since(start))
-// }
-
-// // func FanOut[T, U any](ctx context.Context, fn func(ctx context.Context, input T) (U error)) (<-chan ChanStruct[U], error) {
-// 	outStream := make(chan U)
-
-// loop:
-// 	for {
-// 		go func() {
-// 			select {
-// 			case <-ctx.Done():
-// 				break loop
-// 			default:
-
-// 			}
-// 		}()
-// 	}
-
-// 	return outStream, nil
-// }
-
-// Định nghĩa Stateful Ward (Ward nhưng store được trạng thái Ward trước kia đã làm gì)
-
-// Định nghĩa Steward (Giám sát Heartbeat của Ward để ra quyết định clear and new)
-
 type Worker struct {
 	msgChan  <-chan []byte
 	handler  func(ctx context.Context, payload []byte) error
@@ -277,8 +226,6 @@ func NewWorker(msgChan <-chan []byte, handler func(ctx context.Context, payload 
 
 func (w *Worker) Start(ctx context.Context) {
 	go func() {
-		// 1. Dùng OrChannel gom tín hiệu hủy của hệ thống (ctx.Done()) và
-		// tín hiệu dập máy thủ công (w.quitChan) lại làm 1.
 		combinedDone := OrChannel(ctx.Done(), w.quitChan)
 
 		for payload := range OrDone(combinedDone, w.msgChan) {

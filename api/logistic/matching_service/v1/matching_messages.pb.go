@@ -4,7 +4,7 @@
 // 	protoc        (unknown)
 // source: logistic/matching_service/v1/matching_messages.proto
 
-package v1
+package matchingv1
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -983,6 +983,235 @@ func (x *AcceptMatchResponse) GetCreatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+// SubmitOfferRequest: tài xế ra giá cho một đơn hàng cụ thể.
+// Đây là bước giữa của vòng thương lượng: bid (chủ hàng) -> offer (tài xế)
+// -> accept/reject (chủ hàng).
+type SubmitOfferRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BidId         []byte                 `protobuf:"bytes,1,opt,name=bid_id,json=bidId,proto3" json:"bid_id,omitempty"`
+	AskId         []byte                 `protobuf:"bytes,2,opt,name=ask_id,json=askId,proto3" json:"ask_id,omitempty"`
+	DesiredPrice  float64                `protobuf:"fixed64,3,opt,name=desired_price,json=desiredPrice,proto3" json:"desired_price,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SubmitOfferRequest) Reset() {
+	*x = SubmitOfferRequest{}
+	mi := &file_logistic_matching_service_v1_matching_messages_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SubmitOfferRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubmitOfferRequest) ProtoMessage() {}
+
+func (x *SubmitOfferRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_matching_service_v1_matching_messages_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubmitOfferRequest.ProtoReflect.Descriptor instead.
+func (*SubmitOfferRequest) Descriptor() ([]byte, []int) {
+	return file_logistic_matching_service_v1_matching_messages_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *SubmitOfferRequest) GetBidId() []byte {
+	if x != nil {
+		return x.BidId
+	}
+	return nil
+}
+
+func (x *SubmitOfferRequest) GetAskId() []byte {
+	if x != nil {
+		return x.AskId
+	}
+	return nil
+}
+
+func (x *SubmitOfferRequest) GetDesiredPrice() float64 {
+	if x != nil {
+		return x.DesiredPrice
+	}
+	return 0
+}
+
+type SubmitOfferResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Status        string                 `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SubmitOfferResponse) Reset() {
+	*x = SubmitOfferResponse{}
+	mi := &file_logistic_matching_service_v1_matching_messages_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SubmitOfferResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubmitOfferResponse) ProtoMessage() {}
+
+func (x *SubmitOfferResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_matching_service_v1_matching_messages_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubmitOfferResponse.ProtoReflect.Descriptor instead.
+func (*SubmitOfferResponse) Descriptor() ([]byte, []int) {
+	return file_logistic_matching_service_v1_matching_messages_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *SubmitOfferResponse) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *SubmitOfferResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+// RejectOfferRequest: chủ hàng từ chối báo giá, đơn quay lại trạng thái PENDING
+// để các tài xế khác tiếp tục ra giá.
+type RejectOfferRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BidId         []byte                 `protobuf:"bytes,1,opt,name=bid_id,json=bidId,proto3" json:"bid_id,omitempty"`
+	AskId         []byte                 `protobuf:"bytes,2,opt,name=ask_id,json=askId,proto3" json:"ask_id,omitempty"`
+	Reason        string                 `protobuf:"bytes,3,opt,name=reason,proto3" json:"reason,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RejectOfferRequest) Reset() {
+	*x = RejectOfferRequest{}
+	mi := &file_logistic_matching_service_v1_matching_messages_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RejectOfferRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RejectOfferRequest) ProtoMessage() {}
+
+func (x *RejectOfferRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_matching_service_v1_matching_messages_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RejectOfferRequest.ProtoReflect.Descriptor instead.
+func (*RejectOfferRequest) Descriptor() ([]byte, []int) {
+	return file_logistic_matching_service_v1_matching_messages_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *RejectOfferRequest) GetBidId() []byte {
+	if x != nil {
+		return x.BidId
+	}
+	return nil
+}
+
+func (x *RejectOfferRequest) GetAskId() []byte {
+	if x != nil {
+		return x.AskId
+	}
+	return nil
+}
+
+func (x *RejectOfferRequest) GetReason() string {
+	if x != nil {
+		return x.Reason
+	}
+	return ""
+}
+
+type RejectOfferResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Status        string                 `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RejectOfferResponse) Reset() {
+	*x = RejectOfferResponse{}
+	mi := &file_logistic_matching_service_v1_matching_messages_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RejectOfferResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RejectOfferResponse) ProtoMessage() {}
+
+func (x *RejectOfferResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_matching_service_v1_matching_messages_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RejectOfferResponse.ProtoReflect.Descriptor instead.
+func (*RejectOfferResponse) Descriptor() ([]byte, []int) {
+	return file_logistic_matching_service_v1_matching_messages_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *RejectOfferResponse) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *RejectOfferResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
 var File_logistic_matching_service_v1_matching_messages_proto protoreflect.FileDescriptor
 
 const file_logistic_matching_service_v1_matching_messages_proto_rawDesc = "" +
@@ -1084,7 +1313,21 @@ const file_logistic_matching_service_v1_matching_messages_proto_rawDesc = "" +
 	"\tagreed_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\bagreedAt\x129\n" +
 	"\n" +
 	"created_at\x18\n" +
-	" \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAtB+Z)logistic_project/api/logistic/matching/v1b\x06proto3"
+	" \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"g\n" +
+	"\x12SubmitOfferRequest\x12\x15\n" +
+	"\x06bid_id\x18\x01 \x01(\fR\x05bidId\x12\x15\n" +
+	"\x06ask_id\x18\x02 \x01(\fR\x05askId\x12#\n" +
+	"\rdesired_price\x18\x03 \x01(\x01R\fdesiredPrice\"G\n" +
+	"\x13SubmitOfferResponse\x12\x16\n" +
+	"\x06status\x18\x01 \x01(\tR\x06status\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"Z\n" +
+	"\x12RejectOfferRequest\x12\x15\n" +
+	"\x06bid_id\x18\x01 \x01(\fR\x05bidId\x12\x15\n" +
+	"\x06ask_id\x18\x02 \x01(\fR\x05askId\x12\x16\n" +
+	"\x06reason\x18\x03 \x01(\tR\x06reason\"G\n" +
+	"\x13RejectOfferResponse\x12\x16\n" +
+	"\x06status\x18\x01 \x01(\tR\x06status\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessageBAZ?github.com/logistic/api/logistic/matching_service/v1;matchingv1b\x06proto3"
 
 var (
 	file_logistic_matching_service_v1_matching_messages_proto_rawDescOnce sync.Once
@@ -1098,7 +1341,7 @@ func file_logistic_matching_service_v1_matching_messages_proto_rawDescGZIP() []b
 	return file_logistic_matching_service_v1_matching_messages_proto_rawDescData
 }
 
-var file_logistic_matching_service_v1_matching_messages_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_logistic_matching_service_v1_matching_messages_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_logistic_matching_service_v1_matching_messages_proto_goTypes = []any{
 	(*Location)(nil),              // 0: logistic.matching_service.v1.Location
 	(*SubmitBidRequest)(nil),      // 1: logistic.matching_service.v1.SubmitBidRequest
@@ -1111,26 +1354,30 @@ var file_logistic_matching_service_v1_matching_messages_proto_goTypes = []any{
 	(*Asks)(nil),                  // 8: logistic.matching_service.v1.Asks
 	(*AcceptMatchRequest)(nil),    // 9: logistic.matching_service.v1.AcceptMatchRequest
 	(*AcceptMatchResponse)(nil),   // 10: logistic.matching_service.v1.AcceptMatchResponse
-	(*timestamppb.Timestamp)(nil), // 11: google.protobuf.Timestamp
+	(*SubmitOfferRequest)(nil),    // 11: logistic.matching_service.v1.SubmitOfferRequest
+	(*SubmitOfferResponse)(nil),   // 12: logistic.matching_service.v1.SubmitOfferResponse
+	(*RejectOfferRequest)(nil),    // 13: logistic.matching_service.v1.RejectOfferRequest
+	(*RejectOfferResponse)(nil),   // 14: logistic.matching_service.v1.RejectOfferResponse
+	(*timestamppb.Timestamp)(nil), // 15: google.protobuf.Timestamp
 }
 var file_logistic_matching_service_v1_matching_messages_proto_depIdxs = []int32{
-	11, // 0: logistic.matching_service.v1.SubmitBidRequest.requested_at:type_name -> google.protobuf.Timestamp
+	15, // 0: logistic.matching_service.v1.SubmitBidRequest.requested_at:type_name -> google.protobuf.Timestamp
 	5,  // 1: logistic.matching_service.v1.SubmitBidRequest.payload:type_name -> logistic.matching_service.v1.Bid
-	11, // 2: logistic.matching_service.v1.SubmitAskRequest.requested_at:type_name -> google.protobuf.Timestamp
+	15, // 2: logistic.matching_service.v1.SubmitAskRequest.requested_at:type_name -> google.protobuf.Timestamp
 	7,  // 3: logistic.matching_service.v1.SubmitAskRequest.payload:type_name -> logistic.matching_service.v1.Ask
 	0,  // 4: logistic.matching_service.v1.Bid.origin:type_name -> logistic.matching_service.v1.Location
 	0,  // 5: logistic.matching_service.v1.Bid.destination:type_name -> logistic.matching_service.v1.Location
-	11, // 6: logistic.matching_service.v1.Bid.expires_at:type_name -> google.protobuf.Timestamp
-	11, // 7: logistic.matching_service.v1.Bid.created_at:type_name -> google.protobuf.Timestamp
+	15, // 6: logistic.matching_service.v1.Bid.expires_at:type_name -> google.protobuf.Timestamp
+	15, // 7: logistic.matching_service.v1.Bid.created_at:type_name -> google.protobuf.Timestamp
 	5,  // 8: logistic.matching_service.v1.Bids.bids:type_name -> logistic.matching_service.v1.Bid
 	0,  // 9: logistic.matching_service.v1.Ask.current_location:type_name -> logistic.matching_service.v1.Location
 	0,  // 10: logistic.matching_service.v1.Ask.destination:type_name -> logistic.matching_service.v1.Location
-	11, // 11: logistic.matching_service.v1.Ask.expires_at:type_name -> google.protobuf.Timestamp
-	11, // 12: logistic.matching_service.v1.Ask.created_at:type_name -> google.protobuf.Timestamp
+	15, // 11: logistic.matching_service.v1.Ask.expires_at:type_name -> google.protobuf.Timestamp
+	15, // 12: logistic.matching_service.v1.Ask.created_at:type_name -> google.protobuf.Timestamp
 	7,  // 13: logistic.matching_service.v1.Asks.asks:type_name -> logistic.matching_service.v1.Ask
-	11, // 14: logistic.matching_service.v1.AcceptMatchRequest.agreed_at:type_name -> google.protobuf.Timestamp
-	11, // 15: logistic.matching_service.v1.AcceptMatchResponse.agreed_at:type_name -> google.protobuf.Timestamp
-	11, // 16: logistic.matching_service.v1.AcceptMatchResponse.created_at:type_name -> google.protobuf.Timestamp
+	15, // 14: logistic.matching_service.v1.AcceptMatchRequest.agreed_at:type_name -> google.protobuf.Timestamp
+	15, // 15: logistic.matching_service.v1.AcceptMatchResponse.agreed_at:type_name -> google.protobuf.Timestamp
+	15, // 16: logistic.matching_service.v1.AcceptMatchResponse.created_at:type_name -> google.protobuf.Timestamp
 	17, // [17:17] is the sub-list for method output_type
 	17, // [17:17] is the sub-list for method input_type
 	17, // [17:17] is the sub-list for extension type_name
@@ -1149,7 +1396,7 @@ func file_logistic_matching_service_v1_matching_messages_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_logistic_matching_service_v1_matching_messages_proto_rawDesc), len(file_logistic_matching_service_v1_matching_messages_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   11,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -24,17 +24,36 @@ const (
 	AuthService_GetGoogleLoginURL_FullMethodName = "/logistic.auth_service.v1.AuthService/GetGoogleLoginURL"
 	AuthService_GoogleCallback_FullMethodName    = "/logistic.auth_service.v1.AuthService/GoogleCallback"
 	AuthService_VerifyToken_FullMethodName       = "/logistic.auth_service.v1.AuthService/VerifyToken"
+	AuthService_RefreshToken_FullMethodName      = "/logistic.auth_service.v1.AuthService/RefreshToken"
+	AuthService_Logout_FullMethodName            = "/logistic.auth_service.v1.AuthService/Logout"
+	AuthService_GetPublicKeys_FullMethodName     = "/logistic.auth_service.v1.AuthService/GetPublicKeys"
 )
 
 // AuthServiceClient is the client API for AuthService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// AuthService PHÁT HÀNH danh tính. Nó không kiểm tra danh tính cho từng request
+// — việc đó do gateway làm tại chỗ bằng public key, không đi qua mạng.
+//
+// Xem docs/flows/authentication-flow.md để biết vì sao ranh giới nằm ở đó.
 type AuthServiceClient interface {
 	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
 	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 	GetGoogleLoginURL(ctx context.Context, in *GetGoogleLoginURLRequest, opts ...grpc.CallOption) (*GetGoogleLoginURLResponse, error)
 	GoogleCallback(ctx context.Context, in *GoogleCallbackRequest, opts ...grpc.CallOption) (*GoogleCallbackResponse, error)
+	// VerifyToken giữ lại cho công cụ nội bộ và cho việc lấy profile theo token.
+	// Đường xác thực thường KHÔNG đi qua đây nữa: gateway verify bằng public key.
 	VerifyToken(ctx context.Context, in *VerifyTokenRequest, opts ...grpc.CallOption) (*VerifyTokenResponse, error)
+	// RefreshToken đổi refresh token lấy cặp token mới. Vai trò được đọc LẠI từ DB
+	// ở bước này, nên người vừa bị hạ quyền không gia hạn được quyền cũ.
+	RefreshToken(ctx context.Context, in *RefreshTokenRequest, opts ...grpc.CallOption) (*RefreshTokenResponse, error)
+	// Logout thu hồi refresh token của một phiên.
+	Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*LogoutResponse, error)
+	// GetPublicKeys trả bộ khoá công khai đang hiệu lực, dạng JWKS.
+	// Gateway đọc public key từ biến môi trường là chính; RPC này phục vụ việc
+	// xoay khoá và cho các công cụ vận hành kiểm tra khoá nào đang chạy.
+	GetPublicKeys(ctx context.Context, in *GetPublicKeysRequest, opts ...grpc.CallOption) (*GetPublicKeysResponse, error)
 }
 
 type authServiceClient struct {
@@ -95,15 +114,61 @@ func (c *authServiceClient) VerifyToken(ctx context.Context, in *VerifyTokenRequ
 	return out, nil
 }
 
+func (c *authServiceClient) RefreshToken(ctx context.Context, in *RefreshTokenRequest, opts ...grpc.CallOption) (*RefreshTokenResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RefreshTokenResponse)
+	err := c.cc.Invoke(ctx, AuthService_RefreshToken_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authServiceClient) Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*LogoutResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(LogoutResponse)
+	err := c.cc.Invoke(ctx, AuthService_Logout_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authServiceClient) GetPublicKeys(ctx context.Context, in *GetPublicKeysRequest, opts ...grpc.CallOption) (*GetPublicKeysResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetPublicKeysResponse)
+	err := c.cc.Invoke(ctx, AuthService_GetPublicKeys_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuthServiceServer is the server API for AuthService service.
 // All implementations must embed UnimplementedAuthServiceServer
 // for forward compatibility.
+//
+// AuthService PHÁT HÀNH danh tính. Nó không kiểm tra danh tính cho từng request
+// — việc đó do gateway làm tại chỗ bằng public key, không đi qua mạng.
+//
+// Xem docs/flows/authentication-flow.md để biết vì sao ranh giới nằm ở đó.
 type AuthServiceServer interface {
 	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
 	Login(context.Context, *LoginRequest) (*LoginResponse, error)
 	GetGoogleLoginURL(context.Context, *GetGoogleLoginURLRequest) (*GetGoogleLoginURLResponse, error)
 	GoogleCallback(context.Context, *GoogleCallbackRequest) (*GoogleCallbackResponse, error)
+	// VerifyToken giữ lại cho công cụ nội bộ và cho việc lấy profile theo token.
+	// Đường xác thực thường KHÔNG đi qua đây nữa: gateway verify bằng public key.
 	VerifyToken(context.Context, *VerifyTokenRequest) (*VerifyTokenResponse, error)
+	// RefreshToken đổi refresh token lấy cặp token mới. Vai trò được đọc LẠI từ DB
+	// ở bước này, nên người vừa bị hạ quyền không gia hạn được quyền cũ.
+	RefreshToken(context.Context, *RefreshTokenRequest) (*RefreshTokenResponse, error)
+	// Logout thu hồi refresh token của một phiên.
+	Logout(context.Context, *LogoutRequest) (*LogoutResponse, error)
+	// GetPublicKeys trả bộ khoá công khai đang hiệu lực, dạng JWKS.
+	// Gateway đọc public key từ biến môi trường là chính; RPC này phục vụ việc
+	// xoay khoá và cho các công cụ vận hành kiểm tra khoá nào đang chạy.
+	GetPublicKeys(context.Context, *GetPublicKeysRequest) (*GetPublicKeysResponse, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
 
@@ -128,6 +193,15 @@ func (UnimplementedAuthServiceServer) GoogleCallback(context.Context, *GoogleCal
 }
 func (UnimplementedAuthServiceServer) VerifyToken(context.Context, *VerifyTokenRequest) (*VerifyTokenResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method VerifyToken not implemented")
+}
+func (UnimplementedAuthServiceServer) RefreshToken(context.Context, *RefreshTokenRequest) (*RefreshTokenResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RefreshToken not implemented")
+}
+func (UnimplementedAuthServiceServer) Logout(context.Context, *LogoutRequest) (*LogoutResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method Logout not implemented")
+}
+func (UnimplementedAuthServiceServer) GetPublicKeys(context.Context, *GetPublicKeysRequest) (*GetPublicKeysResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetPublicKeys not implemented")
 }
 func (UnimplementedAuthServiceServer) mustEmbedUnimplementedAuthServiceServer() {}
 func (UnimplementedAuthServiceServer) testEmbeddedByValue()                     {}
@@ -240,6 +314,60 @@ func _AuthService_VerifyToken_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthService_RefreshToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RefreshTokenRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).RefreshToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthService_RefreshToken_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).RefreshToken(ctx, req.(*RefreshTokenRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthService_Logout_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LogoutRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).Logout(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthService_Logout_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).Logout(ctx, req.(*LogoutRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthService_GetPublicKeys_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPublicKeysRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).GetPublicKeys(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthService_GetPublicKeys_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).GetPublicKeys(ctx, req.(*GetPublicKeysRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AuthService_ServiceDesc is the grpc.ServiceDesc for AuthService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -266,6 +394,18 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "VerifyToken",
 			Handler:    _AuthService_VerifyToken_Handler,
+		},
+		{
+			MethodName: "RefreshToken",
+			Handler:    _AuthService_RefreshToken_Handler,
+		},
+		{
+			MethodName: "Logout",
+			Handler:    _AuthService_Logout_Handler,
+		},
+		{
+			MethodName: "GetPublicKeys",
+			Handler:    _AuthService_GetPublicKeys_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

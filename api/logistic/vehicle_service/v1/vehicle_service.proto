@@ -6,30 +6,113 @@ option go_package = "github.com/logistic/api/logistic/vehicle_service/v1;vehicle
 import "logistic/vehicle_service/v1/vehicle_messages.proto";
 import "google/api/annotations.proto";
 
+// VehicleService quản lý phương tiện, giấy tờ, vị trí GPS và trạng thái sẵn sàng
+// nhận đơn của tài xế. Đây là nguồn dữ liệu "xe đang chạy" cho matching_service.
 service VehicleService {
-    rpc RegisterVehicle(RegisterVehicleRequest) returns (RegisterVehicleResponse) {
-        option (google.api.http) = {
-            post: "/v1/vehicles"
-            body: "*"
-        };
-    }
+  // ======================= CLIENT =======================
 
-    rpc GetVehicle(GetVehicleRequest) returns (GetVehicleResponse) {
-        option (google.api.http) = {
-            get: "/v1/vehicles/{id}"
-        };
-    }
+  rpc RegisterVehicle(RegisterVehicleRequest) returns (RegisterVehicleResponse) {
+    option (google.api.http) = {
+      post: "/v1/vehicles"
+      body: "*"
+    };
+  }
 
-    rpc ListVehicles(ListVehiclesRequest) returns (ListVehiclesResponse) {
-        option (google.api.http) = {
-            get: "/v1/vehicles"
-        };
-    }
+  rpc GetVehicle(GetVehicleRequest) returns (GetVehicleResponse) {
+    option (google.api.http) = {get: "/v1/vehicles/{id}"};
+  }
 
-    rpc UpdateVehicleStatus(UpdateVehicleStatusRequest) returns (UpdateVehicleStatusResponse) {
-        option (google.api.http) = {
-            put: "/v1/vehicles/{id}/status"
-            body: "*"
-        };
-    }
+  rpc ListVehicles(ListVehiclesRequest) returns (ListVehiclesResponse) {
+    option (google.api.http) = {get: "/v1/vehicles"};
+  }
+
+  rpc UpdateVehicle(UpdateVehicleRequest) returns (UpdateVehicleResponse) {
+    option (google.api.http) = {
+      put: "/v1/vehicles/{id}"
+      body: "*"
+    };
+  }
+
+  rpc DeleteVehicle(DeleteVehicleRequest) returns (DeleteVehicleResponse) {
+    option (google.api.http) = {delete: "/v1/vehicles/{id}"};
+  }
+
+  rpc UpdateVehicleStatus(UpdateVehicleStatusRequest) returns (UpdateVehicleStatusResponse) {
+    option (google.api.http) = {
+      put: "/v1/vehicles/{id}/status"
+      body: "*"
+    };
+  }
+
+  rpc UploadVehicleDocument(UploadVehicleDocumentRequest) returns (UploadVehicleDocumentResponse) {
+    option (google.api.http) = {
+      post: "/v1/vehicles/{vehicle_id}/documents"
+      body: "*"
+    };
+  }
+
+  rpc ListVehicleDocuments(ListVehicleDocumentsRequest) returns (ListVehicleDocumentsResponse) {
+    option (google.api.http) = {get: "/v1/vehicles/{vehicle_id}/documents"};
+  }
+
+  rpc DeleteVehicleDocument(DeleteVehicleDocumentRequest) returns (DeleteVehicleDocumentResponse) {
+    option (google.api.http) = {delete: "/v1/vehicle-documents/{id}"};
+  }
+
+  rpc ReportLocation(ReportLocationRequest) returns (ReportLocationResponse) {
+    option (google.api.http) = {
+      post: "/v1/vehicles/{vehicle_id}/location"
+      body: "*"
+    };
+  }
+
+  rpc GetVehicleLocation(GetVehicleLocationRequest) returns (GetVehicleLocationResponse) {
+    option (google.api.http) = {get: "/v1/vehicles/{vehicle_id}/location"};
+  }
+
+  rpc SetDriverAvailability(SetDriverAvailabilityRequest) returns (SetDriverAvailabilityResponse) {
+    option (google.api.http) = {
+      post: "/v1/drivers/{driver_id}/availability"
+      body: "*"
+    };
+  }
+
+  rpc GetDriverAvailability(GetDriverAvailabilityRequest) returns (GetDriverAvailabilityResponse) {
+    option (google.api.http) = {get: "/v1/drivers/{driver_id}/availability"};
+  }
+
+  rpc SearchNearbyVehicles(SearchNearbyVehiclesRequest) returns (SearchNearbyVehiclesResponse) {
+    option (google.api.http) = {
+      post: "/v1/vehicles/nearby"
+      body: "*"
+    };
+  }
+
+  // ======================= ADMIN =======================
+
+  rpc AdminListVehicles(AdminListVehiclesRequest) returns (AdminListVehiclesResponse) {
+    option (google.api.http) = {get: "/v1/admin/vehicles"};
+  }
+
+  rpc AdminVerifyVehicle(AdminVerifyVehicleRequest) returns (AdminVerifyVehicleResponse) {
+    option (google.api.http) = {
+      put: "/v1/admin/vehicles/{id}/verify"
+      body: "*"
+    };
+  }
+
+  rpc AdminListPendingDocuments(AdminListPendingDocumentsRequest) returns (AdminListPendingDocumentsResponse) {
+    option (google.api.http) = {get: "/v1/admin/vehicle-documents/pending"};
+  }
+
+  rpc AdminReviewDocument(AdminReviewDocumentRequest) returns (AdminReviewDocumentResponse) {
+    option (google.api.http) = {
+      put: "/v1/admin/vehicle-documents/{id}/review"
+      body: "*"
+    };
+  }
+
+  rpc AdminGetVehicleStats(AdminGetVehicleStatsRequest) returns (AdminGetVehicleStatsResponse) {
+    option (google.api.http) = {get: "/v1/admin/vehicles/stats"};
+  }
 }

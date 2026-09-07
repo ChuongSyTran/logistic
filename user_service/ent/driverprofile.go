@@ -19,23 +19,32 @@ type DriverProfile struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
+	// UserID holds the value of the "user_id" field.
+	UserID uuid.UUID `json:"user_id,omitempty"`
 	// LicenseNumber holds the value of the "license_number" field.
-	LicenseNumber string `json:"license_number,omitempty"`
+	LicenseNumber *string `json:"license_number,omitempty"`
 	// IDCard holds the value of the "id_card" field.
-	IDCard string `json:"id_card,omitempty"`
+	IDCard *string `json:"id_card,omitempty"`
 	// Rating holds the value of the "rating" field.
 	Rating float64 `json:"rating,omitempty"`
+	// TotalTrips holds the value of the "total_trips" field.
+	TotalTrips int `json:"total_trips,omitempty"`
 	// KycStatus holds the value of the "kyc_status" field.
 	KycStatus driverprofile.KycStatus `json:"kyc_status,omitempty"`
+	// KycNote holds the value of the "kyc_note" field.
+	KycNote string `json:"kyc_note,omitempty"`
+	// KycReviewedBy holds the value of the "kyc_reviewed_by" field.
+	KycReviewedBy *uuid.UUID `json:"kyc_reviewed_by,omitempty"`
+	// KycReviewedAt holds the value of the "kyc_reviewed_at" field.
+	KycReviewedAt *time.Time `json:"kyc_reviewed_at,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the DriverProfileQuery when eager-loading is set.
-	Edges               DriverProfileEdges `json:"edges"`
-	user_driver_profile *uuid.UUID
-	selectValues        sql.SelectValues
+	Edges        DriverProfileEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // DriverProfileEdges holds the relations/edges for other nodes in the graph.
@@ -63,16 +72,18 @@ func (*DriverProfile) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case driverprofile.FieldKycReviewedBy:
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case driverprofile.FieldRating:
 			values[i] = new(sql.NullFloat64)
-		case driverprofile.FieldLicenseNumber, driverprofile.FieldIDCard, driverprofile.FieldKycStatus:
+		case driverprofile.FieldTotalTrips:
+			values[i] = new(sql.NullInt64)
+		case driverprofile.FieldLicenseNumber, driverprofile.FieldIDCard, driverprofile.FieldKycStatus, driverprofile.FieldKycNote:
 			values[i] = new(sql.NullString)
-		case driverprofile.FieldCreatedAt, driverprofile.FieldUpdatedAt:
+		case driverprofile.FieldKycReviewedAt, driverprofile.FieldCreatedAt, driverprofile.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case driverprofile.FieldID:
+		case driverprofile.FieldID, driverprofile.FieldUserID:
 			values[i] = new(uuid.UUID)
-		case driverprofile.ForeignKeys[0]: // user_driver_profile
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -94,17 +105,25 @@ func (_m *DriverProfile) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				_m.ID = *value
 			}
+		case driverprofile.FieldUserID:
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field user_id", values[i])
+			} else if value != nil {
+				_m.UserID = *value
+			}
 		case driverprofile.FieldLicenseNumber:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field license_number", values[i])
 			} else if value.Valid {
-				_m.LicenseNumber = value.String
+				_m.LicenseNumber = new(string)
+				*_m.LicenseNumber = value.String
 			}
 		case driverprofile.FieldIDCard:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field id_card", values[i])
 			} else if value.Valid {
-				_m.IDCard = value.String
+				_m.IDCard = new(string)
+				*_m.IDCard = value.String
 			}
 		case driverprofile.FieldRating:
 			if value, ok := values[i].(*sql.NullFloat64); !ok {
@@ -112,11 +131,37 @@ func (_m *DriverProfile) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Rating = value.Float64
 			}
+		case driverprofile.FieldTotalTrips:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field total_trips", values[i])
+			} else if value.Valid {
+				_m.TotalTrips = int(value.Int64)
+			}
 		case driverprofile.FieldKycStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field kyc_status", values[i])
 			} else if value.Valid {
 				_m.KycStatus = driverprofile.KycStatus(value.String)
+			}
+		case driverprofile.FieldKycNote:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field kyc_note", values[i])
+			} else if value.Valid {
+				_m.KycNote = value.String
+			}
+		case driverprofile.FieldKycReviewedBy:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field kyc_reviewed_by", values[i])
+			} else if value.Valid {
+				_m.KycReviewedBy = new(uuid.UUID)
+				*_m.KycReviewedBy = *value.S.(*uuid.UUID)
+			}
+		case driverprofile.FieldKycReviewedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field kyc_reviewed_at", values[i])
+			} else if value.Valid {
+				_m.KycReviewedAt = new(time.Time)
+				*_m.KycReviewedAt = value.Time
 			}
 		case driverprofile.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -129,13 +174,6 @@ func (_m *DriverProfile) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				_m.UpdatedAt = value.Time
-			}
-		case driverprofile.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field user_driver_profile", values[i])
-			} else if value.Valid {
-				_m.user_driver_profile = new(uuid.UUID)
-				*_m.user_driver_profile = *value.S.(*uuid.UUID)
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
@@ -178,17 +216,40 @@ func (_m *DriverProfile) String() string {
 	var builder strings.Builder
 	builder.WriteString("DriverProfile(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
-	builder.WriteString("license_number=")
-	builder.WriteString(_m.LicenseNumber)
+	builder.WriteString("user_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.UserID))
 	builder.WriteString(", ")
-	builder.WriteString("id_card=")
-	builder.WriteString(_m.IDCard)
+	if v := _m.LicenseNumber; v != nil {
+		builder.WriteString("license_number=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.IDCard; v != nil {
+		builder.WriteString("id_card=")
+		builder.WriteString(*v)
+	}
 	builder.WriteString(", ")
 	builder.WriteString("rating=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Rating))
 	builder.WriteString(", ")
+	builder.WriteString("total_trips=")
+	builder.WriteString(fmt.Sprintf("%v", _m.TotalTrips))
+	builder.WriteString(", ")
 	builder.WriteString("kyc_status=")
 	builder.WriteString(fmt.Sprintf("%v", _m.KycStatus))
+	builder.WriteString(", ")
+	builder.WriteString("kyc_note=")
+	builder.WriteString(_m.KycNote)
+	builder.WriteString(", ")
+	if v := _m.KycReviewedBy; v != nil {
+		builder.WriteString("kyc_reviewed_by=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.KycReviewedAt; v != nil {
+		builder.WriteString("kyc_reviewed_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))

@@ -12,7 +12,6 @@ import (
 	"matching_service/internal/mapper"
 	"matching_service/internal/mapper/generated"
 
-	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 )
 
@@ -55,6 +54,8 @@ func (r *matchingRepoImpl) CreateBid(ctx context.Context, bid *entity.Bid) error
 		SetCargoValue(bid.CargoValue).
 		SetRequiredDeposit(bid.RequiredDeposit).
 		SetDesiredDeposit(bid.DesiredDeposit).
+		SetOfferedPrice(bid.OfferedPrice).
+		SetOfferedAskID(bid.OfferedAskID).
 		SetStatus(bid.Status).
 		SetExpiresAt(bid.ExpiresAt).
 		Save(ctx)
@@ -103,19 +104,11 @@ func (r *matchingRepoImpl) CreateAsk(ctx context.Context, ask *entity.Ask) error
 
 func (r *matchingRepoImpl) FindAskForBid(ctx context.Context, bid *entity.Bid) ([]entity.Ask, error) {
 	daoList, err := r.slaveClient.Asks.Query().
-		Where(asks.ZoneID(bid.Origin.ZoneID)).
 		Where(asks.Status(entity.AskStatusPending)).
 		Where(asks.AvailableVolumeM3GT(bid.VolumeM3)).
 		Where(asks.AvailableWeightKgGT(bid.WeightKg)).
 		Where(asks.MinPriceLTE(bid.MaxPrice)).
-		Where(func(s *sql.Selector) {
-			s.Where(sql.ExprP(
-				"ST_DWithin(current_coordinates, ST_SetSRID(ST_MakePoint($1, $2), 4326), $3)",
-				bid.Origin.Longitude,
-				bid.Origin.Latitude,
-				5000,
-			))
-		}).
+		Where(withinRadiusKm("origin_lat", "origin_lng", bid.Origin.Latitude, bid.Origin.Longitude, coarseFilterRadiusKm)).
 		Order(asks.ByMinPrice()).
 		All(ctx)
 
@@ -128,22 +121,9 @@ func (r *matchingRepoImpl) FindAskForBid(ctx context.Context, bid *entity.Bid) (
 
 func (r *matchingRepoImpl) FindBidForAsk(ctx context.Context, ask *entity.Ask) ([]entity.Bid, error) {
 	daoList, err := r.slaveClient.Bids.Query().
-		Where(bids.ZoneID(ask.CurrentLocation.ZoneID)).
 		Where(bids.Status(entity.BidStatusPending)).
-		Where(func(s *sql.Selector) {
-			s.Where(sql.ExprP(
-				"ST_DWithin(pickup_coordinates, ST_SetSRID(ST_MakePoint($1, $2), 4326), $3)",
-				ask.CurrentLocation.Longitude,
-				ask.CurrentLocation.Latitude,
-				5000,
-			))
-			s.Where(sql.ExprP(
-				"ST_DWithin(delivery_coordinates, ST_SetSRID(ST_MakePoint($1, $2), 4326), $3)",
-				ask.Destination.Longitude,
-				ask.Destination.Latitude,
-				5000,
-			))
-		}).
+		Where(withinRadiusKm("origin_lat", "origin_lng", ask.CurrentLocation.Latitude, ask.CurrentLocation.Longitude, coarseFilterRadiusKm)).
+		Where(withinRadiusKm("destination_lat", "destination_lng", ask.Destination.Latitude, ask.Destination.Longitude, coarseFilterRadiusKm)).
 		Order(bids.ByMaxPrice()).All(ctx)
 
 	if err != nil {
@@ -206,6 +186,8 @@ func (r *matchingRepoImpl) UpdateBid(ctx context.Context, bid *entity.Bid) error
 		SetCargoValue(bid.CargoValue).
 		SetRequiredDeposit(bid.RequiredDeposit).
 		SetDesiredDeposit(bid.DesiredDeposit).
+		SetOfferedPrice(bid.OfferedPrice).
+		SetOfferedAskID(bid.OfferedAskID).
 		SetStatus(bid.Status).
 		SetExpiresAt(bid.ExpiresAt).
 		Save(ctx)
@@ -246,12 +228,19 @@ func (r *matchingRepoImpl) GetAsk(ctx context.Context, id uuid.UUID) (*entity.As
 }
 
 func (r *matchingRepoImpl) CreateMatchContract(ctx context.Context, contract *entity.MatchContract) error {
+	// Schema Match bắt buộc agreed_price, agreed_at và ba trường chữ ký, không cái
+	// nào có mặc định — thiếu một cái là ent trả ValidationError.
 	_, err := r.masterClient.Match.Create().
 		SetID(contract.ID).
 		SetBidID(contract.BidID).
 		SetAskID(contract.AskID).
+		SetAgreedPrice(contract.ConsensusPrice).
 		SetConsensusPrice(contract.ConsensusPrice).
 		SetConsensusDeposit(contract.ConsensusDeposit).
+		SetShipperSignature(contract.ShipperSignature).
+		SetDriverSignature(contract.DriverSignature).
+		SetSystemSignature(contract.SystemSignature).
+		SetAgreedAt(contract.AgreedAt).
 		SetStatus(int(contract.Status)).
 		Save(ctx)
 

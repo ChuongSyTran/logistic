@@ -12,7 +12,9 @@ type Config struct {
 	SlaveDatabase  SlaveDatabaseConfig
 	NatConfig      NatConfig
 	KafkaConfig    KafkaConfig
+	RabbitMQ       RabbitMQConfig
 	WalletService  WalletServiceConfig
+	VehicleService VehicleServiceConfig
 }
 
 type ServerConfig struct {
@@ -49,7 +51,7 @@ type KafkaConfig struct {
 }
 
 type WalletServiceConfig struct {
-	GrpcAddr string `env:"MATCHING_WALLET_GRPC_ADDR" env-default:"wallet_service:9005"`
+	GrpcAddr string `env:"MATCHING_WALLET_GRPC_ADDR" env-default:"wallet-service:9007"`
 }
 
 func (db *MasterDatabaseConfig) GetDataSource() string {
@@ -62,9 +64,22 @@ func (db *SlaveDatabaseConfig) GetDataSource() string {
 		db.Host, db.Port, db.User, db.Password, db.DBName)
 }
 
-// LoadConfig loads configuration from environment variables
 func LoadConfig() (*Config, error) {
 	cfg := &Config{}
 	err := cleanenv.ReadEnv(cfg)
 	return cfg, err
+}
+
+type RabbitMQConfig struct {
+	Host     string `env:"RABBITMQ_HOST" env-default:"rabbitmq"`
+	Port     string `env:"RABBITMQ_PORT" env-default:"5672"`
+	User     string `env:"RABBITMQ_USER" env-default:"guest"`
+	Password string `env:"RABBITMQ_PASSWORD" env-default:"guest"`
+	VHost    string `env:"RABBITMQ_VHOST" env-default:"/"`
+	Exchange string `env:"RABBITMQ_EXCHANGE" env-default:"logistic.events"`
+	Enabled  bool   `env:"MATCHING_MQ_ENABLED" env-default:"true"`
+}
+
+type VehicleServiceConfig struct {
+	GrpcAddr string `env:"MATCHING_VEHICLE_GRPC_ADDR" env-default:"vehicle-service:9005"`
 }

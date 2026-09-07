@@ -8,6 +8,46 @@ import (
 )
 
 var (
+	// DriverAvailabilitiesColumns holds the columns for the "driver_availabilities" table.
+	DriverAvailabilitiesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "driver_id", Type: field.TypeUUID, Unique: true},
+		{Name: "is_online", Type: field.TypeBool, Default: false},
+		{Name: "available_weight_kg", Type: field.TypeFloat64, Default: 0},
+		{Name: "available_volume_cbm", Type: field.TypeFloat64, Default: 0},
+		{Name: "current_lat", Type: field.TypeFloat64, Default: 0},
+		{Name: "current_lng", Type: field.TypeFloat64, Default: 0},
+		{Name: "zone_id", Type: field.TypeString, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "vehicle_id", Type: field.TypeUUID, Unique: true},
+	}
+	// DriverAvailabilitiesTable holds the schema information for the "driver_availabilities" table.
+	DriverAvailabilitiesTable = &schema.Table{
+		Name:       "driver_availabilities",
+		Columns:    DriverAvailabilitiesColumns,
+		PrimaryKey: []*schema.Column{DriverAvailabilitiesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "driver_availabilities_vehicles_availability",
+				Columns:    []*schema.Column{DriverAvailabilitiesColumns[10]},
+				RefColumns: []*schema.Column{VehiclesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "driveravailability_is_online_zone_id",
+				Unique:  false,
+				Columns: []*schema.Column{DriverAvailabilitiesColumns[2], DriverAvailabilitiesColumns[7]},
+			},
+			{
+				Name:    "driveravailability_vehicle_id",
+				Unique:  false,
+				Columns: []*schema.Column{DriverAvailabilitiesColumns[10]},
+			},
+		},
+	}
 	// VehiclesColumns holds the columns for the "vehicles" table.
 	VehiclesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
@@ -15,10 +55,15 @@ var (
 		{Name: "license_plate", Type: field.TypeString, Unique: true},
 		{Name: "brand", Type: field.TypeString, Nullable: true},
 		{Name: "model", Type: field.TypeString, Nullable: true},
-		{Name: "vehicle_type", Type: field.TypeEnum, Enums: []string{"truck", "van", "bike"}},
+		{Name: "manufacture_year", Type: field.TypeInt, Nullable: true},
+		{Name: "vehicle_type", Type: field.TypeEnum, Enums: []string{"truck", "van", "bike", "container", "trailer"}},
 		{Name: "capacity_weight_kg", Type: field.TypeFloat64, Default: 0},
 		{Name: "capacity_volume_cbm", Type: field.TypeFloat64, Default: 0},
-		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "maintenance"}, Default: "active"},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "maintenance", "inactive"}, Default: "active"},
+		{Name: "verification_status", Type: field.TypeEnum, Enums: []string{"pending", "verified", "rejected"}, Default: "pending"},
+		{Name: "verification_note", Type: field.TypeString, Nullable: true},
+		{Name: "verified_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "verified_at", Type: field.TypeTime, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 	}
@@ -27,12 +72,120 @@ var (
 		Name:       "vehicles",
 		Columns:    VehiclesColumns,
 		PrimaryKey: []*schema.Column{VehiclesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "vehicle_driver_id_status",
+				Unique:  false,
+				Columns: []*schema.Column{VehiclesColumns[1], VehiclesColumns[9]},
+			},
+			{
+				Name:    "vehicle_verification_status",
+				Unique:  false,
+				Columns: []*schema.Column{VehiclesColumns[10]},
+			},
+			{
+				Name:    "vehicle_vehicle_type_status",
+				Unique:  false,
+				Columns: []*schema.Column{VehiclesColumns[6], VehiclesColumns[9]},
+			},
+		},
+	}
+	// VehicleDocumentsColumns holds the columns for the "vehicle_documents" table.
+	VehicleDocumentsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "document_type", Type: field.TypeEnum, Enums: []string{"registration", "inspection", "insurance", "license"}},
+		{Name: "document_number", Type: field.TypeString, Nullable: true},
+		{Name: "file_url", Type: field.TypeString},
+		{Name: "issued_at", Type: field.TypeTime, Nullable: true},
+		{Name: "expires_at", Type: field.TypeTime, Nullable: true},
+		{Name: "review_status", Type: field.TypeEnum, Enums: []string{"pending", "approved", "rejected"}, Default: "pending"},
+		{Name: "review_note", Type: field.TypeString, Nullable: true},
+		{Name: "reviewed_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "reviewed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "vehicle_id", Type: field.TypeUUID},
+	}
+	// VehicleDocumentsTable holds the schema information for the "vehicle_documents" table.
+	VehicleDocumentsTable = &schema.Table{
+		Name:       "vehicle_documents",
+		Columns:    VehicleDocumentsColumns,
+		PrimaryKey: []*schema.Column{VehicleDocumentsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "vehicle_documents_vehicles_documents",
+				Columns:    []*schema.Column{VehicleDocumentsColumns[12]},
+				RefColumns: []*schema.Column{VehiclesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "vehicledocument_vehicle_id_document_type",
+				Unique:  false,
+				Columns: []*schema.Column{VehicleDocumentsColumns[12], VehicleDocumentsColumns[1]},
+			},
+			{
+				Name:    "vehicledocument_review_status",
+				Unique:  false,
+				Columns: []*schema.Column{VehicleDocumentsColumns[6]},
+			},
+			{
+				Name:    "vehicledocument_expires_at",
+				Unique:  false,
+				Columns: []*schema.Column{VehicleDocumentsColumns[5]},
+			},
+		},
+	}
+	// VehicleLocationsColumns holds the columns for the "vehicle_locations" table.
+	VehicleLocationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "driver_id", Type: field.TypeUUID},
+		{Name: "latitude", Type: field.TypeFloat64},
+		{Name: "longitude", Type: field.TypeFloat64},
+		{Name: "heading", Type: field.TypeFloat64, Default: 0},
+		{Name: "speed_kph", Type: field.TypeFloat64, Default: 0},
+		{Name: "zone_id", Type: field.TypeString, Nullable: true},
+		{Name: "recorded_at", Type: field.TypeTime},
+		{Name: "vehicle_id", Type: field.TypeUUID, Unique: true},
+	}
+	// VehicleLocationsTable holds the schema information for the "vehicle_locations" table.
+	VehicleLocationsTable = &schema.Table{
+		Name:       "vehicle_locations",
+		Columns:    VehicleLocationsColumns,
+		PrimaryKey: []*schema.Column{VehicleLocationsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "vehicle_locations_vehicles_location",
+				Columns:    []*schema.Column{VehicleLocationsColumns[8]},
+				RefColumns: []*schema.Column{VehiclesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "vehiclelocation_zone_id",
+				Unique:  false,
+				Columns: []*schema.Column{VehicleLocationsColumns[6]},
+			},
+			{
+				Name:    "vehiclelocation_driver_id",
+				Unique:  false,
+				Columns: []*schema.Column{VehicleLocationsColumns[1]},
+			},
+		},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		DriverAvailabilitiesTable,
 		VehiclesTable,
+		VehicleDocumentsTable,
+		VehicleLocationsTable,
 	}
 )
 
 func init() {
+	DriverAvailabilitiesTable.ForeignKeys[0].RefTable = VehiclesTable
+	VehicleDocumentsTable.ForeignKeys[0].RefTable = VehiclesTable
+	VehicleLocationsTable.ForeignKeys[0].RefTable = VehiclesTable
 }

@@ -7,10 +7,12 @@ import (
 	"errors"
 	"fmt"
 	"time"
+	"user_service/ent/address"
 	"user_service/ent/driverprofile"
 	"user_service/ent/predicate"
 	"user_service/ent/shipperprofile"
 	"user_service/ent/user"
+	"user_service/ent/userdevice"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -45,6 +47,12 @@ func (_u *UserUpdate) SetNillablePhone(v *string) *UserUpdate {
 	return _u
 }
 
+// ClearPhone clears the value of the "phone" field.
+func (_u *UserUpdate) ClearPhone() *UserUpdate {
+	_u.mutation.ClearPhone()
+	return _u
+}
+
 // SetEmail sets the "email" field.
 func (_u *UserUpdate) SetEmail(v string) *UserUpdate {
 	_u.mutation.SetEmail(v)
@@ -62,6 +70,46 @@ func (_u *UserUpdate) SetNillableEmail(v *string) *UserUpdate {
 // ClearEmail clears the value of the "email" field.
 func (_u *UserUpdate) ClearEmail() *UserUpdate {
 	_u.mutation.ClearEmail()
+	return _u
+}
+
+// SetFullName sets the "full_name" field.
+func (_u *UserUpdate) SetFullName(v string) *UserUpdate {
+	_u.mutation.SetFullName(v)
+	return _u
+}
+
+// SetNillableFullName sets the "full_name" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableFullName(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetFullName(*v)
+	}
+	return _u
+}
+
+// ClearFullName clears the value of the "full_name" field.
+func (_u *UserUpdate) ClearFullName() *UserUpdate {
+	_u.mutation.ClearFullName()
+	return _u
+}
+
+// SetAvatarURL sets the "avatar_url" field.
+func (_u *UserUpdate) SetAvatarURL(v string) *UserUpdate {
+	_u.mutation.SetAvatarURL(v)
+	return _u
+}
+
+// SetNillableAvatarURL sets the "avatar_url" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableAvatarURL(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetAvatarURL(*v)
+	}
+	return _u
+}
+
+// ClearAvatarURL clears the value of the "avatar_url" field.
+func (_u *UserUpdate) ClearAvatarURL() *UserUpdate {
+	_u.mutation.ClearAvatarURL()
 	return _u
 }
 
@@ -107,17 +155,23 @@ func (_u *UserUpdate) SetNillableStatus(v *user.Status) *UserUpdate {
 	return _u
 }
 
-// SetCreatedAt sets the "created_at" field.
-func (_u *UserUpdate) SetCreatedAt(v time.Time) *UserUpdate {
-	_u.mutation.SetCreatedAt(v)
+// SetStatusReason sets the "status_reason" field.
+func (_u *UserUpdate) SetStatusReason(v string) *UserUpdate {
+	_u.mutation.SetStatusReason(v)
 	return _u
 }
 
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (_u *UserUpdate) SetNillableCreatedAt(v *time.Time) *UserUpdate {
+// SetNillableStatusReason sets the "status_reason" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableStatusReason(v *string) *UserUpdate {
 	if v != nil {
-		_u.SetCreatedAt(*v)
+		_u.SetStatusReason(*v)
 	}
+	return _u
+}
+
+// ClearStatusReason clears the value of the "status_reason" field.
+func (_u *UserUpdate) ClearStatusReason() *UserUpdate {
+	_u.mutation.ClearStatusReason()
 	return _u
 }
 
@@ -165,6 +219,36 @@ func (_u *UserUpdate) SetShipperProfile(v *ShipperProfile) *UserUpdate {
 	return _u.SetShipperProfileID(v.ID)
 }
 
+// AddAddressIDs adds the "addresses" edge to the Address entity by IDs.
+func (_u *UserUpdate) AddAddressIDs(ids ...uuid.UUID) *UserUpdate {
+	_u.mutation.AddAddressIDs(ids...)
+	return _u
+}
+
+// AddAddresses adds the "addresses" edges to the Address entity.
+func (_u *UserUpdate) AddAddresses(v ...*Address) *UserUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAddressIDs(ids...)
+}
+
+// AddDeviceIDs adds the "devices" edge to the UserDevice entity by IDs.
+func (_u *UserUpdate) AddDeviceIDs(ids ...uuid.UUID) *UserUpdate {
+	_u.mutation.AddDeviceIDs(ids...)
+	return _u
+}
+
+// AddDevices adds the "devices" edges to the UserDevice entity.
+func (_u *UserUpdate) AddDevices(v ...*UserDevice) *UserUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddDeviceIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdate) Mutation() *UserMutation {
 	return _u.mutation
@@ -180,6 +264,48 @@ func (_u *UserUpdate) ClearDriverProfile() *UserUpdate {
 func (_u *UserUpdate) ClearShipperProfile() *UserUpdate {
 	_u.mutation.ClearShipperProfile()
 	return _u
+}
+
+// ClearAddresses clears all "addresses" edges to the Address entity.
+func (_u *UserUpdate) ClearAddresses() *UserUpdate {
+	_u.mutation.ClearAddresses()
+	return _u
+}
+
+// RemoveAddressIDs removes the "addresses" edge to Address entities by IDs.
+func (_u *UserUpdate) RemoveAddressIDs(ids ...uuid.UUID) *UserUpdate {
+	_u.mutation.RemoveAddressIDs(ids...)
+	return _u
+}
+
+// RemoveAddresses removes "addresses" edges to Address entities.
+func (_u *UserUpdate) RemoveAddresses(v ...*Address) *UserUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAddressIDs(ids...)
+}
+
+// ClearDevices clears all "devices" edges to the UserDevice entity.
+func (_u *UserUpdate) ClearDevices() *UserUpdate {
+	_u.mutation.ClearDevices()
+	return _u
+}
+
+// RemoveDeviceIDs removes the "devices" edge to UserDevice entities by IDs.
+func (_u *UserUpdate) RemoveDeviceIDs(ids ...uuid.UUID) *UserUpdate {
+	_u.mutation.RemoveDeviceIDs(ids...)
+	return _u
+}
+
+// RemoveDevices removes "devices" edges to UserDevice entities.
+func (_u *UserUpdate) RemoveDevices(v ...*UserDevice) *UserUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveDeviceIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -248,11 +374,26 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.Phone(); ok {
 		_spec.SetField(user.FieldPhone, field.TypeString, value)
 	}
+	if _u.mutation.PhoneCleared() {
+		_spec.ClearField(user.FieldPhone, field.TypeString)
+	}
 	if value, ok := _u.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
 	}
 	if _u.mutation.EmailCleared() {
 		_spec.ClearField(user.FieldEmail, field.TypeString)
+	}
+	if value, ok := _u.mutation.FullName(); ok {
+		_spec.SetField(user.FieldFullName, field.TypeString, value)
+	}
+	if _u.mutation.FullNameCleared() {
+		_spec.ClearField(user.FieldFullName, field.TypeString)
+	}
+	if value, ok := _u.mutation.AvatarURL(); ok {
+		_spec.SetField(user.FieldAvatarURL, field.TypeString, value)
+	}
+	if _u.mutation.AvatarURLCleared() {
+		_spec.ClearField(user.FieldAvatarURL, field.TypeString)
 	}
 	if value, ok := _u.mutation.PasswordHash(); ok {
 		_spec.SetField(user.FieldPasswordHash, field.TypeString, value)
@@ -263,8 +404,11 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(user.FieldStatus, field.TypeEnum, value)
 	}
-	if value, ok := _u.mutation.CreatedAt(); ok {
-		_spec.SetField(user.FieldCreatedAt, field.TypeTime, value)
+	if value, ok := _u.mutation.StatusReason(); ok {
+		_spec.SetField(user.FieldStatusReason, field.TypeString, value)
+	}
+	if _u.mutation.StatusReasonCleared() {
+		_spec.ClearField(user.FieldStatusReason, field.TypeString)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(user.FieldUpdatedAt, field.TypeTime, value)
@@ -327,6 +471,96 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.AddressesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AddressesTable,
+			Columns: []string{user.AddressesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(address.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAddressesIDs(); len(nodes) > 0 && !_u.mutation.AddressesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AddressesTable,
+			Columns: []string{user.AddressesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(address.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AddressesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AddressesTable,
+			Columns: []string{user.AddressesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(address.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.DevicesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.DevicesTable,
+			Columns: []string{user.DevicesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userdevice.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedDevicesIDs(); len(nodes) > 0 && !_u.mutation.DevicesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.DevicesTable,
+			Columns: []string{user.DevicesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userdevice.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.DevicesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.DevicesTable,
+			Columns: []string{user.DevicesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userdevice.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -361,6 +595,12 @@ func (_u *UserUpdateOne) SetNillablePhone(v *string) *UserUpdateOne {
 	return _u
 }
 
+// ClearPhone clears the value of the "phone" field.
+func (_u *UserUpdateOne) ClearPhone() *UserUpdateOne {
+	_u.mutation.ClearPhone()
+	return _u
+}
+
 // SetEmail sets the "email" field.
 func (_u *UserUpdateOne) SetEmail(v string) *UserUpdateOne {
 	_u.mutation.SetEmail(v)
@@ -378,6 +618,46 @@ func (_u *UserUpdateOne) SetNillableEmail(v *string) *UserUpdateOne {
 // ClearEmail clears the value of the "email" field.
 func (_u *UserUpdateOne) ClearEmail() *UserUpdateOne {
 	_u.mutation.ClearEmail()
+	return _u
+}
+
+// SetFullName sets the "full_name" field.
+func (_u *UserUpdateOne) SetFullName(v string) *UserUpdateOne {
+	_u.mutation.SetFullName(v)
+	return _u
+}
+
+// SetNillableFullName sets the "full_name" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableFullName(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetFullName(*v)
+	}
+	return _u
+}
+
+// ClearFullName clears the value of the "full_name" field.
+func (_u *UserUpdateOne) ClearFullName() *UserUpdateOne {
+	_u.mutation.ClearFullName()
+	return _u
+}
+
+// SetAvatarURL sets the "avatar_url" field.
+func (_u *UserUpdateOne) SetAvatarURL(v string) *UserUpdateOne {
+	_u.mutation.SetAvatarURL(v)
+	return _u
+}
+
+// SetNillableAvatarURL sets the "avatar_url" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableAvatarURL(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetAvatarURL(*v)
+	}
+	return _u
+}
+
+// ClearAvatarURL clears the value of the "avatar_url" field.
+func (_u *UserUpdateOne) ClearAvatarURL() *UserUpdateOne {
+	_u.mutation.ClearAvatarURL()
 	return _u
 }
 
@@ -423,17 +703,23 @@ func (_u *UserUpdateOne) SetNillableStatus(v *user.Status) *UserUpdateOne {
 	return _u
 }
 
-// SetCreatedAt sets the "created_at" field.
-func (_u *UserUpdateOne) SetCreatedAt(v time.Time) *UserUpdateOne {
-	_u.mutation.SetCreatedAt(v)
+// SetStatusReason sets the "status_reason" field.
+func (_u *UserUpdateOne) SetStatusReason(v string) *UserUpdateOne {
+	_u.mutation.SetStatusReason(v)
 	return _u
 }
 
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (_u *UserUpdateOne) SetNillableCreatedAt(v *time.Time) *UserUpdateOne {
+// SetNillableStatusReason sets the "status_reason" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableStatusReason(v *string) *UserUpdateOne {
 	if v != nil {
-		_u.SetCreatedAt(*v)
+		_u.SetStatusReason(*v)
 	}
+	return _u
+}
+
+// ClearStatusReason clears the value of the "status_reason" field.
+func (_u *UserUpdateOne) ClearStatusReason() *UserUpdateOne {
+	_u.mutation.ClearStatusReason()
 	return _u
 }
 
@@ -481,6 +767,36 @@ func (_u *UserUpdateOne) SetShipperProfile(v *ShipperProfile) *UserUpdateOne {
 	return _u.SetShipperProfileID(v.ID)
 }
 
+// AddAddressIDs adds the "addresses" edge to the Address entity by IDs.
+func (_u *UserUpdateOne) AddAddressIDs(ids ...uuid.UUID) *UserUpdateOne {
+	_u.mutation.AddAddressIDs(ids...)
+	return _u
+}
+
+// AddAddresses adds the "addresses" edges to the Address entity.
+func (_u *UserUpdateOne) AddAddresses(v ...*Address) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAddressIDs(ids...)
+}
+
+// AddDeviceIDs adds the "devices" edge to the UserDevice entity by IDs.
+func (_u *UserUpdateOne) AddDeviceIDs(ids ...uuid.UUID) *UserUpdateOne {
+	_u.mutation.AddDeviceIDs(ids...)
+	return _u
+}
+
+// AddDevices adds the "devices" edges to the UserDevice entity.
+func (_u *UserUpdateOne) AddDevices(v ...*UserDevice) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddDeviceIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdateOne) Mutation() *UserMutation {
 	return _u.mutation
@@ -496,6 +812,48 @@ func (_u *UserUpdateOne) ClearDriverProfile() *UserUpdateOne {
 func (_u *UserUpdateOne) ClearShipperProfile() *UserUpdateOne {
 	_u.mutation.ClearShipperProfile()
 	return _u
+}
+
+// ClearAddresses clears all "addresses" edges to the Address entity.
+func (_u *UserUpdateOne) ClearAddresses() *UserUpdateOne {
+	_u.mutation.ClearAddresses()
+	return _u
+}
+
+// RemoveAddressIDs removes the "addresses" edge to Address entities by IDs.
+func (_u *UserUpdateOne) RemoveAddressIDs(ids ...uuid.UUID) *UserUpdateOne {
+	_u.mutation.RemoveAddressIDs(ids...)
+	return _u
+}
+
+// RemoveAddresses removes "addresses" edges to Address entities.
+func (_u *UserUpdateOne) RemoveAddresses(v ...*Address) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAddressIDs(ids...)
+}
+
+// ClearDevices clears all "devices" edges to the UserDevice entity.
+func (_u *UserUpdateOne) ClearDevices() *UserUpdateOne {
+	_u.mutation.ClearDevices()
+	return _u
+}
+
+// RemoveDeviceIDs removes the "devices" edge to UserDevice entities by IDs.
+func (_u *UserUpdateOne) RemoveDeviceIDs(ids ...uuid.UUID) *UserUpdateOne {
+	_u.mutation.RemoveDeviceIDs(ids...)
+	return _u
+}
+
+// RemoveDevices removes "devices" edges to UserDevice entities.
+func (_u *UserUpdateOne) RemoveDevices(v ...*UserDevice) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveDeviceIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -594,11 +952,26 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	if value, ok := _u.mutation.Phone(); ok {
 		_spec.SetField(user.FieldPhone, field.TypeString, value)
 	}
+	if _u.mutation.PhoneCleared() {
+		_spec.ClearField(user.FieldPhone, field.TypeString)
+	}
 	if value, ok := _u.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
 	}
 	if _u.mutation.EmailCleared() {
 		_spec.ClearField(user.FieldEmail, field.TypeString)
+	}
+	if value, ok := _u.mutation.FullName(); ok {
+		_spec.SetField(user.FieldFullName, field.TypeString, value)
+	}
+	if _u.mutation.FullNameCleared() {
+		_spec.ClearField(user.FieldFullName, field.TypeString)
+	}
+	if value, ok := _u.mutation.AvatarURL(); ok {
+		_spec.SetField(user.FieldAvatarURL, field.TypeString, value)
+	}
+	if _u.mutation.AvatarURLCleared() {
+		_spec.ClearField(user.FieldAvatarURL, field.TypeString)
 	}
 	if value, ok := _u.mutation.PasswordHash(); ok {
 		_spec.SetField(user.FieldPasswordHash, field.TypeString, value)
@@ -609,8 +982,11 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(user.FieldStatus, field.TypeEnum, value)
 	}
-	if value, ok := _u.mutation.CreatedAt(); ok {
-		_spec.SetField(user.FieldCreatedAt, field.TypeTime, value)
+	if value, ok := _u.mutation.StatusReason(); ok {
+		_spec.SetField(user.FieldStatusReason, field.TypeString, value)
+	}
+	if _u.mutation.StatusReasonCleared() {
+		_spec.ClearField(user.FieldStatusReason, field.TypeString)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(user.FieldUpdatedAt, field.TypeTime, value)
@@ -666,6 +1042,96 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(shipperprofile.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AddressesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AddressesTable,
+			Columns: []string{user.AddressesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(address.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAddressesIDs(); len(nodes) > 0 && !_u.mutation.AddressesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AddressesTable,
+			Columns: []string{user.AddressesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(address.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AddressesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AddressesTable,
+			Columns: []string{user.AddressesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(address.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.DevicesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.DevicesTable,
+			Columns: []string{user.DevicesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userdevice.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedDevicesIDs(); len(nodes) > 0 && !_u.mutation.DevicesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.DevicesTable,
+			Columns: []string{user.DevicesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userdevice.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.DevicesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.DevicesTable,
+			Columns: []string{user.DevicesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userdevice.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

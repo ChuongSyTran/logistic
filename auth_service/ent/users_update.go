@@ -162,6 +162,20 @@ func (_u *UsersUpdate) ClearGoogleID() *UsersUpdate {
 	return _u
 }
 
+// SetRole sets the "role" field.
+func (_u *UsersUpdate) SetRole(v users.Role) *UsersUpdate {
+	_u.mutation.SetRole(v)
+	return _u
+}
+
+// SetNillableRole sets the "role" field if the given value is not nil.
+func (_u *UsersUpdate) SetNillableRole(v *users.Role) *UsersUpdate {
+	if v != nil {
+		_u.SetRole(*v)
+	}
+	return _u
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (_u *UsersUpdate) SetUpdatedAt(v time.Time) *UsersUpdate {
 	_u.mutation.SetUpdatedAt(v)
@@ -215,8 +229,21 @@ func (_u *UsersUpdate) defaults() error {
 	return nil
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (_u *UsersUpdate) check() error {
+	if v, ok := _u.mutation.Role(); ok {
+		if err := users.RoleValidator(v); err != nil {
+			return &ValidationError{Name: "role", err: fmt.Errorf(`ent: validator failed for field "Users.role": %w`, err)}
+		}
+	}
+	return nil
+}
+
 func (_u *UsersUpdate) sqlSave(ctx context.Context) (_node int, err error) {
-	_spec := sqlgraph.NewUpdateSpec(users.Table, users.Columns, sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt))
+	if err := _u.check(); err != nil {
+		return _node, err
+	}
+	_spec := sqlgraph.NewUpdateSpec(users.Table, users.Columns, sqlgraph.NewFieldSpec(users.FieldID, field.TypeUUID))
 	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -262,6 +289,9 @@ func (_u *UsersUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.GoogleIDCleared() {
 		_spec.ClearField(users.FieldGoogleID, field.TypeString)
+	}
+	if value, ok := _u.mutation.Role(); ok {
+		_spec.SetField(users.FieldRole, field.TypeEnum, value)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(users.FieldUpdatedAt, field.TypeTime, value)
@@ -420,6 +450,20 @@ func (_u *UsersUpdateOne) ClearGoogleID() *UsersUpdateOne {
 	return _u
 }
 
+// SetRole sets the "role" field.
+func (_u *UsersUpdateOne) SetRole(v users.Role) *UsersUpdateOne {
+	_u.mutation.SetRole(v)
+	return _u
+}
+
+// SetNillableRole sets the "role" field if the given value is not nil.
+func (_u *UsersUpdateOne) SetNillableRole(v *users.Role) *UsersUpdateOne {
+	if v != nil {
+		_u.SetRole(*v)
+	}
+	return _u
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (_u *UsersUpdateOne) SetUpdatedAt(v time.Time) *UsersUpdateOne {
 	_u.mutation.SetUpdatedAt(v)
@@ -486,8 +530,21 @@ func (_u *UsersUpdateOne) defaults() error {
 	return nil
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (_u *UsersUpdateOne) check() error {
+	if v, ok := _u.mutation.Role(); ok {
+		if err := users.RoleValidator(v); err != nil {
+			return &ValidationError{Name: "role", err: fmt.Errorf(`ent: validator failed for field "Users.role": %w`, err)}
+		}
+	}
+	return nil
+}
+
 func (_u *UsersUpdateOne) sqlSave(ctx context.Context) (_node *Users, err error) {
-	_spec := sqlgraph.NewUpdateSpec(users.Table, users.Columns, sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt))
+	if err := _u.check(); err != nil {
+		return _node, err
+	}
+	_spec := sqlgraph.NewUpdateSpec(users.Table, users.Columns, sqlgraph.NewFieldSpec(users.FieldID, field.TypeUUID))
 	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Users.id" for update`)}
@@ -550,6 +607,9 @@ func (_u *UsersUpdateOne) sqlSave(ctx context.Context) (_node *Users, err error)
 	}
 	if _u.mutation.GoogleIDCleared() {
 		_spec.ClearField(users.FieldGoogleID, field.TypeString)
+	}
+	if value, ok := _u.mutation.Role(); ok {
+		_spec.SetField(users.FieldRole, field.TypeEnum, value)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(users.FieldUpdatedAt, field.TypeTime, value)

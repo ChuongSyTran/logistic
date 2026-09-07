@@ -25,38 +25,113 @@ var File_logistic_vehicle_service_v1_vehicle_service_proto protoreflect.FileDesc
 
 const file_logistic_vehicle_service_v1_vehicle_service_proto_rawDesc = "" +
 	"\n" +
-	"1logistic/vehicle_service/v1/vehicle_service.proto\x12\x1blogistic.vehicle_service.v1\x1a2logistic/vehicle_service/v1/vehicle_messages.proto\x1a\x1cgoogle/api/annotations.proto2\xef\x04\n" +
+	"1logistic/vehicle_service/v1/vehicle_service.proto\x12\x1blogistic.vehicle_service.v1\x1a2logistic/vehicle_service/v1/vehicle_messages.proto\x1a\x1cgoogle/api/annotations.proto2\xe6\x19\n" +
 	"\x0eVehicleService\x12\x95\x01\n" +
 	"\x0fRegisterVehicle\x123.logistic.vehicle_service.v1.RegisterVehicleRequest\x1a4.logistic.vehicle_service.v1.RegisterVehicleResponse\"\x17\x82\xd3\xe4\x93\x02\x11:\x01*\"\f/v1/vehicles\x12\x88\x01\n" +
 	"\n" +
 	"GetVehicle\x12..logistic.vehicle_service.v1.GetVehicleRequest\x1a/.logistic.vehicle_service.v1.GetVehicleResponse\"\x19\x82\xd3\xe4\x93\x02\x13\x12\x11/v1/vehicles/{id}\x12\x89\x01\n" +
-	"\fListVehicles\x120.logistic.vehicle_service.v1.ListVehiclesRequest\x1a1.logistic.vehicle_service.v1.ListVehiclesResponse\"\x14\x82\xd3\xe4\x93\x02\x0e\x12\f/v1/vehicles\x12\xad\x01\n" +
-	"\x13UpdateVehicleStatus\x127.logistic.vehicle_service.v1.UpdateVehicleStatusRequest\x1a8.logistic.vehicle_service.v1.UpdateVehicleStatusResponse\"#\x82\xd3\xe4\x93\x02\x1d:\x01*\x1a\x18/v1/vehicles/{id}/statusB?Z=github.com/logistic/api/logistic/vehicle_service/v1;vehiclev1b\x06proto3"
+	"\fListVehicles\x120.logistic.vehicle_service.v1.ListVehiclesRequest\x1a1.logistic.vehicle_service.v1.ListVehiclesResponse\"\x14\x82\xd3\xe4\x93\x02\x0e\x12\f/v1/vehicles\x12\x94\x01\n" +
+	"\rUpdateVehicle\x121.logistic.vehicle_service.v1.UpdateVehicleRequest\x1a2.logistic.vehicle_service.v1.UpdateVehicleResponse\"\x1c\x82\xd3\xe4\x93\x02\x16:\x01*\x1a\x11/v1/vehicles/{id}\x12\x91\x01\n" +
+	"\rDeleteVehicle\x121.logistic.vehicle_service.v1.DeleteVehicleRequest\x1a2.logistic.vehicle_service.v1.DeleteVehicleResponse\"\x19\x82\xd3\xe4\x93\x02\x13*\x11/v1/vehicles/{id}\x12\xad\x01\n" +
+	"\x13UpdateVehicleStatus\x127.logistic.vehicle_service.v1.UpdateVehicleStatusRequest\x1a8.logistic.vehicle_service.v1.UpdateVehicleStatusResponse\"#\x82\xd3\xe4\x93\x02\x1d:\x01*\x1a\x18/v1/vehicles/{id}/status\x12\xbe\x01\n" +
+	"\x15UploadVehicleDocument\x129.logistic.vehicle_service.v1.UploadVehicleDocumentRequest\x1a:.logistic.vehicle_service.v1.UploadVehicleDocumentResponse\".\x82\xd3\xe4\x93\x02(:\x01*\"#/v1/vehicles/{vehicle_id}/documents\x12\xb8\x01\n" +
+	"\x14ListVehicleDocuments\x128.logistic.vehicle_service.v1.ListVehicleDocumentsRequest\x1a9.logistic.vehicle_service.v1.ListVehicleDocumentsResponse\"+\x82\xd3\xe4\x93\x02%\x12#/v1/vehicles/{vehicle_id}/documents\x12\xb2\x01\n" +
+	"\x15DeleteVehicleDocument\x129.logistic.vehicle_service.v1.DeleteVehicleDocumentRequest\x1a:.logistic.vehicle_service.v1.DeleteVehicleDocumentResponse\"\"\x82\xd3\xe4\x93\x02\x1c*\x1a/v1/vehicle-documents/{id}\x12\xa8\x01\n" +
+	"\x0eReportLocation\x122.logistic.vehicle_service.v1.ReportLocationRequest\x1a3.logistic.vehicle_service.v1.ReportLocationResponse\"-\x82\xd3\xe4\x93\x02':\x01*\"\"/v1/vehicles/{vehicle_id}/location\x12\xb1\x01\n" +
+	"\x12GetVehicleLocation\x126.logistic.vehicle_service.v1.GetVehicleLocationRequest\x1a7.logistic.vehicle_service.v1.GetVehicleLocationResponse\"*\x82\xd3\xe4\x93\x02$\x12\"/v1/vehicles/{vehicle_id}/location\x12\xbf\x01\n" +
+	"\x15SetDriverAvailability\x129.logistic.vehicle_service.v1.SetDriverAvailabilityRequest\x1a:.logistic.vehicle_service.v1.SetDriverAvailabilityResponse\"/\x82\xd3\xe4\x93\x02):\x01*\"$/v1/drivers/{driver_id}/availability\x12\xbc\x01\n" +
+	"\x15GetDriverAvailability\x129.logistic.vehicle_service.v1.GetDriverAvailabilityRequest\x1a:.logistic.vehicle_service.v1.GetDriverAvailabilityResponse\",\x82\xd3\xe4\x93\x02&\x12$/v1/drivers/{driver_id}/availability\x12\xab\x01\n" +
+	"\x14SearchNearbyVehicles\x128.logistic.vehicle_service.v1.SearchNearbyVehiclesRequest\x1a9.logistic.vehicle_service.v1.SearchNearbyVehiclesResponse\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/v1/vehicles/nearby\x12\x9e\x01\n" +
+	"\x11AdminListVehicles\x125.logistic.vehicle_service.v1.AdminListVehiclesRequest\x1a6.logistic.vehicle_service.v1.AdminListVehiclesResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\x12\x12/v1/admin/vehicles\x12\xb0\x01\n" +
+	"\x12AdminVerifyVehicle\x126.logistic.vehicle_service.v1.AdminVerifyVehicleRequest\x1a7.logistic.vehicle_service.v1.AdminVerifyVehicleResponse\")\x82\xd3\xe4\x93\x02#:\x01*\x1a\x1e/v1/admin/vehicles/{id}/verify\x12\xc7\x01\n" +
+	"\x19AdminListPendingDocuments\x12=.logistic.vehicle_service.v1.AdminListPendingDocumentsRequest\x1a>.logistic.vehicle_service.v1.AdminListPendingDocumentsResponse\"+\x82\xd3\xe4\x93\x02%\x12#/v1/admin/vehicle-documents/pending\x12\xbc\x01\n" +
+	"\x13AdminReviewDocument\x127.logistic.vehicle_service.v1.AdminReviewDocumentRequest\x1a8.logistic.vehicle_service.v1.AdminReviewDocumentResponse\"2\x82\xd3\xe4\x93\x02,:\x01*\x1a'/v1/admin/vehicle-documents/{id}/review\x12\xad\x01\n" +
+	"\x14AdminGetVehicleStats\x128.logistic.vehicle_service.v1.AdminGetVehicleStatsRequest\x1a9.logistic.vehicle_service.v1.AdminGetVehicleStatsResponse\" \x82\xd3\xe4\x93\x02\x1a\x12\x18/v1/admin/vehicles/statsB?Z=github.com/logistic/api/logistic/vehicle_service/v1;vehiclev1b\x06proto3"
 
 var file_logistic_vehicle_service_v1_vehicle_service_proto_goTypes = []any{
-	(*RegisterVehicleRequest)(nil),      // 0: logistic.vehicle_service.v1.RegisterVehicleRequest
-	(*GetVehicleRequest)(nil),           // 1: logistic.vehicle_service.v1.GetVehicleRequest
-	(*ListVehiclesRequest)(nil),         // 2: logistic.vehicle_service.v1.ListVehiclesRequest
-	(*UpdateVehicleStatusRequest)(nil),  // 3: logistic.vehicle_service.v1.UpdateVehicleStatusRequest
-	(*RegisterVehicleResponse)(nil),     // 4: logistic.vehicle_service.v1.RegisterVehicleResponse
-	(*GetVehicleResponse)(nil),          // 5: logistic.vehicle_service.v1.GetVehicleResponse
-	(*ListVehiclesResponse)(nil),        // 6: logistic.vehicle_service.v1.ListVehiclesResponse
-	(*UpdateVehicleStatusResponse)(nil), // 7: logistic.vehicle_service.v1.UpdateVehicleStatusResponse
+	(*RegisterVehicleRequest)(nil),            // 0: logistic.vehicle_service.v1.RegisterVehicleRequest
+	(*GetVehicleRequest)(nil),                 // 1: logistic.vehicle_service.v1.GetVehicleRequest
+	(*ListVehiclesRequest)(nil),               // 2: logistic.vehicle_service.v1.ListVehiclesRequest
+	(*UpdateVehicleRequest)(nil),              // 3: logistic.vehicle_service.v1.UpdateVehicleRequest
+	(*DeleteVehicleRequest)(nil),              // 4: logistic.vehicle_service.v1.DeleteVehicleRequest
+	(*UpdateVehicleStatusRequest)(nil),        // 5: logistic.vehicle_service.v1.UpdateVehicleStatusRequest
+	(*UploadVehicleDocumentRequest)(nil),      // 6: logistic.vehicle_service.v1.UploadVehicleDocumentRequest
+	(*ListVehicleDocumentsRequest)(nil),       // 7: logistic.vehicle_service.v1.ListVehicleDocumentsRequest
+	(*DeleteVehicleDocumentRequest)(nil),      // 8: logistic.vehicle_service.v1.DeleteVehicleDocumentRequest
+	(*ReportLocationRequest)(nil),             // 9: logistic.vehicle_service.v1.ReportLocationRequest
+	(*GetVehicleLocationRequest)(nil),         // 10: logistic.vehicle_service.v1.GetVehicleLocationRequest
+	(*SetDriverAvailabilityRequest)(nil),      // 11: logistic.vehicle_service.v1.SetDriverAvailabilityRequest
+	(*GetDriverAvailabilityRequest)(nil),      // 12: logistic.vehicle_service.v1.GetDriverAvailabilityRequest
+	(*SearchNearbyVehiclesRequest)(nil),       // 13: logistic.vehicle_service.v1.SearchNearbyVehiclesRequest
+	(*AdminListVehiclesRequest)(nil),          // 14: logistic.vehicle_service.v1.AdminListVehiclesRequest
+	(*AdminVerifyVehicleRequest)(nil),         // 15: logistic.vehicle_service.v1.AdminVerifyVehicleRequest
+	(*AdminListPendingDocumentsRequest)(nil),  // 16: logistic.vehicle_service.v1.AdminListPendingDocumentsRequest
+	(*AdminReviewDocumentRequest)(nil),        // 17: logistic.vehicle_service.v1.AdminReviewDocumentRequest
+	(*AdminGetVehicleStatsRequest)(nil),       // 18: logistic.vehicle_service.v1.AdminGetVehicleStatsRequest
+	(*RegisterVehicleResponse)(nil),           // 19: logistic.vehicle_service.v1.RegisterVehicleResponse
+	(*GetVehicleResponse)(nil),                // 20: logistic.vehicle_service.v1.GetVehicleResponse
+	(*ListVehiclesResponse)(nil),              // 21: logistic.vehicle_service.v1.ListVehiclesResponse
+	(*UpdateVehicleResponse)(nil),             // 22: logistic.vehicle_service.v1.UpdateVehicleResponse
+	(*DeleteVehicleResponse)(nil),             // 23: logistic.vehicle_service.v1.DeleteVehicleResponse
+	(*UpdateVehicleStatusResponse)(nil),       // 24: logistic.vehicle_service.v1.UpdateVehicleStatusResponse
+	(*UploadVehicleDocumentResponse)(nil),     // 25: logistic.vehicle_service.v1.UploadVehicleDocumentResponse
+	(*ListVehicleDocumentsResponse)(nil),      // 26: logistic.vehicle_service.v1.ListVehicleDocumentsResponse
+	(*DeleteVehicleDocumentResponse)(nil),     // 27: logistic.vehicle_service.v1.DeleteVehicleDocumentResponse
+	(*ReportLocationResponse)(nil),            // 28: logistic.vehicle_service.v1.ReportLocationResponse
+	(*GetVehicleLocationResponse)(nil),        // 29: logistic.vehicle_service.v1.GetVehicleLocationResponse
+	(*SetDriverAvailabilityResponse)(nil),     // 30: logistic.vehicle_service.v1.SetDriverAvailabilityResponse
+	(*GetDriverAvailabilityResponse)(nil),     // 31: logistic.vehicle_service.v1.GetDriverAvailabilityResponse
+	(*SearchNearbyVehiclesResponse)(nil),      // 32: logistic.vehicle_service.v1.SearchNearbyVehiclesResponse
+	(*AdminListVehiclesResponse)(nil),         // 33: logistic.vehicle_service.v1.AdminListVehiclesResponse
+	(*AdminVerifyVehicleResponse)(nil),        // 34: logistic.vehicle_service.v1.AdminVerifyVehicleResponse
+	(*AdminListPendingDocumentsResponse)(nil), // 35: logistic.vehicle_service.v1.AdminListPendingDocumentsResponse
+	(*AdminReviewDocumentResponse)(nil),       // 36: logistic.vehicle_service.v1.AdminReviewDocumentResponse
+	(*AdminGetVehicleStatsResponse)(nil),      // 37: logistic.vehicle_service.v1.AdminGetVehicleStatsResponse
 }
 var file_logistic_vehicle_service_v1_vehicle_service_proto_depIdxs = []int32{
-	0, // 0: logistic.vehicle_service.v1.VehicleService.RegisterVehicle:input_type -> logistic.vehicle_service.v1.RegisterVehicleRequest
-	1, // 1: logistic.vehicle_service.v1.VehicleService.GetVehicle:input_type -> logistic.vehicle_service.v1.GetVehicleRequest
-	2, // 2: logistic.vehicle_service.v1.VehicleService.ListVehicles:input_type -> logistic.vehicle_service.v1.ListVehiclesRequest
-	3, // 3: logistic.vehicle_service.v1.VehicleService.UpdateVehicleStatus:input_type -> logistic.vehicle_service.v1.UpdateVehicleStatusRequest
-	4, // 4: logistic.vehicle_service.v1.VehicleService.RegisterVehicle:output_type -> logistic.vehicle_service.v1.RegisterVehicleResponse
-	5, // 5: logistic.vehicle_service.v1.VehicleService.GetVehicle:output_type -> logistic.vehicle_service.v1.GetVehicleResponse
-	6, // 6: logistic.vehicle_service.v1.VehicleService.ListVehicles:output_type -> logistic.vehicle_service.v1.ListVehiclesResponse
-	7, // 7: logistic.vehicle_service.v1.VehicleService.UpdateVehicleStatus:output_type -> logistic.vehicle_service.v1.UpdateVehicleStatusResponse
-	4, // [4:8] is the sub-list for method output_type
-	0, // [0:4] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	0,  // 0: logistic.vehicle_service.v1.VehicleService.RegisterVehicle:input_type -> logistic.vehicle_service.v1.RegisterVehicleRequest
+	1,  // 1: logistic.vehicle_service.v1.VehicleService.GetVehicle:input_type -> logistic.vehicle_service.v1.GetVehicleRequest
+	2,  // 2: logistic.vehicle_service.v1.VehicleService.ListVehicles:input_type -> logistic.vehicle_service.v1.ListVehiclesRequest
+	3,  // 3: logistic.vehicle_service.v1.VehicleService.UpdateVehicle:input_type -> logistic.vehicle_service.v1.UpdateVehicleRequest
+	4,  // 4: logistic.vehicle_service.v1.VehicleService.DeleteVehicle:input_type -> logistic.vehicle_service.v1.DeleteVehicleRequest
+	5,  // 5: logistic.vehicle_service.v1.VehicleService.UpdateVehicleStatus:input_type -> logistic.vehicle_service.v1.UpdateVehicleStatusRequest
+	6,  // 6: logistic.vehicle_service.v1.VehicleService.UploadVehicleDocument:input_type -> logistic.vehicle_service.v1.UploadVehicleDocumentRequest
+	7,  // 7: logistic.vehicle_service.v1.VehicleService.ListVehicleDocuments:input_type -> logistic.vehicle_service.v1.ListVehicleDocumentsRequest
+	8,  // 8: logistic.vehicle_service.v1.VehicleService.DeleteVehicleDocument:input_type -> logistic.vehicle_service.v1.DeleteVehicleDocumentRequest
+	9,  // 9: logistic.vehicle_service.v1.VehicleService.ReportLocation:input_type -> logistic.vehicle_service.v1.ReportLocationRequest
+	10, // 10: logistic.vehicle_service.v1.VehicleService.GetVehicleLocation:input_type -> logistic.vehicle_service.v1.GetVehicleLocationRequest
+	11, // 11: logistic.vehicle_service.v1.VehicleService.SetDriverAvailability:input_type -> logistic.vehicle_service.v1.SetDriverAvailabilityRequest
+	12, // 12: logistic.vehicle_service.v1.VehicleService.GetDriverAvailability:input_type -> logistic.vehicle_service.v1.GetDriverAvailabilityRequest
+	13, // 13: logistic.vehicle_service.v1.VehicleService.SearchNearbyVehicles:input_type -> logistic.vehicle_service.v1.SearchNearbyVehiclesRequest
+	14, // 14: logistic.vehicle_service.v1.VehicleService.AdminListVehicles:input_type -> logistic.vehicle_service.v1.AdminListVehiclesRequest
+	15, // 15: logistic.vehicle_service.v1.VehicleService.AdminVerifyVehicle:input_type -> logistic.vehicle_service.v1.AdminVerifyVehicleRequest
+	16, // 16: logistic.vehicle_service.v1.VehicleService.AdminListPendingDocuments:input_type -> logistic.vehicle_service.v1.AdminListPendingDocumentsRequest
+	17, // 17: logistic.vehicle_service.v1.VehicleService.AdminReviewDocument:input_type -> logistic.vehicle_service.v1.AdminReviewDocumentRequest
+	18, // 18: logistic.vehicle_service.v1.VehicleService.AdminGetVehicleStats:input_type -> logistic.vehicle_service.v1.AdminGetVehicleStatsRequest
+	19, // 19: logistic.vehicle_service.v1.VehicleService.RegisterVehicle:output_type -> logistic.vehicle_service.v1.RegisterVehicleResponse
+	20, // 20: logistic.vehicle_service.v1.VehicleService.GetVehicle:output_type -> logistic.vehicle_service.v1.GetVehicleResponse
+	21, // 21: logistic.vehicle_service.v1.VehicleService.ListVehicles:output_type -> logistic.vehicle_service.v1.ListVehiclesResponse
+	22, // 22: logistic.vehicle_service.v1.VehicleService.UpdateVehicle:output_type -> logistic.vehicle_service.v1.UpdateVehicleResponse
+	23, // 23: logistic.vehicle_service.v1.VehicleService.DeleteVehicle:output_type -> logistic.vehicle_service.v1.DeleteVehicleResponse
+	24, // 24: logistic.vehicle_service.v1.VehicleService.UpdateVehicleStatus:output_type -> logistic.vehicle_service.v1.UpdateVehicleStatusResponse
+	25, // 25: logistic.vehicle_service.v1.VehicleService.UploadVehicleDocument:output_type -> logistic.vehicle_service.v1.UploadVehicleDocumentResponse
+	26, // 26: logistic.vehicle_service.v1.VehicleService.ListVehicleDocuments:output_type -> logistic.vehicle_service.v1.ListVehicleDocumentsResponse
+	27, // 27: logistic.vehicle_service.v1.VehicleService.DeleteVehicleDocument:output_type -> logistic.vehicle_service.v1.DeleteVehicleDocumentResponse
+	28, // 28: logistic.vehicle_service.v1.VehicleService.ReportLocation:output_type -> logistic.vehicle_service.v1.ReportLocationResponse
+	29, // 29: logistic.vehicle_service.v1.VehicleService.GetVehicleLocation:output_type -> logistic.vehicle_service.v1.GetVehicleLocationResponse
+	30, // 30: logistic.vehicle_service.v1.VehicleService.SetDriverAvailability:output_type -> logistic.vehicle_service.v1.SetDriverAvailabilityResponse
+	31, // 31: logistic.vehicle_service.v1.VehicleService.GetDriverAvailability:output_type -> logistic.vehicle_service.v1.GetDriverAvailabilityResponse
+	32, // 32: logistic.vehicle_service.v1.VehicleService.SearchNearbyVehicles:output_type -> logistic.vehicle_service.v1.SearchNearbyVehiclesResponse
+	33, // 33: logistic.vehicle_service.v1.VehicleService.AdminListVehicles:output_type -> logistic.vehicle_service.v1.AdminListVehiclesResponse
+	34, // 34: logistic.vehicle_service.v1.VehicleService.AdminVerifyVehicle:output_type -> logistic.vehicle_service.v1.AdminVerifyVehicleResponse
+	35, // 35: logistic.vehicle_service.v1.VehicleService.AdminListPendingDocuments:output_type -> logistic.vehicle_service.v1.AdminListPendingDocumentsResponse
+	36, // 36: logistic.vehicle_service.v1.VehicleService.AdminReviewDocument:output_type -> logistic.vehicle_service.v1.AdminReviewDocumentResponse
+	37, // 37: logistic.vehicle_service.v1.VehicleService.AdminGetVehicleStats:output_type -> logistic.vehicle_service.v1.AdminGetVehicleStatsResponse
+	19, // [19:38] is the sub-list for method output_type
+	0,  // [0:19] is the sub-list for method input_type
+	0,  // [0:0] is the sub-list for extension type_name
+	0,  // [0:0] is the sub-list for extension extendee
+	0,  // [0:0] is the sub-list for field type_name
 }
 
 func init() { file_logistic_vehicle_service_v1_vehicle_service_proto_init() }

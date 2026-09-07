@@ -30,6 +30,20 @@ func (_u *DriverProfileUpdate) Where(ps ...predicate.DriverProfile) *DriverProfi
 	return _u
 }
 
+// SetUserID sets the "user_id" field.
+func (_u *DriverProfileUpdate) SetUserID(v uuid.UUID) *DriverProfileUpdate {
+	_u.mutation.SetUserID(v)
+	return _u
+}
+
+// SetNillableUserID sets the "user_id" field if the given value is not nil.
+func (_u *DriverProfileUpdate) SetNillableUserID(v *uuid.UUID) *DriverProfileUpdate {
+	if v != nil {
+		_u.SetUserID(*v)
+	}
+	return _u
+}
+
 // SetLicenseNumber sets the "license_number" field.
 func (_u *DriverProfileUpdate) SetLicenseNumber(v string) *DriverProfileUpdate {
 	_u.mutation.SetLicenseNumber(v)
@@ -44,6 +58,12 @@ func (_u *DriverProfileUpdate) SetNillableLicenseNumber(v *string) *DriverProfil
 	return _u
 }
 
+// ClearLicenseNumber clears the value of the "license_number" field.
+func (_u *DriverProfileUpdate) ClearLicenseNumber() *DriverProfileUpdate {
+	_u.mutation.ClearLicenseNumber()
+	return _u
+}
+
 // SetIDCard sets the "id_card" field.
 func (_u *DriverProfileUpdate) SetIDCard(v string) *DriverProfileUpdate {
 	_u.mutation.SetIDCard(v)
@@ -55,6 +75,12 @@ func (_u *DriverProfileUpdate) SetNillableIDCard(v *string) *DriverProfileUpdate
 	if v != nil {
 		_u.SetIDCard(*v)
 	}
+	return _u
+}
+
+// ClearIDCard clears the value of the "id_card" field.
+func (_u *DriverProfileUpdate) ClearIDCard() *DriverProfileUpdate {
+	_u.mutation.ClearIDCard()
 	return _u
 }
 
@@ -79,6 +105,27 @@ func (_u *DriverProfileUpdate) AddRating(v float64) *DriverProfileUpdate {
 	return _u
 }
 
+// SetTotalTrips sets the "total_trips" field.
+func (_u *DriverProfileUpdate) SetTotalTrips(v int) *DriverProfileUpdate {
+	_u.mutation.ResetTotalTrips()
+	_u.mutation.SetTotalTrips(v)
+	return _u
+}
+
+// SetNillableTotalTrips sets the "total_trips" field if the given value is not nil.
+func (_u *DriverProfileUpdate) SetNillableTotalTrips(v *int) *DriverProfileUpdate {
+	if v != nil {
+		_u.SetTotalTrips(*v)
+	}
+	return _u
+}
+
+// AddTotalTrips adds value to the "total_trips" field.
+func (_u *DriverProfileUpdate) AddTotalTrips(v int) *DriverProfileUpdate {
+	_u.mutation.AddTotalTrips(v)
+	return _u
+}
+
 // SetKycStatus sets the "kyc_status" field.
 func (_u *DriverProfileUpdate) SetKycStatus(v driverprofile.KycStatus) *DriverProfileUpdate {
 	_u.mutation.SetKycStatus(v)
@@ -93,29 +140,69 @@ func (_u *DriverProfileUpdate) SetNillableKycStatus(v *driverprofile.KycStatus) 
 	return _u
 }
 
-// SetCreatedAt sets the "created_at" field.
-func (_u *DriverProfileUpdate) SetCreatedAt(v time.Time) *DriverProfileUpdate {
-	_u.mutation.SetCreatedAt(v)
+// SetKycNote sets the "kyc_note" field.
+func (_u *DriverProfileUpdate) SetKycNote(v string) *DriverProfileUpdate {
+	_u.mutation.SetKycNote(v)
 	return _u
 }
 
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (_u *DriverProfileUpdate) SetNillableCreatedAt(v *time.Time) *DriverProfileUpdate {
+// SetNillableKycNote sets the "kyc_note" field if the given value is not nil.
+func (_u *DriverProfileUpdate) SetNillableKycNote(v *string) *DriverProfileUpdate {
 	if v != nil {
-		_u.SetCreatedAt(*v)
+		_u.SetKycNote(*v)
 	}
+	return _u
+}
+
+// ClearKycNote clears the value of the "kyc_note" field.
+func (_u *DriverProfileUpdate) ClearKycNote() *DriverProfileUpdate {
+	_u.mutation.ClearKycNote()
+	return _u
+}
+
+// SetKycReviewedBy sets the "kyc_reviewed_by" field.
+func (_u *DriverProfileUpdate) SetKycReviewedBy(v uuid.UUID) *DriverProfileUpdate {
+	_u.mutation.SetKycReviewedBy(v)
+	return _u
+}
+
+// SetNillableKycReviewedBy sets the "kyc_reviewed_by" field if the given value is not nil.
+func (_u *DriverProfileUpdate) SetNillableKycReviewedBy(v *uuid.UUID) *DriverProfileUpdate {
+	if v != nil {
+		_u.SetKycReviewedBy(*v)
+	}
+	return _u
+}
+
+// ClearKycReviewedBy clears the value of the "kyc_reviewed_by" field.
+func (_u *DriverProfileUpdate) ClearKycReviewedBy() *DriverProfileUpdate {
+	_u.mutation.ClearKycReviewedBy()
+	return _u
+}
+
+// SetKycReviewedAt sets the "kyc_reviewed_at" field.
+func (_u *DriverProfileUpdate) SetKycReviewedAt(v time.Time) *DriverProfileUpdate {
+	_u.mutation.SetKycReviewedAt(v)
+	return _u
+}
+
+// SetNillableKycReviewedAt sets the "kyc_reviewed_at" field if the given value is not nil.
+func (_u *DriverProfileUpdate) SetNillableKycReviewedAt(v *time.Time) *DriverProfileUpdate {
+	if v != nil {
+		_u.SetKycReviewedAt(*v)
+	}
+	return _u
+}
+
+// ClearKycReviewedAt clears the value of the "kyc_reviewed_at" field.
+func (_u *DriverProfileUpdate) ClearKycReviewedAt() *DriverProfileUpdate {
+	_u.mutation.ClearKycReviewedAt()
 	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
 func (_u *DriverProfileUpdate) SetUpdatedAt(v time.Time) *DriverProfileUpdate {
 	_u.mutation.SetUpdatedAt(v)
-	return _u
-}
-
-// SetUserID sets the "user" edge to the User entity by ID.
-func (_u *DriverProfileUpdate) SetUserID(id uuid.UUID) *DriverProfileUpdate {
-	_u.mutation.SetUserID(id)
 	return _u
 }
 
@@ -199,8 +286,14 @@ func (_u *DriverProfileUpdate) sqlSave(ctx context.Context) (_node int, err erro
 	if value, ok := _u.mutation.LicenseNumber(); ok {
 		_spec.SetField(driverprofile.FieldLicenseNumber, field.TypeString, value)
 	}
+	if _u.mutation.LicenseNumberCleared() {
+		_spec.ClearField(driverprofile.FieldLicenseNumber, field.TypeString)
+	}
 	if value, ok := _u.mutation.IDCard(); ok {
 		_spec.SetField(driverprofile.FieldIDCard, field.TypeString, value)
+	}
+	if _u.mutation.IDCardCleared() {
+		_spec.ClearField(driverprofile.FieldIDCard, field.TypeString)
 	}
 	if value, ok := _u.mutation.Rating(); ok {
 		_spec.SetField(driverprofile.FieldRating, field.TypeFloat64, value)
@@ -208,11 +301,32 @@ func (_u *DriverProfileUpdate) sqlSave(ctx context.Context) (_node int, err erro
 	if value, ok := _u.mutation.AddedRating(); ok {
 		_spec.AddField(driverprofile.FieldRating, field.TypeFloat64, value)
 	}
+	if value, ok := _u.mutation.TotalTrips(); ok {
+		_spec.SetField(driverprofile.FieldTotalTrips, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedTotalTrips(); ok {
+		_spec.AddField(driverprofile.FieldTotalTrips, field.TypeInt, value)
+	}
 	if value, ok := _u.mutation.KycStatus(); ok {
 		_spec.SetField(driverprofile.FieldKycStatus, field.TypeEnum, value)
 	}
-	if value, ok := _u.mutation.CreatedAt(); ok {
-		_spec.SetField(driverprofile.FieldCreatedAt, field.TypeTime, value)
+	if value, ok := _u.mutation.KycNote(); ok {
+		_spec.SetField(driverprofile.FieldKycNote, field.TypeString, value)
+	}
+	if _u.mutation.KycNoteCleared() {
+		_spec.ClearField(driverprofile.FieldKycNote, field.TypeString)
+	}
+	if value, ok := _u.mutation.KycReviewedBy(); ok {
+		_spec.SetField(driverprofile.FieldKycReviewedBy, field.TypeUUID, value)
+	}
+	if _u.mutation.KycReviewedByCleared() {
+		_spec.ClearField(driverprofile.FieldKycReviewedBy, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.KycReviewedAt(); ok {
+		_spec.SetField(driverprofile.FieldKycReviewedAt, field.TypeTime, value)
+	}
+	if _u.mutation.KycReviewedAtCleared() {
+		_spec.ClearField(driverprofile.FieldKycReviewedAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(driverprofile.FieldUpdatedAt, field.TypeTime, value)
@@ -266,6 +380,20 @@ type DriverProfileUpdateOne struct {
 	mutation *DriverProfileMutation
 }
 
+// SetUserID sets the "user_id" field.
+func (_u *DriverProfileUpdateOne) SetUserID(v uuid.UUID) *DriverProfileUpdateOne {
+	_u.mutation.SetUserID(v)
+	return _u
+}
+
+// SetNillableUserID sets the "user_id" field if the given value is not nil.
+func (_u *DriverProfileUpdateOne) SetNillableUserID(v *uuid.UUID) *DriverProfileUpdateOne {
+	if v != nil {
+		_u.SetUserID(*v)
+	}
+	return _u
+}
+
 // SetLicenseNumber sets the "license_number" field.
 func (_u *DriverProfileUpdateOne) SetLicenseNumber(v string) *DriverProfileUpdateOne {
 	_u.mutation.SetLicenseNumber(v)
@@ -280,6 +408,12 @@ func (_u *DriverProfileUpdateOne) SetNillableLicenseNumber(v *string) *DriverPro
 	return _u
 }
 
+// ClearLicenseNumber clears the value of the "license_number" field.
+func (_u *DriverProfileUpdateOne) ClearLicenseNumber() *DriverProfileUpdateOne {
+	_u.mutation.ClearLicenseNumber()
+	return _u
+}
+
 // SetIDCard sets the "id_card" field.
 func (_u *DriverProfileUpdateOne) SetIDCard(v string) *DriverProfileUpdateOne {
 	_u.mutation.SetIDCard(v)
@@ -291,6 +425,12 @@ func (_u *DriverProfileUpdateOne) SetNillableIDCard(v *string) *DriverProfileUpd
 	if v != nil {
 		_u.SetIDCard(*v)
 	}
+	return _u
+}
+
+// ClearIDCard clears the value of the "id_card" field.
+func (_u *DriverProfileUpdateOne) ClearIDCard() *DriverProfileUpdateOne {
+	_u.mutation.ClearIDCard()
 	return _u
 }
 
@@ -315,6 +455,27 @@ func (_u *DriverProfileUpdateOne) AddRating(v float64) *DriverProfileUpdateOne {
 	return _u
 }
 
+// SetTotalTrips sets the "total_trips" field.
+func (_u *DriverProfileUpdateOne) SetTotalTrips(v int) *DriverProfileUpdateOne {
+	_u.mutation.ResetTotalTrips()
+	_u.mutation.SetTotalTrips(v)
+	return _u
+}
+
+// SetNillableTotalTrips sets the "total_trips" field if the given value is not nil.
+func (_u *DriverProfileUpdateOne) SetNillableTotalTrips(v *int) *DriverProfileUpdateOne {
+	if v != nil {
+		_u.SetTotalTrips(*v)
+	}
+	return _u
+}
+
+// AddTotalTrips adds value to the "total_trips" field.
+func (_u *DriverProfileUpdateOne) AddTotalTrips(v int) *DriverProfileUpdateOne {
+	_u.mutation.AddTotalTrips(v)
+	return _u
+}
+
 // SetKycStatus sets the "kyc_status" field.
 func (_u *DriverProfileUpdateOne) SetKycStatus(v driverprofile.KycStatus) *DriverProfileUpdateOne {
 	_u.mutation.SetKycStatus(v)
@@ -329,29 +490,69 @@ func (_u *DriverProfileUpdateOne) SetNillableKycStatus(v *driverprofile.KycStatu
 	return _u
 }
 
-// SetCreatedAt sets the "created_at" field.
-func (_u *DriverProfileUpdateOne) SetCreatedAt(v time.Time) *DriverProfileUpdateOne {
-	_u.mutation.SetCreatedAt(v)
+// SetKycNote sets the "kyc_note" field.
+func (_u *DriverProfileUpdateOne) SetKycNote(v string) *DriverProfileUpdateOne {
+	_u.mutation.SetKycNote(v)
 	return _u
 }
 
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (_u *DriverProfileUpdateOne) SetNillableCreatedAt(v *time.Time) *DriverProfileUpdateOne {
+// SetNillableKycNote sets the "kyc_note" field if the given value is not nil.
+func (_u *DriverProfileUpdateOne) SetNillableKycNote(v *string) *DriverProfileUpdateOne {
 	if v != nil {
-		_u.SetCreatedAt(*v)
+		_u.SetKycNote(*v)
 	}
+	return _u
+}
+
+// ClearKycNote clears the value of the "kyc_note" field.
+func (_u *DriverProfileUpdateOne) ClearKycNote() *DriverProfileUpdateOne {
+	_u.mutation.ClearKycNote()
+	return _u
+}
+
+// SetKycReviewedBy sets the "kyc_reviewed_by" field.
+func (_u *DriverProfileUpdateOne) SetKycReviewedBy(v uuid.UUID) *DriverProfileUpdateOne {
+	_u.mutation.SetKycReviewedBy(v)
+	return _u
+}
+
+// SetNillableKycReviewedBy sets the "kyc_reviewed_by" field if the given value is not nil.
+func (_u *DriverProfileUpdateOne) SetNillableKycReviewedBy(v *uuid.UUID) *DriverProfileUpdateOne {
+	if v != nil {
+		_u.SetKycReviewedBy(*v)
+	}
+	return _u
+}
+
+// ClearKycReviewedBy clears the value of the "kyc_reviewed_by" field.
+func (_u *DriverProfileUpdateOne) ClearKycReviewedBy() *DriverProfileUpdateOne {
+	_u.mutation.ClearKycReviewedBy()
+	return _u
+}
+
+// SetKycReviewedAt sets the "kyc_reviewed_at" field.
+func (_u *DriverProfileUpdateOne) SetKycReviewedAt(v time.Time) *DriverProfileUpdateOne {
+	_u.mutation.SetKycReviewedAt(v)
+	return _u
+}
+
+// SetNillableKycReviewedAt sets the "kyc_reviewed_at" field if the given value is not nil.
+func (_u *DriverProfileUpdateOne) SetNillableKycReviewedAt(v *time.Time) *DriverProfileUpdateOne {
+	if v != nil {
+		_u.SetKycReviewedAt(*v)
+	}
+	return _u
+}
+
+// ClearKycReviewedAt clears the value of the "kyc_reviewed_at" field.
+func (_u *DriverProfileUpdateOne) ClearKycReviewedAt() *DriverProfileUpdateOne {
+	_u.mutation.ClearKycReviewedAt()
 	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
 func (_u *DriverProfileUpdateOne) SetUpdatedAt(v time.Time) *DriverProfileUpdateOne {
 	_u.mutation.SetUpdatedAt(v)
-	return _u
-}
-
-// SetUserID sets the "user" edge to the User entity by ID.
-func (_u *DriverProfileUpdateOne) SetUserID(id uuid.UUID) *DriverProfileUpdateOne {
-	_u.mutation.SetUserID(id)
 	return _u
 }
 
@@ -465,8 +666,14 @@ func (_u *DriverProfileUpdateOne) sqlSave(ctx context.Context) (_node *DriverPro
 	if value, ok := _u.mutation.LicenseNumber(); ok {
 		_spec.SetField(driverprofile.FieldLicenseNumber, field.TypeString, value)
 	}
+	if _u.mutation.LicenseNumberCleared() {
+		_spec.ClearField(driverprofile.FieldLicenseNumber, field.TypeString)
+	}
 	if value, ok := _u.mutation.IDCard(); ok {
 		_spec.SetField(driverprofile.FieldIDCard, field.TypeString, value)
+	}
+	if _u.mutation.IDCardCleared() {
+		_spec.ClearField(driverprofile.FieldIDCard, field.TypeString)
 	}
 	if value, ok := _u.mutation.Rating(); ok {
 		_spec.SetField(driverprofile.FieldRating, field.TypeFloat64, value)
@@ -474,11 +681,32 @@ func (_u *DriverProfileUpdateOne) sqlSave(ctx context.Context) (_node *DriverPro
 	if value, ok := _u.mutation.AddedRating(); ok {
 		_spec.AddField(driverprofile.FieldRating, field.TypeFloat64, value)
 	}
+	if value, ok := _u.mutation.TotalTrips(); ok {
+		_spec.SetField(driverprofile.FieldTotalTrips, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedTotalTrips(); ok {
+		_spec.AddField(driverprofile.FieldTotalTrips, field.TypeInt, value)
+	}
 	if value, ok := _u.mutation.KycStatus(); ok {
 		_spec.SetField(driverprofile.FieldKycStatus, field.TypeEnum, value)
 	}
-	if value, ok := _u.mutation.CreatedAt(); ok {
-		_spec.SetField(driverprofile.FieldCreatedAt, field.TypeTime, value)
+	if value, ok := _u.mutation.KycNote(); ok {
+		_spec.SetField(driverprofile.FieldKycNote, field.TypeString, value)
+	}
+	if _u.mutation.KycNoteCleared() {
+		_spec.ClearField(driverprofile.FieldKycNote, field.TypeString)
+	}
+	if value, ok := _u.mutation.KycReviewedBy(); ok {
+		_spec.SetField(driverprofile.FieldKycReviewedBy, field.TypeUUID, value)
+	}
+	if _u.mutation.KycReviewedByCleared() {
+		_spec.ClearField(driverprofile.FieldKycReviewedBy, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.KycReviewedAt(); ok {
+		_spec.SetField(driverprofile.FieldKycReviewedAt, field.TypeTime, value)
+	}
+	if _u.mutation.KycReviewedAtCleared() {
+		_spec.ClearField(driverprofile.FieldKycReviewedAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(driverprofile.FieldUpdatedAt, field.TypeTime, value)

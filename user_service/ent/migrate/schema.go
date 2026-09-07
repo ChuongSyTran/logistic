@@ -8,16 +8,64 @@ import (
 )
 
 var (
+	// AddressesColumns holds the columns for the "addresses" table.
+	AddressesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "label", Type: field.TypeString, Nullable: true},
+		{Name: "contact_name", Type: field.TypeString, Nullable: true},
+		{Name: "contact_phone", Type: field.TypeString, Nullable: true},
+		{Name: "line1", Type: field.TypeString},
+		{Name: "ward", Type: field.TypeString, Nullable: true},
+		{Name: "district", Type: field.TypeString, Nullable: true},
+		{Name: "city", Type: field.TypeString, Nullable: true},
+		{Name: "latitude", Type: field.TypeFloat64, Default: 0},
+		{Name: "longitude", Type: field.TypeFloat64, Default: 0},
+		{Name: "address_type", Type: field.TypeEnum, Enums: []string{"pickup", "delivery", "both"}, Default: "both"},
+		{Name: "is_default", Type: field.TypeBool, Default: false},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "user_id", Type: field.TypeUUID},
+	}
+	// AddressesTable holds the schema information for the "addresses" table.
+	AddressesTable = &schema.Table{
+		Name:       "addresses",
+		Columns:    AddressesColumns,
+		PrimaryKey: []*schema.Column{AddressesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "addresses_users_addresses",
+				Columns:    []*schema.Column{AddressesColumns[14]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "address_user_id_address_type",
+				Unique:  false,
+				Columns: []*schema.Column{AddressesColumns[14], AddressesColumns[10]},
+			},
+			{
+				Name:    "address_user_id_is_default",
+				Unique:  false,
+				Columns: []*schema.Column{AddressesColumns[14], AddressesColumns[11]},
+			},
+		},
+	}
 	// DriverProfilesColumns holds the columns for the "driver_profiles" table.
 	DriverProfilesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
-		{Name: "license_number", Type: field.TypeString, Unique: true},
-		{Name: "id_card", Type: field.TypeString, Unique: true},
+		{Name: "license_number", Type: field.TypeString, Unique: true, Nullable: true},
+		{Name: "id_card", Type: field.TypeString, Unique: true, Nullable: true},
 		{Name: "rating", Type: field.TypeFloat64, Default: 5},
+		{Name: "total_trips", Type: field.TypeInt, Default: 0},
 		{Name: "kyc_status", Type: field.TypeEnum, Enums: []string{"pending", "approved", "rejected"}, Default: "pending"},
+		{Name: "kyc_note", Type: field.TypeString, Nullable: true},
+		{Name: "kyc_reviewed_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "kyc_reviewed_at", Type: field.TypeTime, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "user_driver_profile", Type: field.TypeUUID, Unique: true},
+		{Name: "user_id", Type: field.TypeUUID, Unique: true},
 	}
 	// DriverProfilesTable holds the schema information for the "driver_profiles" table.
 	DriverProfilesTable = &schema.Table{
@@ -27,9 +75,21 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "driver_profiles_users_driver_profile",
-				Columns:    []*schema.Column{DriverProfilesColumns[7]},
+				Columns:    []*schema.Column{DriverProfilesColumns[11]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "driverprofile_kyc_status",
+				Unique:  false,
+				Columns: []*schema.Column{DriverProfilesColumns[5]},
+			},
+			{
+				Name:    "driverprofile_user_id",
+				Unique:  true,
+				Columns: []*schema.Column{DriverProfilesColumns[11]},
 			},
 		},
 	}
@@ -38,9 +98,11 @@ var (
 		{Name: "id", Type: field.TypeUUID, Unique: true},
 		{Name: "company_name", Type: field.TypeString, Nullable: true},
 		{Name: "tax_code", Type: field.TypeString, Nullable: true},
+		{Name: "business_address", Type: field.TypeString, Nullable: true},
+		{Name: "total_orders", Type: field.TypeInt, Default: 0},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "user_shipper_profile", Type: field.TypeUUID, Unique: true},
+		{Name: "user_id", Type: field.TypeUUID, Unique: true},
 	}
 	// ShipperProfilesTable holds the schema information for the "shipper_profiles" table.
 	ShipperProfilesTable = &schema.Table{
@@ -50,20 +112,30 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "shipper_profiles_users_shipper_profile",
-				Columns:    []*schema.Column{ShipperProfilesColumns[5]},
+				Columns:    []*schema.Column{ShipperProfilesColumns[7]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "shipperprofile_user_id",
+				Unique:  true,
+				Columns: []*schema.Column{ShipperProfilesColumns[7]},
 			},
 		},
 	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
-		{Name: "phone", Type: field.TypeString, Unique: true},
+		{Name: "phone", Type: field.TypeString, Unique: true, Nullable: true},
 		{Name: "email", Type: field.TypeString, Unique: true, Nullable: true},
+		{Name: "full_name", Type: field.TypeString, Nullable: true},
+		{Name: "avatar_url", Type: field.TypeString, Nullable: true},
 		{Name: "password_hash", Type: field.TypeString},
 		{Name: "role", Type: field.TypeEnum, Enums: []string{"driver", "shipper", "admin"}},
-		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "banned"}, Default: "active"},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "banned", "suspended"}, Default: "active"},
+		{Name: "status_reason", Type: field.TypeString, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 	}
@@ -72,16 +144,64 @@ var (
 		Name:       "users",
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "user_role_status",
+				Unique:  false,
+				Columns: []*schema.Column{UsersColumns[6], UsersColumns[7]},
+			},
+			{
+				Name:    "user_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{UsersColumns[9]},
+			},
+		},
+	}
+	// UserDevicesColumns holds the columns for the "user_devices" table.
+	UserDevicesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "device_token", Type: field.TypeString, Unique: true},
+		{Name: "platform", Type: field.TypeEnum, Enums: []string{"android", "ios", "web"}, Default: "android"},
+		{Name: "device_name", Type: field.TypeString, Nullable: true},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "last_seen_at", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "user_id", Type: field.TypeUUID},
+	}
+	// UserDevicesTable holds the schema information for the "user_devices" table.
+	UserDevicesTable = &schema.Table{
+		Name:       "user_devices",
+		Columns:    UserDevicesColumns,
+		PrimaryKey: []*schema.Column{UserDevicesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_devices_users_devices",
+				Columns:    []*schema.Column{UserDevicesColumns[7]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "userdevice_user_id_is_active",
+				Unique:  false,
+				Columns: []*schema.Column{UserDevicesColumns[7], UserDevicesColumns[4]},
+			},
+		},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		AddressesTable,
 		DriverProfilesTable,
 		ShipperProfilesTable,
 		UsersTable,
+		UserDevicesTable,
 	}
 )
 
 func init() {
+	AddressesTable.ForeignKeys[0].RefTable = UsersTable
 	DriverProfilesTable.ForeignKeys[0].RefTable = UsersTable
 	ShipperProfilesTable.ForeignKeys[0].RefTable = UsersTable
+	UserDevicesTable.ForeignKeys[0].RefTable = UsersTable
 }

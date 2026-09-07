@@ -5,105 +5,74 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"time"
 
 	"auth_service/internal/entity"
 
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
+	"github.com/logistic/pkg/authn"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/oauth2"
 )
 
-// ========================================================================================
-// KIẾN TRÚC: AuthService — Tầng Business Logic thuần túy
-//
-// Rule: BIZ LAYER KHÔNG ĐƯỢC:
-//   ✗ Import bất kỳ thư viện HTTP nào (gin, net/http)
-//   ✗ Import bất kỳ thư viện DB nào (ent, gorm, database/sql)
-//   ✗ Biết về JSON serialization
-//
-// BIZ LAYER CHỈ ĐƯỢC:
-//   ✓ Gọi repo interface (không quan tâm impl là gì)
-//   ✓ Thực thi business rule (validation, hashing, token generation)
-//   ✓ Throw domain errors (ErrEmailAlreadyExists, ErrInvalidCredentials)
-//
-// Đây là "Protected Variation" principle: Business logic được bọc kín,
-// thay đổi ở infra (DB, framework) không ripple vào business rules.
-// ========================================================================================
-
 type AuthService interface {
 	Register(ctx context.Context, req entity.UserRegister) (*entity.UserProfile, error)
-	Login(ctx context.Context, req entity.UserLogin) (*entity.AuthTokenPair, error)
+	Login(ctx context.Context, req entity.UserLogin) (*entity.AuthTokenPair, *entity.UserProfile, error)
 	GetGoogleLoginURL(state string) string
-	GoogleCallback(ctx context.Context, code string) (*entity.AuthTokenPair, error)
+	GoogleCallback(ctx context.Context, code string) (*entity.AuthTokenPair, *entity.UserProfile, error)
 	VerifyToken(ctx context.Context, tokenString string) (*entity.UserProfile, error)
+	RefreshToken(ctx context.Context, refreshToken string) (*entity.AuthTokenPair, error)
+	Logout(ctx context.Context, refreshToken string) error
 }
 
 var (
-	// Domain errors — được định nghĩa ở biz layer, không ở controller/delivery.
-	// Lý do: Controller dịch HTTP status từ domain error, chứ KHÔNG tự biết business rule.
-	// Pattern: errors.Is(err, ErrEmailAlreadyExists) → HTTP 409 Conflict
 	ErrEmailAlreadyExists  = errors.New("biz: email already registered")
 	ErrInvalidCredentials  = errors.New("biz: invalid email or password")
 	ErrTokenGenerationFail = errors.New("biz: failed to generate auth token")
+	ErrInvalidToken        = errors.New("biz: invalid token")
+	ErrSessionRevoked      = errors.New("biz: phiên đăng nhập đã bị thu hồi")
 )
 
-// jwtClaims là custom claims cho JWT token.
-// SECURITY NOTE: Chỉ nhúng UserId và Email vào payload, KHÔNG nhúng password hay role.
-// JWT payload là Base64 encoded (KHÔNG encrypted) — ai cũng decode được nếu intercept được token.
-// Role-based access: Nên query DB khi cần, hoặc dùng opaque token thay vì JWT nếu cần revocability.
-type jwtClaims struct {
-	UserId int64  `json:"userId"`
-	Email  string `json:"email"`
-	jwt.RegisteredClaims
-}
-
 type authServiceImpl struct {
-	authRepo AuthRepo
+	authRepo    AuthRepo
+	sessionRepo SessionRepo
 
-	// TRADE-OFF: Inject jwtSecret vào struct thay vì hardcode hay đọc từ os.Getenv() mỗi lần gọi.
-	// os.Getenv() bên trong business logic là bad practice: biz sẽ không testable (env phải set đúng mới test được).
-	// Giải pháp: DI layer đọc secret một lần, inject vào đây — biz chỉ dùng, không quan tâm nguồn gốc.
-	jwtSecret   string
+	signer   *authn.Signer
+	verifier *authn.Verifier
+
 	oauthConfig *oauth2.Config
 }
 
-func NewAuthService(authRepo AuthRepo, jwtSecret string, oauthConfig *oauth2.Config) AuthService {
+func NewAuthService(
+	authRepo AuthRepo,
+	sessionRepo SessionRepo,
+	signer *authn.Signer,
+	verifier *authn.Verifier,
+	oauthConfig *oauth2.Config,
+) AuthService {
 	return &authServiceImpl{
 		authRepo:    authRepo,
-		jwtSecret:   jwtSecret,
+		sessionRepo: sessionRepo,
+		signer:      signer,
+		verifier:    verifier,
 		oauthConfig: oauthConfig,
 	}
 }
 
-// Register implement business logic đăng ký user.
 func (s *authServiceImpl) Register(ctx context.Context, req entity.UserRegister) (*entity.UserProfile, error) {
-	// STEP 1 — Guard clause: Kiểm tra email trước khi làm bất cứ điều gì tốn kém (hashing).
-	// Đây là "Fail Fast" principle: phát hiện lỗi sớm nhất có thể, tránh tốn CPU cho bcrypt
-	// (bcrypt cost 12 ≈ 250ms/request) khi email đã tồn tại.
 	exists, err := s.authRepo.ExistsByEmail(ctx, req.Email)
 	if err != nil {
 		return nil, fmt.Errorf("biz register: checking email existence: %w", err)
 	}
 	if exists {
-		// Trả về domain error, KHÔNG HTTP error. Controller sẽ map sang HTTP 409.
 		return nil, ErrEmailAlreadyExists
 	}
 
-	// STEP 2 — Hash password TRƯỚC KHI gọi repo.
-	// WHY bcrypt? bcrypt tự động thêm random salt → cùng password cho hash khác nhau.
-	// → Chống rainbow table attack. Không cần self-managed salt column trong DB.
-	//
-	// Cost factor 12: OWASP khuyến nghị >= 10 cho bcrypt năm 2024.
-	// Cost 12 ≈ 250ms trên server thông thường — đủ chậm để brute-force không khả thi,
-	// đủ nhanh để user experience không bị ảnh hưởng.
 	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.Password), 12)
 	if err != nil {
 		return nil, fmt.Errorf("biz register: hashing password: %w", err)
 	}
 
-	// STEP 3 — Persist. Repo nhận hashed password, KHÔNG BAO GIỜ nhận plain text.
 	profile, err := s.authRepo.Save(ctx, req, string(hashedBytes))
 	if err != nil {
 		return nil, fmt.Errorf("biz register: persisting user: %w", err)
@@ -112,61 +81,41 @@ func (s *authServiceImpl) Register(ctx context.Context, req entity.UserRegister)
 	return profile, nil
 }
 
-// Login implement business logic đăng nhập.
-func (s *authServiceImpl) Login(ctx context.Context, req entity.UserLogin) (*entity.AuthTokenPair, error) {
-	// STEP 1 — Tìm user. FindByEmail trả về profile + hashed password.
-	// SECURITY NOTE: Không phân biệt "email không tồn tại" vs "password sai" trong response.
-	// Lý do: Tránh User Enumeration Attack — attacker không biết email có tồn tại hay không.
+func (s *authServiceImpl) Login(ctx context.Context, req entity.UserLogin) (*entity.AuthTokenPair, *entity.UserProfile, error) {
 	profile, hashedPassword, err := s.authRepo.FindByEmail(ctx, req.Email)
 	if err != nil {
-		// err có thể là "not found" — biz layer chuẩn hóa thành ErrInvalidCredentials
-		return nil, ErrInvalidCredentials
+		bcrypt.CompareHashAndPassword(dummyHash, []byte(req.Password))
+		return nil, nil, ErrInvalidCredentials
 	}
 
-	// STEP 2 — Compare hash. bcrypt.CompareHashAndPassword tự xử lý constant-time comparison.
-	// Nếu dùng == hay bytes.Equal để so sánh, bạn có thể bị Timing Attack.
-	// bcrypt's CompareHashAndPassword chạy trong constant time bất kể match hay không.
 	if err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(req.Password)); err != nil {
-		return nil, ErrInvalidCredentials
+		return nil, nil, ErrInvalidCredentials
 	}
 
-	// STEP 3 — Generate token pair.
-	tokenPair, err := s.generateTokenPair(profile)
+	tokenPair, err := s.issue(ctx, profile)
 	if err != nil {
-		return nil, fmt.Errorf("biz login: %w: %v", ErrTokenGenerationFail, err)
+		return nil, nil, fmt.Errorf("biz login: %w: %v", ErrTokenGenerationFail, err)
 	}
 
-	return tokenPair, nil
+	return tokenPair, profile, nil
 }
 
-// getOAuthConfig trả về cấu hình Google OAuth2 đã được inject.
-func (s *authServiceImpl) getOAuthConfig() *oauth2.Config {
-	return s.oauthConfig
-}
+var dummyHash = []byte("$2a$12$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy")
 
-// GetGoogleLoginURL trả về URL để redirect user sang trang đăng nhập của Google
 func (s *authServiceImpl) GetGoogleLoginURL(state string) string {
-	// Gọi hàm AuthCodeURL của thư viện để nó gắn state và ClientID vào link Google
-	conf := s.getOAuthConfig()
-	return conf.AuthCodeURL(state) // Trả về link Google chuẩn!
+	return s.oauthConfig.AuthCodeURL(state)
 }
 
-// GoogleCallback xử lý Authorization Code Google trả về
-func (s *authServiceImpl) GoogleCallback(ctx context.Context, code string) (*entity.AuthTokenPair, error) {
-	conf := s.getOAuthConfig()
-
-	// 1. Đổi code lấy Access Token của Google
-	token, err := conf.Exchange(ctx, code)
+func (s *authServiceImpl) GoogleCallback(ctx context.Context, code string) (*entity.AuthTokenPair, *entity.UserProfile, error) {
+	token, err := s.oauthConfig.Exchange(ctx, code)
 	if err != nil {
-		return nil, fmt.Errorf("google callback: exchange code failed: %w", err)
+		return nil, nil, fmt.Errorf("google callback: exchange code failed: %w", err)
 	}
 
-	// 2. Dùng Token gọi API lấy thông tin User
-	// Conf.Client tự động nhét token vào Header (Authorization: Bearer ...)
-	client := conf.Client(ctx, token)
+	client := s.oauthConfig.Client(ctx, token)
 	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
 	if err != nil {
-		return nil, fmt.Errorf("google callback: failed to get user info: %w", err)
+		return nil, nil, fmt.Errorf("google callback: failed to get user info: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -176,106 +125,124 @@ func (s *authServiceImpl) GoogleCallback(ctx context.Context, code string) (*ent
 		Name  string `json:"name"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
-		return nil, fmt.Errorf("google callback: failed to decode user info: %w", err)
+		return nil, nil, fmt.Errorf("google callback: failed to decode user info: %w", err)
 	}
 
-	// 3. Kiểm tra DB xem User đã tồn tại chưa
 	profile, _, err := s.authRepo.FindByEmail(ctx, userInfo.Email)
 	if err != nil {
-		// User chưa tồn tại -> Đăng ký mới tự động (Auto Register)
-		newReq := entity.UserRegister{
+		profile, err = s.authRepo.Save(ctx, entity.UserRegister{
 			Email:    userInfo.Email,
-			Password: "", // Không cần password vì login qua Google
+			Password: "",
 			FullName: userInfo.Name,
 			GoogleID: userInfo.Id,
-		}
-		// Lưu user mới với password rỗng
-		profile, err = s.authRepo.Save(ctx, newReq, "")
+			Role:     authn.RoleShipper,
+		}, "")
 		if err != nil {
-			return nil, fmt.Errorf("google callback: failed to create oauth user: %w", err)
+			return nil, nil, fmt.Errorf("google callback: failed to create oauth user: %w", err)
 		}
 	}
 
-	// 4. Sinh JWT Token của hệ thống mình (Logistics OS)
-	return s.generateTokenPair(profile)
+	pair, err := s.issue(ctx, profile)
+	if err != nil {
+		return nil, nil, err
+	}
+	return pair, profile, nil
 }
 
-// generateTokenPair là private helper — chỉ AuthService dùng.
-// DESIGN: Tách thành method riêng để dễ unit test (có thể test token generation độc lập).
-func (s *authServiceImpl) generateTokenPair(profile *entity.UserProfile) (*entity.AuthTokenPair, error) {
-	now := time.Now()
-	accessExpiresAt := now.Add(15 * time.Minute)
-
-	// Access Token — short-lived (15 phút), stateless.
-	accessClaims := jwtClaims{
-		UserId: profile.Id,
-		Email:  profile.Email,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(accessExpiresAt),
-			IssuedAt:  jwt.NewNumericDate(now),
-			Issuer:    "goBackend", // Identify token issuer — dùng khi multi-service
-		},
-	}
-
-	// ALGORITHM CHOICE: HS256 (HMAC-SHA256) — symmetric, dùng chung 1 secret.
-	// Khi nào nên dùng RS256 (asymmetric)? Khi cần nhiều service verify token mà không share secret.
-	// Ví dụ: Auth service ký bằng private key, các microservice khác verify bằng public key.
-	// Với monolith / single backend: HS256 đơn giản hơn và đủ dùng.
-	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
-	accessTokenStr, err := accessToken.SignedString([]byte(s.jwtSecret))
+func (s *authServiceImpl) issue(ctx context.Context, profile *entity.UserProfile) (*entity.AuthTokenPair, error) {
+	pair, err := s.signer.Issue(profile.Id, profile.Email, profile.Role)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %v", ErrTokenGenerationFail, err)
 	}
 
-	// Refresh Token — long-lived (7 ngày), nhưng stateful (phải lưu DB để revoke được).
-	// TODO: Lưu refresh token hash vào DB/Redis. Hiện tại chỉ generate — cần implement persistence.
-	// Hash refresh token trước khi lưu (tương tự password): nếu DB bị leak, token vô dụng.
-	refreshClaims := jwtClaims{
-		UserId: profile.Id,
-		Email:  profile.Email,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(now.Add(7 * 24 * time.Hour)),
-			IssuedAt:  jwt.NewNumericDate(now),
-			Issuer:    "goBackend",
-		},
-	}
-	// Dùng secret khác cho refresh token — tách biệt signing key theo token type.
-	// Lý do: Nếu access token secret bị lộ, refresh token vẫn an toàn.
-	refreshSecret := s.jwtSecret + "_refresh"
-	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
-	refreshTokenStr, err := refreshToken.SignedString([]byte(refreshSecret))
+	refreshID, err := uuid.Parse(pair.RefreshID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: jti không hợp lệ: %v", ErrTokenGenerationFail, err)
 	}
 
-	_ = os.Getenv // Suppress unused import nếu có — sẽ xóa khi đã có env config đầy đủ
+	if err := s.sessionRepo.Create(ctx, entity.RefreshSession{
+		ID:        refreshID,
+		UserID:    profile.Id,
+		ExpiresAt: time.Now().Add(authn.DefaultRefreshTTL),
+	}); err != nil {
+		return nil, fmt.Errorf("biz issue: lưu phiên refresh: %w", err)
+	}
 
 	return &entity.AuthTokenPair{
-		AccessToken:  accessTokenStr,
-		RefreshToken: refreshTokenStr,
-		ExpiresIn:    accessExpiresAt.Unix(),
+		AccessToken:  pair.AccessToken,
+		RefreshToken: pair.RefreshToken,
+		ExpiresAt:    pair.ExpiresAt,
 	}, nil
 }
 
-// VerifyToken xác thực JWT và trả về thông tin User.
-func (s *authServiceImpl) VerifyToken(ctx context.Context, tokenString string) (*entity.UserProfile, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &jwtClaims{}, func(t *jwt.Token) (interface{}, error) {
-		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method")
-		}
-		return []byte(s.jwtSecret), nil
-	})
-	if err != nil || !token.Valid {
-		return nil, errors.New("biz: invalid token")
-	}
-	claims, ok := token.Claims.(*jwtClaims)
-	if !ok {
-		return nil, errors.New("biz: invalid token claims")
+func (s *authServiceImpl) RefreshToken(ctx context.Context, refreshToken string) (*entity.AuthTokenPair, error) {
+	claims, err := s.verifier.VerifyRefresh(refreshToken)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %v", ErrInvalidToken, err)
 	}
 
-	profile, _, err := s.authRepo.FindByEmail(ctx, claims.Email)
+	sessionID, err := uuid.Parse(claims.ID)
 	if err != nil {
-		return nil, errors.New("biz: user not found from token")
+		return nil, ErrInvalidToken
+	}
+	userID, err := claims.SubjectUUID()
+	if err != nil {
+		return nil, ErrInvalidToken
+	}
+
+	session, err := s.sessionRepo.Get(ctx, sessionID)
+	if err != nil {
+		return nil, ErrSessionRevoked
+	}
+	if !session.IsUsable(time.Now()) {
+		return nil, ErrSessionRevoked
+	}
+
+	if session.UsedAt != nil {
+		if err := s.sessionRepo.RevokeAllForUser(ctx, userID); err != nil {
+			return nil, fmt.Errorf("biz refresh: thu hồi phiên sau khi phát hiện dùng lại: %w", err)
+		}
+		return nil, ErrSessionRevoked
+	}
+
+	profile, err := s.authRepo.FindByID(ctx, userID)
+	if err != nil {
+		return nil, ErrInvalidToken
+	}
+
+	if err := s.sessionRepo.MarkUsed(ctx, sessionID); err != nil {
+		return nil, fmt.Errorf("biz refresh: đánh dấu phiên đã dùng: %w", err)
+	}
+
+	return s.issue(ctx, profile)
+}
+
+func (s *authServiceImpl) Logout(ctx context.Context, refreshToken string) error {
+	claims, err := s.verifier.VerifyRefresh(refreshToken)
+	if err != nil {
+		return nil
+	}
+	sessionID, err := uuid.Parse(claims.ID)
+	if err != nil {
+		return nil
+	}
+	return s.sessionRepo.Revoke(ctx, sessionID)
+}
+
+func (s *authServiceImpl) VerifyToken(ctx context.Context, tokenString string) (*entity.UserProfile, error) {
+	claims, err := s.verifier.VerifyAccess(tokenString)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %v", ErrInvalidToken, err)
+	}
+
+	userID, err := claims.SubjectUUID()
+	if err != nil {
+		return nil, ErrInvalidToken
+	}
+
+	profile, err := s.authRepo.FindByID(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("%w: không tìm thấy người dùng", ErrInvalidToken)
 	}
 	return profile, nil
 }

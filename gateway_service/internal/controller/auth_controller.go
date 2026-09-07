@@ -1,12 +1,19 @@
 package controller
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"log"
 	"net/http"
 	"time"
 
+	"gateway_service/internal/middleware"
+	"gateway_service/internal/response"
+
 	pb "github.com/logistic/api/logistic/auth_service/v1"
+	pbuser "github.com/logistic/api/logistic/user_service/v1"
+	"github.com/logistic/pkg/uuidx"
 
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc/codes"
@@ -15,24 +22,61 @@ import (
 
 type AuthController struct {
 	authClient pb.AuthServiceClient
+	userClient pbuser.UserServiceClient
+
+	secureCookies bool
 }
 
-func NewAuthController(authClient pb.AuthServiceClient) *AuthController {
+func NewAuthController(authClient pb.AuthServiceClient, userClient pbuser.UserServiceClient, isProduction bool) *AuthController {
 	return &AuthController{
-		authClient: authClient,
+		authClient:    authClient,
+		userClient:    userClient,
+		secureCookies: isProduction,
 	}
 }
 
-// Structs for parsing HTTP requests
 type RegisterRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 	FullName string `json:"full_name"`
-	Password string `json:"password" binding:"required,min=6"`
+	Password string `json:"password" binding:"required,min=8"`
+	Role     string `json:"role" binding:"omitempty,oneof=driver shipper"`
+	Phone    string `json:"phone"`
+}
+
+// ensureProfile dựng hồ sơ user_service dưới đúng id auth_service cấp — không có
+// nó thì token và hồ sơ trỏ về hai id khác nhau, mọi /users/* trả 404 hoặc 403.
+// Gọi cả ở login để vá dần tài khoản cũ; đã có hồ sơ thì bỏ qua ALREADY_EXISTS.
+func (c *AuthController) ensureProfile(ctx context.Context, profile *pb.UserProfile, phone string) {
+	if c.userClient == nil || profile == nil || len(profile.Id) == 0 {
+		return
+	}
+
+	_, err := c.userClient.RegisterUser(ctx, &pbuser.RegisterUserRequest{
+		Id:       profile.Id,
+		Email:    profile.Email,
+		FullName: profile.GetFullName(),
+		Role:     profile.Role,
+		Phone:    phone,
+	})
+	if err == nil {
+		return
+	}
+	if status.Code(err) == codes.AlreadyExists {
+		return
+	}
+
+	log.Printf("[gateway] không dựng được hồ sơ user_service cho %s: %v — "+
+		"các endpoint /api/v1/users/* sẽ trả 404 tới khi lần đăng nhập sau vá lại",
+		uuidx.String(profile.Id), err)
 }
 
 type LoginRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
+}
+
+type RefreshRequest struct {
+	RefreshToken string `json:"refresh_token"`
 }
 
 // Register godoc
@@ -42,15 +86,14 @@ type LoginRequest struct {
 // @Accept       json
 // @Produce      json
 // @Param        request body RegisterRequest true "Thông tin đăng ký"
-// @Success      201 {object} map[string]interface{} "Tạo tài khoản thành công"
-// @Failure      400 {object} map[string]interface{} "Lỗi dữ liệu đầu vào"
-// @Failure      409 {object} map[string]interface{} "Email đã tồn tại"
-// @Failure      500 {object} map[string]interface{} "Lỗi server nội bộ"
-// @Router       /api/auth/v1/register [post]
+// @Success      201 {object} response.Envelope "Tạo tài khoản thành công"
+// @Failure      400 {object} response.ErrorBody "Lỗi dữ liệu đầu vào"
+// @Failure      409 {object} response.ErrorBody "Email đã tồn tại"
+// @Router       /api/v1/auth/register [post]
 func (c *AuthController) Register(ctx *gin.Context) {
 	var req RegisterRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "validation_failed", "message": err.Error()})
+		response.BadRequest(ctx, "VALIDATION_FAILED", err.Error())
 		return
 	}
 
@@ -58,43 +101,32 @@ func (c *AuthController) Register(ctx *gin.Context) {
 		Email:    req.Email,
 		FullName: req.FullName,
 		Password: req.Password,
+		Role:     req.Role,
 	})
 	if err != nil {
-		st, _ := status.FromError(err)
-		if st.Code() == codes.AlreadyExists {
-			ctx.JSON(http.StatusConflict, gin.H{"error": "email_already_exists", "message": st.Message()})
-			return
-		}
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "internal_server_error", "message": st.Message()})
+		response.Error(ctx, err)
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{
-		"user": gin.H{
-			"id":        resp.Profile.Id,
-			"email":     resp.Profile.Email,
-			"full_name": resp.Profile.FullName,
-			"avatar":    resp.Profile.Avatar,
-		},
-	})
+	c.ensureProfile(ctx.Request.Context(), resp.Profile, req.Phone)
+
+	response.Created(ctx, gin.H{"user": toAuthProfileDTO(resp.Profile)}, "Đăng ký tài khoản thành công")
 }
 
 // Login godoc
 // @Summary      Đăng nhập
-// @Description  Đăng nhập bằng email và mật khẩu. Trả về access_token, refresh_token và expires_in.
+// @Description  Đăng nhập bằng email và mật khẩu. Trả về access_token, refresh_token và expires_at.
 // @Tags         Auth
 // @Accept       json
 // @Produce      json
 // @Param        request body LoginRequest true "Thông tin đăng nhập"
-// @Success      200 {object} map[string]interface{} "Đăng nhập thành công, trả về token pair"
-// @Failure      400 {object} map[string]interface{} "Lỗi dữ liệu đầu vào"
-// @Failure      401 {object} map[string]interface{} "Sai email hoặc mật khẩu"
-// @Failure      500 {object} map[string]interface{} "Lỗi server nội bộ"
-// @Router       /api/auth/v1/login [post]
+// @Success      200 {object} response.Envelope "Đăng nhập thành công"
+// @Failure      401 {object} response.ErrorBody "Sai email hoặc mật khẩu"
+// @Router       /api/v1/auth/login [post]
 func (c *AuthController) Login(ctx *gin.Context) {
 	var req LoginRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "validation_failed", "message": err.Error()})
+		response.BadRequest(ctx, "VALIDATION_FAILED", err.Error())
 		return
 	}
 
@@ -103,128 +135,234 @@ func (c *AuthController) Login(ctx *gin.Context) {
 		Password: req.Password,
 	})
 	if err != nil {
-		st, _ := status.FromError(err)
-		if st.Code() == codes.Unauthenticated {
-			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "invalid_credentials", "message": st.Message()})
-			return
-		}
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "internal_server_error", "message": st.Message()})
+		response.Error(ctx, err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	c.setAuthCookies(ctx, resp.TokenPair)
+	c.ensureProfile(ctx.Request.Context(), resp.Profile, "")
+
+	response.OK(ctx, gin.H{
 		"access_token":  resp.TokenPair.AccessToken,
 		"refresh_token": resp.TokenPair.RefreshToken,
-		"expires_in":    resp.TokenPair.ExpiresIn,
+		"expires_at":    resp.TokenPair.ExpiresAt,
+		"user":          toAuthProfileDTO(resp.Profile),
 	})
+}
+
+// Refresh godoc
+// @Summary      Làm mới phiên đăng nhập
+// @Description  Đổi refresh token lấy cặp token mới. Refresh token dùng MỘT LẦN — mỗi lần gọi trả về refresh token mới, token cũ hết hiệu lực ngay.
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        request body RefreshRequest false "Refresh token (nếu không dùng cookie)"
+// @Success      200 {object} response.Envelope
+// @Failure      401 {object} response.ErrorBody "Refresh token không hợp lệ"
+// @Failure      403 {object} response.ErrorBody "Phiên đã bị thu hồi, cần đăng nhập lại"
+// @Router       /api/v1/auth/refresh [post]
+func (c *AuthController) Refresh(ctx *gin.Context) {
+	token := c.extractRefreshToken(ctx)
+	if token == "" {
+		response.Unauthorized(ctx, "thiếu refresh token")
+		return
+	}
+
+	resp, err := c.authClient.RefreshToken(ctx.Request.Context(), &pb.RefreshTokenRequest{
+		RefreshToken: token,
+	})
+	if err != nil {
+		c.clearAuthCookies(ctx)
+		response.Error(ctx, err)
+		return
+	}
+
+	c.setAuthCookies(ctx, resp.TokenPair)
+
+	response.OK(ctx, gin.H{
+		"access_token":  resp.TokenPair.AccessToken,
+		"refresh_token": resp.TokenPair.RefreshToken,
+		"expires_at":    resp.TokenPair.ExpiresAt,
+	})
+}
+
+// Logout godoc
+// @Summary      Đăng xuất
+// @Description  Thu hồi refresh token của phiên hiện tại. Access token đang cầm vẫn còn hiệu lực tới khi hết hạn (tối đa 15 phút).
+// @Tags         Auth
+// @Produce      json
+// @Success      200 {object} response.Envelope
+// @Router       /api/v1/auth/logout [post]
+func (c *AuthController) Logout(ctx *gin.Context) {
+	token := c.extractRefreshToken(ctx)
+	if token != "" {
+		if _, err := c.authClient.Logout(ctx.Request.Context(), &pb.LogoutRequest{
+			RefreshToken: token,
+		}); err != nil {
+			response.Error(ctx, err)
+			return
+		}
+	}
+
+	c.clearAuthCookies(ctx)
+	response.OKMessage(ctx, nil, "Đã đăng xuất")
 }
 
 // GoogleLogin godoc
 // @Summary      Đăng nhập bằng Google OAuth2
-// @Description  Khởi tạo luồng OAuth2 với Google. Redirect người dùng đến trang đăng nhập Google. Tạo state cookie để chống CSRF.
+// @Description  Khởi tạo luồng OAuth2 với Google. Tạo state cookie để chống CSRF.
 // @Tags         Auth - OAuth2
 // @Produce      json
 // @Success      307 {string} string "Redirect đến Google OAuth consent screen"
-// @Failure      500 {object} map[string]interface{} "Lỗi khi lấy Google Login URL"
-// @Router       /api/auth/v1/google/login [get]
+// @Router       /api/v1/auth/google/login [get]
 func (c *AuthController) GoogleLogin(ctx *gin.Context) {
-	b := make([]byte, 16)
-	rand.Read(b)
-	state := base64.URLEncoding.EncodeToString(b)
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		response.Error(ctx, err)
+		return
+	}
+	state := base64.RawURLEncoding.EncodeToString(b)
 
 	resp, err := c.authClient.GetGoogleLoginURL(ctx.Request.Context(), &pb.GetGoogleLoginURLRequest{
 		State: state,
 	})
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "internal_server_error"})
+		response.Error(ctx, err)
 		return
 	}
 
-	ctx.SetCookie("oauth_state", state, int(time.Minute*5), "/", "", false, true)
+	ctx.SetCookie("oauth_state", state, int(5*time.Minute/time.Second), "/", "", c.secureCookies, true)
 	ctx.Redirect(http.StatusTemporaryRedirect, resp.Url)
 }
 
 // GoogleCallback godoc
 // @Summary      Google OAuth2 Callback
-// @Description  Xử lý callback từ Google sau khi user đăng nhập. Xác thực state, đổi code lấy token, set cookie access_token và refresh_token, rồi redirect về frontend.
+// @Description  Xử lý callback từ Google, xác thực state, đổi code lấy token rồi set cookie.
 // @Tags         Auth - OAuth2
 // @Produce      json
 // @Param        state query string true "OAuth state parameter (CSRF protection)"
 // @Param        code  query string true "Authorization code từ Google"
 // @Success      307 {string} string "Redirect về frontend với cookie đã set"
-// @Failure      400 {object} map[string]interface{} "State không hợp lệ"
-// @Failure      500 {object} map[string]interface{} "Lỗi xử lý callback"
-// @Router       /api/auth/v1/google/callback [get]
+// @Router       /api/v1/auth/google/callback [get]
 func (c *AuthController) GoogleCallback(ctx *gin.Context) {
 	urlState := ctx.Query("state")
 	cookieState, err := ctx.Cookie("oauth_state")
-	if err != nil || urlState != cookieState {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid_state", "message": "State không hợp lệ."})
+	if err != nil || urlState == "" || urlState != cookieState {
+		response.BadRequest(ctx, "INVALID_OAUTH_STATE", "State không hợp lệ.")
 		return
 	}
-	
-	code := ctx.Query("code")
+
+	ctx.SetCookie("oauth_state", "", -1, "/", "", c.secureCookies, true)
+
 	resp, err := c.authClient.GoogleCallback(ctx.Request.Context(), &pb.GoogleCallbackRequest{
-		Code: code,
+		Code: ctx.Query("code"),
 	})
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "internal_server_error"})
+		response.Error(ctx, err)
 		return
 	}
 
-	tokenPair := resp.TokenPair
-	accessMaxAge := max(int(tokenPair.ExpiresIn-time.Now().Unix()), 0)
-	refreshMaxAge := int(7 * 24 * time.Hour / time.Second)
-
-	ctx.SetCookie("access_token", tokenPair.AccessToken, accessMaxAge, "/", "", false, false)
-	ctx.SetCookie("refresh_token", tokenPair.RefreshToken, refreshMaxAge, "/", "", false, true)
-
+	c.setAuthCookies(ctx, resp.TokenPair)
 	ctx.Redirect(http.StatusTemporaryRedirect, "http://127.0.0.1:3000/")
 }
 
 // GetInfo godoc
-// @Summary      Lấy thông tin người dùng
-// @Description  Lấy thông tin profile của người dùng hiện tại. Token có thể truyền qua cookie access_token hoặc header Authorization Bearer.
+// @Summary      Lấy thông tin người dùng hiện tại
+// @Description  Trả về profile của chủ nhân access token.
 // @Tags         Auth
 // @Produce      json
 // @Param        Authorization header string false "Bearer token (nếu không dùng cookie)"
-// @Success      200 {object} map[string]interface{} "Lấy thông tin thành công"
-// @Failure      401 {object} map[string]interface{} "Token không hợp lệ hoặc không tìm thấy"
-// @Router       /api/auth/v1/get-info [get]
+// @Success      200 {object} response.Envelope
+// @Failure      401 {object} response.ErrorBody
+// @Router       /api/v1/auth/me [get]
 func (c *AuthController) GetInfo(ctx *gin.Context) {
-	token, err := ctx.Cookie("access_token")
-	if err != nil {
-		authHeader := ctx.GetHeader("Authorization")
-		if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
-			token = authHeader[7:]
-		}
-	}
-
-	if token == "" {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized", "message": "Không tìm thấy token."})
+	identity, ok := middleware.CurrentIdentity(ctx)
+	if !ok {
+		response.Unauthorized(ctx, "cần đăng nhập")
 		return
 	}
 
 	resp, err := c.authClient.VerifyToken(ctx.Request.Context(), &pb.VerifyTokenRequest{
-		Token: token,
+		Token: extractAccessToken(ctx),
 	})
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "invalid_token", "message": "Token không hợp lệ hoặc đã hết hạn."})
+		response.Error(ctx, err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"status":     "success",
-		"statusCode": 200,
-		"message":    "Get info successfully",
-		"data": gin.H{
-			"user": gin.H{
-				"id":        resp.Profile.Id,
-				"email":     resp.Profile.Email,
-				"full_name": resp.Profile.FullName,
-				"avatar":    resp.Profile.Avatar,
-			},
-			"isTotp": false,
-		},
-	})
+	profile := toAuthProfileDTO(resp.Profile)
+
+	profile.Role = identity.Role
+
+	response.OKMessage(ctx, gin.H{"user": profile}, "Get info successfully")
+}
+
+type AuthProfileDTO struct {
+	ID       string `json:"id"`
+	Email    string `json:"email"`
+	FullName string `json:"full_name"`
+	Avatar   string `json:"avatar"`
+	Role     string `json:"role"`
+}
+
+func toAuthProfileDTO(p *pb.UserProfile) *AuthProfileDTO {
+	if p == nil {
+		return nil
+	}
+	dto := &AuthProfileDTO{
+		ID:    uuidx.String(p.Id),
+		Email: p.Email,
+		Role:  p.Role,
+	}
+	if p.FullName != nil {
+		dto.FullName = *p.FullName
+	}
+	if p.Avatar != nil {
+		dto.Avatar = *p.Avatar
+	}
+	return dto
+}
+
+func (c *AuthController) setAuthCookies(ctx *gin.Context, pair *pb.AuthTokenPair) {
+	if pair == nil {
+		return
+	}
+
+	ctx.SetSameSite(http.SameSiteLaxMode)
+
+	accessMaxAge := int(time.Until(time.Unix(pair.ExpiresAt, 0)).Seconds())
+	if accessMaxAge < 0 {
+		accessMaxAge = 0
+	}
+	refreshMaxAge := int(7 * 24 * time.Hour / time.Second)
+
+	ctx.SetCookie("access_token", pair.AccessToken, accessMaxAge, "/", "", c.secureCookies, true)
+	ctx.SetCookie("refresh_token", pair.RefreshToken, refreshMaxAge, "/", "", c.secureCookies, true)
+}
+
+func (c *AuthController) clearAuthCookies(ctx *gin.Context) {
+	ctx.SetSameSite(http.SameSiteLaxMode)
+	ctx.SetCookie("access_token", "", -1, "/", "", c.secureCookies, true)
+	ctx.SetCookie("refresh_token", "", -1, "/", "", c.secureCookies, true)
+}
+
+func (c *AuthController) extractRefreshToken(ctx *gin.Context) string {
+	var req RefreshRequest
+	if err := ctx.ShouldBindJSON(&req); err == nil && req.RefreshToken != "" {
+		return req.RefreshToken
+	}
+	if cookie, err := ctx.Cookie("refresh_token"); err == nil {
+		return cookie
+	}
+	return ""
+}
+
+func extractAccessToken(ctx *gin.Context) string {
+	if h := ctx.GetHeader("Authorization"); len(h) > 7 {
+		return h[7:]
+	}
+	if cookie, err := ctx.Cookie("access_token"); err == nil {
+		return cookie
+	}
+	return ""
 }

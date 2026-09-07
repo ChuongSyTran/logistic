@@ -24,12 +24,18 @@ type User struct {
 	Phone string `json:"phone,omitempty"`
 	// Email holds the value of the "email" field.
 	Email string `json:"email,omitempty"`
+	// FullName holds the value of the "full_name" field.
+	FullName string `json:"full_name,omitempty"`
+	// AvatarURL holds the value of the "avatar_url" field.
+	AvatarURL string `json:"avatar_url,omitempty"`
 	// PasswordHash holds the value of the "password_hash" field.
-	PasswordHash string `json:"password_hash,omitempty"`
+	PasswordHash string `json:"-"`
 	// Role holds the value of the "role" field.
 	Role user.Role `json:"role,omitempty"`
 	// Status holds the value of the "status" field.
 	Status user.Status `json:"status,omitempty"`
+	// StatusReason holds the value of the "status_reason" field.
+	StatusReason string `json:"status_reason,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -46,9 +52,13 @@ type UserEdges struct {
 	DriverProfile *DriverProfile `json:"driver_profile,omitempty"`
 	// ShipperProfile holds the value of the shipper_profile edge.
 	ShipperProfile *ShipperProfile `json:"shipper_profile,omitempty"`
+	// Addresses holds the value of the addresses edge.
+	Addresses []*Address `json:"addresses,omitempty"`
+	// Devices holds the value of the devices edge.
+	Devices []*UserDevice `json:"devices,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [4]bool
 }
 
 // DriverProfileOrErr returns the DriverProfile value or an error if the edge
@@ -73,12 +83,30 @@ func (e UserEdges) ShipperProfileOrErr() (*ShipperProfile, error) {
 	return nil, &NotLoadedError{edge: "shipper_profile"}
 }
 
+// AddressesOrErr returns the Addresses value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) AddressesOrErr() ([]*Address, error) {
+	if e.loadedTypes[2] {
+		return e.Addresses, nil
+	}
+	return nil, &NotLoadedError{edge: "addresses"}
+}
+
+// DevicesOrErr returns the Devices value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) DevicesOrErr() ([]*UserDevice, error) {
+	if e.loadedTypes[3] {
+		return e.Devices, nil
+	}
+	return nil, &NotLoadedError{edge: "devices"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case user.FieldPhone, user.FieldEmail, user.FieldPasswordHash, user.FieldRole, user.FieldStatus:
+		case user.FieldPhone, user.FieldEmail, user.FieldFullName, user.FieldAvatarURL, user.FieldPasswordHash, user.FieldRole, user.FieldStatus, user.FieldStatusReason:
 			values[i] = new(sql.NullString)
 		case user.FieldCreatedAt, user.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -117,6 +145,18 @@ func (_m *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Email = value.String
 			}
+		case user.FieldFullName:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field full_name", values[i])
+			} else if value.Valid {
+				_m.FullName = value.String
+			}
+		case user.FieldAvatarURL:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field avatar_url", values[i])
+			} else if value.Valid {
+				_m.AvatarURL = value.String
+			}
 		case user.FieldPasswordHash:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field password_hash", values[i])
@@ -134,6 +174,12 @@ func (_m *User) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
 				_m.Status = user.Status(value.String)
+			}
+		case user.FieldStatusReason:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field status_reason", values[i])
+			} else if value.Valid {
+				_m.StatusReason = value.String
 			}
 		case user.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -170,6 +216,16 @@ func (_m *User) QueryShipperProfile() *ShipperProfileQuery {
 	return NewUserClient(_m.config).QueryShipperProfile(_m)
 }
 
+// QueryAddresses queries the "addresses" edge of the User entity.
+func (_m *User) QueryAddresses() *AddressQuery {
+	return NewUserClient(_m.config).QueryAddresses(_m)
+}
+
+// QueryDevices queries the "devices" edge of the User entity.
+func (_m *User) QueryDevices() *UserDeviceQuery {
+	return NewUserClient(_m.config).QueryDevices(_m)
+}
+
 // Update returns a builder for updating this User.
 // Note that you need to call User.Unwrap() before calling this method if this User
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -199,14 +255,22 @@ func (_m *User) String() string {
 	builder.WriteString("email=")
 	builder.WriteString(_m.Email)
 	builder.WriteString(", ")
-	builder.WriteString("password_hash=")
-	builder.WriteString(_m.PasswordHash)
+	builder.WriteString("full_name=")
+	builder.WriteString(_m.FullName)
+	builder.WriteString(", ")
+	builder.WriteString("avatar_url=")
+	builder.WriteString(_m.AvatarURL)
+	builder.WriteString(", ")
+	builder.WriteString("password_hash=<sensitive>")
 	builder.WriteString(", ")
 	builder.WriteString("role=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Role))
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Status))
+	builder.WriteString(", ")
+	builder.WriteString("status_reason=")
+	builder.WriteString(_m.StatusReason)
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))

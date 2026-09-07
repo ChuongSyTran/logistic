@@ -6,28 +6,36 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 	"github.com/google/uuid"
+	"github.com/logistic/pkg/uuidx"
 )
 
-// ShipperProfile holds the schema definition for the ShipperProfile entity.
 type ShipperProfile struct {
 	ent.Schema
 }
 
-// Fields of the ShipperProfile.
 func (ShipperProfile) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique(),
+		field.UUID("id", uuid.UUID{}).Default(uuidx.New).Unique(),
+		field.UUID("user_id", uuid.UUID{}),
 		field.String("company_name").Optional(),
 		field.String("tax_code").Optional(),
-		field.Time("created_at").Default(time.Now),
+		field.String("business_address").Optional(),
+		field.Int("total_orders").Default(0),
+		field.Time("created_at").Default(time.Now).Immutable(),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 	}
 }
 
-// Edges of the ShipperProfile.
 func (ShipperProfile) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("user", User.Type).Ref("shipper_profile").Unique().Required(),
+		edge.From("user", User.Type).Ref("shipper_profile").Field("user_id").Unique().Required(),
+	}
+}
+
+func (ShipperProfile) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("user_id").Unique(),
 	}
 }

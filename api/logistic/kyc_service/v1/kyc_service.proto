@@ -1,0 +1,41 @@
+syntax = "proto3";
+package logistic.kyc_service.v1;
+
+import "google/api/annotations.proto";
+import "logistic/kyc_service/v1/kyc_messages.proto";
+
+option go_package = "github.com/logistic/api/logistic/kyc_service/v1;kycv1";
+
+service KycService {
+  rpc SubmitKYC(SubmitKYCRequest) returns (SubmitKYCResponse) {
+    option (google.api.http) = {
+      post: "/v1/kyc/submit"
+      body: "*"
+    };
+  }
+
+  rpc GetKYC(GetKYCRequest) returns (GetKYCResponse) {
+    option (google.api.http) = {
+      get: "/v1/kyc/{user_id}"
+    };
+  }
+
+  rpc ListPendingKYC(ListPendingKYCRequest) returns (ListPendingKYCResponse) {
+    option (google.api.http) = {
+      get: "/v1/admin/kyc/pending"
+    };
+  }
+
+  rpc ReviewKYC(ReviewKYCRequest) returns (ReviewKYCResponse) {
+    option (google.api.http) = {
+      put: "/v1/admin/kyc/{user_id}/review"
+      body: "*"
+    };
+  }
+
+  rpc CountPendingKYC(CountPendingKYCRequest) returns (CountPendingKYCResponse) {
+    option (google.api.http) = {
+      get: "/v1/admin/kyc/count-pending"
+    };
+  }
+}

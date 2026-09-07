@@ -1262,9 +1262,22 @@ func (m *AsksMutation) OldRouteID(ctx context.Context) (v []byte, err error) {
 	return oldValue.RouteID, nil
 }
 
+// ClearRouteID clears the value of the "route_id" field.
+func (m *AsksMutation) ClearRouteID() {
+	m.route_id = nil
+	m.clearedFields[asks.FieldRouteID] = struct{}{}
+}
+
+// RouteIDCleared returns if the "route_id" field was cleared in this mutation.
+func (m *AsksMutation) RouteIDCleared() bool {
+	_, ok := m.clearedFields[asks.FieldRouteID]
+	return ok
+}
+
 // ResetRouteID resets all changes to the "route_id" field.
 func (m *AsksMutation) ResetRouteID() {
 	m.route_id = nil
+	delete(m.clearedFields, asks.FieldRouteID)
 }
 
 // SetStatus sets the "status" field.
@@ -1354,9 +1367,22 @@ func (m *AsksMutation) OldExpiresAt(ctx context.Context) (v time.Time, err error
 	return oldValue.ExpiresAt, nil
 }
 
+// ClearExpiresAt clears the value of the "expires_at" field.
+func (m *AsksMutation) ClearExpiresAt() {
+	m.expires_at = nil
+	m.clearedFields[asks.FieldExpiresAt] = struct{}{}
+}
+
+// ExpiresAtCleared returns if the "expires_at" field was cleared in this mutation.
+func (m *AsksMutation) ExpiresAtCleared() bool {
+	_, ok := m.clearedFields[asks.FieldExpiresAt]
+	return ok
+}
+
 // ResetExpiresAt resets all changes to the "expires_at" field.
 func (m *AsksMutation) ResetExpiresAt() {
 	m.expires_at = nil
+	delete(m.clearedFields, asks.FieldExpiresAt)
 }
 
 // AddMatchIDs adds the "matches" edge to the Match entity by ids.
@@ -2007,6 +2033,12 @@ func (m *AsksMutation) ClearedFields() []string {
 	if m.FieldCleared(asks.FieldMinPrice) {
 		fields = append(fields, asks.FieldMinPrice)
 	}
+	if m.FieldCleared(asks.FieldRouteID) {
+		fields = append(fields, asks.FieldRouteID)
+	}
+	if m.FieldCleared(asks.FieldExpiresAt) {
+		fields = append(fields, asks.FieldExpiresAt)
+	}
 	return fields
 }
 
@@ -2026,6 +2058,12 @@ func (m *AsksMutation) ClearField(name string) error {
 		return nil
 	case asks.FieldMinPrice:
 		m.ClearMinPrice()
+		return nil
+	case asks.FieldRouteID:
+		m.ClearRouteID()
+		return nil
+	case asks.FieldExpiresAt:
+		m.ClearExpiresAt()
 		return nil
 	}
 	return fmt.Errorf("unknown Asks nullable field %s", name)
@@ -2237,6 +2275,9 @@ type BidsMutation struct {
 	adddestination_lat       *float64
 	destination_lng          *float64
 	adddestination_lng       *float64
+	offered_price            *float64
+	addoffered_price         *float64
+	offered_ask_id           *uuid.UUID
 	status                   *int8
 	addstatus                *int8
 	expires_at               *time.Time
@@ -3411,6 +3452,125 @@ func (m *BidsMutation) ResetDestinationLng() {
 	m.adddestination_lng = nil
 }
 
+// SetOfferedPrice sets the "offered_price" field.
+func (m *BidsMutation) SetOfferedPrice(f float64) {
+	m.offered_price = &f
+	m.addoffered_price = nil
+}
+
+// OfferedPrice returns the value of the "offered_price" field in the mutation.
+func (m *BidsMutation) OfferedPrice() (r float64, exists bool) {
+	v := m.offered_price
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOfferedPrice returns the old "offered_price" field's value of the Bids entity.
+// If the Bids object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BidsMutation) OldOfferedPrice(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOfferedPrice is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOfferedPrice requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOfferedPrice: %w", err)
+	}
+	return oldValue.OfferedPrice, nil
+}
+
+// AddOfferedPrice adds f to the "offered_price" field.
+func (m *BidsMutation) AddOfferedPrice(f float64) {
+	if m.addoffered_price != nil {
+		*m.addoffered_price += f
+	} else {
+		m.addoffered_price = &f
+	}
+}
+
+// AddedOfferedPrice returns the value that was added to the "offered_price" field in this mutation.
+func (m *BidsMutation) AddedOfferedPrice() (r float64, exists bool) {
+	v := m.addoffered_price
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearOfferedPrice clears the value of the "offered_price" field.
+func (m *BidsMutation) ClearOfferedPrice() {
+	m.offered_price = nil
+	m.addoffered_price = nil
+	m.clearedFields[bids.FieldOfferedPrice] = struct{}{}
+}
+
+// OfferedPriceCleared returns if the "offered_price" field was cleared in this mutation.
+func (m *BidsMutation) OfferedPriceCleared() bool {
+	_, ok := m.clearedFields[bids.FieldOfferedPrice]
+	return ok
+}
+
+// ResetOfferedPrice resets all changes to the "offered_price" field.
+func (m *BidsMutation) ResetOfferedPrice() {
+	m.offered_price = nil
+	m.addoffered_price = nil
+	delete(m.clearedFields, bids.FieldOfferedPrice)
+}
+
+// SetOfferedAskID sets the "offered_ask_id" field.
+func (m *BidsMutation) SetOfferedAskID(u uuid.UUID) {
+	m.offered_ask_id = &u
+}
+
+// OfferedAskID returns the value of the "offered_ask_id" field in the mutation.
+func (m *BidsMutation) OfferedAskID() (r uuid.UUID, exists bool) {
+	v := m.offered_ask_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOfferedAskID returns the old "offered_ask_id" field's value of the Bids entity.
+// If the Bids object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BidsMutation) OldOfferedAskID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOfferedAskID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOfferedAskID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOfferedAskID: %w", err)
+	}
+	return oldValue.OfferedAskID, nil
+}
+
+// ClearOfferedAskID clears the value of the "offered_ask_id" field.
+func (m *BidsMutation) ClearOfferedAskID() {
+	m.offered_ask_id = nil
+	m.clearedFields[bids.FieldOfferedAskID] = struct{}{}
+}
+
+// OfferedAskIDCleared returns if the "offered_ask_id" field was cleared in this mutation.
+func (m *BidsMutation) OfferedAskIDCleared() bool {
+	_, ok := m.clearedFields[bids.FieldOfferedAskID]
+	return ok
+}
+
+// ResetOfferedAskID resets all changes to the "offered_ask_id" field.
+func (m *BidsMutation) ResetOfferedAskID() {
+	m.offered_ask_id = nil
+	delete(m.clearedFields, bids.FieldOfferedAskID)
+}
+
 // SetStatus sets the "status" field.
 func (m *BidsMutation) SetStatus(i int8) {
 	m.status = &i
@@ -3498,9 +3658,22 @@ func (m *BidsMutation) OldExpiresAt(ctx context.Context) (v time.Time, err error
 	return oldValue.ExpiresAt, nil
 }
 
+// ClearExpiresAt clears the value of the "expires_at" field.
+func (m *BidsMutation) ClearExpiresAt() {
+	m.expires_at = nil
+	m.clearedFields[bids.FieldExpiresAt] = struct{}{}
+}
+
+// ExpiresAtCleared returns if the "expires_at" field was cleared in this mutation.
+func (m *BidsMutation) ExpiresAtCleared() bool {
+	_, ok := m.clearedFields[bids.FieldExpiresAt]
+	return ok
+}
+
 // ResetExpiresAt resets all changes to the "expires_at" field.
 func (m *BidsMutation) ResetExpiresAt() {
 	m.expires_at = nil
+	delete(m.clearedFields, bids.FieldExpiresAt)
 }
 
 // AddMatchIDs adds the "matches" edge to the Match entity by ids.
@@ -3645,7 +3818,7 @@ func (m *BidsMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *BidsMutation) Fields() []string {
-	fields := make([]string, 0, 25)
+	fields := make([]string, 0, 27)
 	if m.created_at != nil {
 		fields = append(fields, bids.FieldCreatedAt)
 	}
@@ -3715,6 +3888,12 @@ func (m *BidsMutation) Fields() []string {
 	if m.destination_lng != nil {
 		fields = append(fields, bids.FieldDestinationLng)
 	}
+	if m.offered_price != nil {
+		fields = append(fields, bids.FieldOfferedPrice)
+	}
+	if m.offered_ask_id != nil {
+		fields = append(fields, bids.FieldOfferedAskID)
+	}
 	if m.status != nil {
 		fields = append(fields, bids.FieldStatus)
 	}
@@ -3775,6 +3954,10 @@ func (m *BidsMutation) Field(name string) (ent.Value, bool) {
 		return m.DestinationLat()
 	case bids.FieldDestinationLng:
 		return m.DestinationLng()
+	case bids.FieldOfferedPrice:
+		return m.OfferedPrice()
+	case bids.FieldOfferedAskID:
+		return m.OfferedAskID()
 	case bids.FieldStatus:
 		return m.Status()
 	case bids.FieldExpiresAt:
@@ -3834,6 +4017,10 @@ func (m *BidsMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldDestinationLat(ctx)
 	case bids.FieldDestinationLng:
 		return m.OldDestinationLng(ctx)
+	case bids.FieldOfferedPrice:
+		return m.OldOfferedPrice(ctx)
+	case bids.FieldOfferedAskID:
+		return m.OldOfferedAskID(ctx)
 	case bids.FieldStatus:
 		return m.OldStatus(ctx)
 	case bids.FieldExpiresAt:
@@ -4008,6 +4195,20 @@ func (m *BidsMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetDestinationLng(v)
 		return nil
+	case bids.FieldOfferedPrice:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOfferedPrice(v)
+		return nil
+	case bids.FieldOfferedAskID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOfferedAskID(v)
+		return nil
 	case bids.FieldStatus:
 		v, ok := value.(int8)
 		if !ok {
@@ -4060,6 +4261,9 @@ func (m *BidsMutation) AddedFields() []string {
 	if m.adddestination_lng != nil {
 		fields = append(fields, bids.FieldDestinationLng)
 	}
+	if m.addoffered_price != nil {
+		fields = append(fields, bids.FieldOfferedPrice)
+	}
 	if m.addstatus != nil {
 		fields = append(fields, bids.FieldStatus)
 	}
@@ -4091,6 +4295,8 @@ func (m *BidsMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedDestinationLat()
 	case bids.FieldDestinationLng:
 		return m.AddedDestinationLng()
+	case bids.FieldOfferedPrice:
+		return m.AddedOfferedPrice()
 	case bids.FieldStatus:
 		return m.AddedStatus()
 	}
@@ -4172,6 +4378,13 @@ func (m *BidsMutation) AddField(name string, value ent.Value) error {
 		}
 		m.AddDestinationLng(v)
 		return nil
+	case bids.FieldOfferedPrice:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddOfferedPrice(v)
+		return nil
 	case bids.FieldStatus:
 		v, ok := value.(int8)
 		if !ok {
@@ -4193,6 +4406,15 @@ func (m *BidsMutation) ClearedFields() []string {
 	if m.FieldCleared(bids.FieldMaxPrice) {
 		fields = append(fields, bids.FieldMaxPrice)
 	}
+	if m.FieldCleared(bids.FieldOfferedPrice) {
+		fields = append(fields, bids.FieldOfferedPrice)
+	}
+	if m.FieldCleared(bids.FieldOfferedAskID) {
+		fields = append(fields, bids.FieldOfferedAskID)
+	}
+	if m.FieldCleared(bids.FieldExpiresAt) {
+		fields = append(fields, bids.FieldExpiresAt)
+	}
 	return fields
 }
 
@@ -4212,6 +4434,15 @@ func (m *BidsMutation) ClearField(name string) error {
 		return nil
 	case bids.FieldMaxPrice:
 		m.ClearMaxPrice()
+		return nil
+	case bids.FieldOfferedPrice:
+		m.ClearOfferedPrice()
+		return nil
+	case bids.FieldOfferedAskID:
+		m.ClearOfferedAskID()
+		return nil
+	case bids.FieldExpiresAt:
+		m.ClearExpiresAt()
 		return nil
 	}
 	return fmt.Errorf("unknown Bids nullable field %s", name)
@@ -4289,6 +4520,12 @@ func (m *BidsMutation) ResetField(name string) error {
 		return nil
 	case bids.FieldDestinationLng:
 		m.ResetDestinationLng()
+		return nil
+	case bids.FieldOfferedPrice:
+		m.ResetOfferedPrice()
+		return nil
+	case bids.FieldOfferedAskID:
+		m.ResetOfferedAskID()
 		return nil
 	case bids.FieldStatus:
 		m.ResetStatus()

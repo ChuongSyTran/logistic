@@ -4,7 +4,7 @@ package logistic.matching_service.v1;
 
 import "logistic/matching_service/v1/matching_messages.proto";
 
-option go_package = "logistic_project/api/logistic/matching/v1";
+option go_package = "github.com/logistic/api/logistic/matching_service/v1;matchingv1";
 
 // MatchingEngineService handles Real-time Freight Bidding
 // This is the core protocol for matching empty vehicle space with cargo
@@ -17,4 +17,10 @@ service MatchingEngineService {
 
   // AcceptMatch is called by Customers who agree the trip
   rpc AcceptMatch(AcceptMatchRequest) returns (AcceptMatchResponse);
+
+  // SubmitOffer is called by Drivers who want to bid a price on a cargo
+  rpc SubmitOffer(SubmitOfferRequest) returns (SubmitOfferResponse);
+
+  // RejectOffer is called by Customers who turn down a driver price
+  rpc RejectOffer(RejectOfferRequest) returns (RejectOfferResponse);
 }

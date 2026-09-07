@@ -6,7 +6,8 @@
   },
   "tags": [
     {
-      "name": "VehicleService"
+      "name": "VehicleService",
+      "description": "VehicleService quản lý phương tiện, giấy tờ, vị trí GPS và trạng thái sẵn sàng\nnhận đơn của tài xế. Đây là nguồn dữ liệu \"xe đang chạy\" cho matching_service.\n\n======================= CLIENT ======================="
     }
   ],
   "consumes": [
@@ -16,6 +17,313 @@
     "application/json"
   ],
   "paths": {
+    "/v1/admin/vehicle-documents/pending": {
+      "get": {
+        "operationId": "VehicleService_AdminListPendingDocuments",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1AdminListPendingDocumentsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "VehicleService"
+        ]
+      }
+    },
+    "/v1/admin/vehicle-documents/{id}/review": {
+      "put": {
+        "operationId": "VehicleService_AdminReviewDocument",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1AdminReviewDocumentResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/VehicleServiceAdminReviewDocumentBody"
+            }
+          }
+        ],
+        "tags": [
+          "VehicleService"
+        ]
+      }
+    },
+    "/v1/admin/vehicles": {
+      "get": {
+        "operationId": "VehicleService_AdminListVehicles",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1AdminListVehiclesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "verificationStatus",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "vehicleType",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "keyword",
+            "description": "biển số",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "VehicleService"
+        ]
+      }
+    },
+    "/v1/admin/vehicles/stats": {
+      "get": {
+        "operationId": "VehicleService_AdminGetVehicleStats",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1AdminGetVehicleStatsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "VehicleService"
+        ]
+      }
+    },
+    "/v1/admin/vehicles/{id}/verify": {
+      "put": {
+        "operationId": "VehicleService_AdminVerifyVehicle",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1AdminVerifyVehicleResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/VehicleServiceAdminVerifyVehicleBody"
+            }
+          }
+        ],
+        "tags": [
+          "VehicleService"
+        ]
+      }
+    },
+    "/v1/drivers/{driverId}/availability": {
+      "get": {
+        "operationId": "VehicleService_GetDriverAvailability",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetDriverAvailabilityResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "driverId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          }
+        ],
+        "tags": [
+          "VehicleService"
+        ]
+      },
+      "post": {
+        "operationId": "VehicleService_SetDriverAvailability",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1SetDriverAvailabilityResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "driverId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/VehicleServiceSetDriverAvailabilityBody"
+            }
+          }
+        ],
+        "tags": [
+          "VehicleService"
+        ]
+      }
+    },
+    "/v1/vehicle-documents/{id}": {
+      "delete": {
+        "operationId": "VehicleService_DeleteVehicleDocument",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteVehicleDocumentResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "driverId",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          }
+        ],
+        "tags": [
+          "VehicleService"
+        ]
+      }
+    },
     "/v1/vehicles": {
       "get": {
         "operationId": "VehicleService_ListVehicles",
@@ -40,6 +348,32 @@
             "required": false,
             "type": "string",
             "format": "byte"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "vehicleType",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
           }
         ],
         "tags": [
@@ -77,6 +411,39 @@
         ]
       }
     },
+    "/v1/vehicles/nearby": {
+      "post": {
+        "operationId": "VehicleService_SearchNearbyVehicles",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1SearchNearbyVehiclesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "SearchNearbyVehicles là API mà matching_service gọi sang để lấy danh sách xe\nđang online quanh điểm lấy hàng. Truy vấn chạy trên Redis GEO nên trả về\ntrong vài mili-giây kể cả khi có hàng chục nghìn xe.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1SearchNearbyVehiclesRequest"
+            }
+          }
+        ],
+        "tags": [
+          "VehicleService"
+        ]
+      }
+    },
     "/v1/vehicles/{id}": {
       "get": {
         "operationId": "VehicleService_GetVehicle",
@@ -101,6 +468,86 @@
             "required": true,
             "type": "string",
             "format": "byte"
+          },
+          {
+            "name": "driverId",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          }
+        ],
+        "tags": [
+          "VehicleService"
+        ]
+      },
+      "delete": {
+        "operationId": "VehicleService_DeleteVehicle",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteVehicleResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "driverId",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          }
+        ],
+        "tags": [
+          "VehicleService"
+        ]
+      },
+      "put": {
+        "operationId": "VehicleService_UpdateVehicle",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateVehicleResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/VehicleServiceUpdateVehicleBody"
+            }
           }
         ],
         "tags": [
@@ -146,14 +593,313 @@
           "VehicleService"
         ]
       }
+    },
+    "/v1/vehicles/{vehicleId}/documents": {
+      "get": {
+        "operationId": "VehicleService_ListVehicleDocuments",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListVehicleDocumentsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "vehicleId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "reviewStatus",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "driverId",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          }
+        ],
+        "tags": [
+          "VehicleService"
+        ]
+      },
+      "post": {
+        "operationId": "VehicleService_UploadVehicleDocument",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UploadVehicleDocumentResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "vehicleId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/VehicleServiceUploadVehicleDocumentBody"
+            }
+          }
+        ],
+        "tags": [
+          "VehicleService"
+        ]
+      }
+    },
+    "/v1/vehicles/{vehicleId}/location": {
+      "get": {
+        "operationId": "VehicleService_GetVehicleLocation",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetVehicleLocationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "vehicleId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "driverId",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          }
+        ],
+        "tags": [
+          "VehicleService"
+        ]
+      },
+      "post": {
+        "operationId": "VehicleService_ReportLocation",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ReportLocationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "vehicleId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/VehicleServiceReportLocationBody"
+            }
+          }
+        ],
+        "tags": [
+          "VehicleService"
+        ]
+      }
     }
   },
   "definitions": {
+    "VehicleServiceAdminReviewDocumentBody": {
+      "type": "object",
+      "properties": {
+        "approved": {
+          "type": "boolean"
+        },
+        "note": {
+          "type": "string"
+        },
+        "reviewerId": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "VehicleServiceAdminVerifyVehicleBody": {
+      "type": "object",
+      "properties": {
+        "approved": {
+          "type": "boolean"
+        },
+        "note": {
+          "type": "string"
+        },
+        "reviewerId": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "VehicleServiceReportLocationBody": {
+      "type": "object",
+      "properties": {
+        "driverId": {
+          "type": "string",
+          "format": "byte"
+        },
+        "latitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "longitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "heading": {
+          "type": "number",
+          "format": "double"
+        },
+        "speedKph": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "VehicleServiceSetDriverAvailabilityBody": {
+      "type": "object",
+      "properties": {
+        "vehicleId": {
+          "type": "string",
+          "format": "byte"
+        },
+        "isOnline": {
+          "type": "boolean"
+        },
+        "availableWeightKg": {
+          "type": "number",
+          "format": "double"
+        },
+        "availableVolumeCbm": {
+          "type": "number",
+          "format": "double"
+        },
+        "currentLat": {
+          "type": "number",
+          "format": "double"
+        },
+        "currentLng": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "VehicleServiceUpdateVehicleBody": {
+      "type": "object",
+      "properties": {
+        "brand": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "manufactureYear": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "vehicleType": {
+          "type": "string"
+        },
+        "capacityWeightKg": {
+          "type": "number",
+          "format": "double"
+        },
+        "capacityVolumeCbm": {
+          "type": "number",
+          "format": "double"
+        },
+        "driverId": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
     "VehicleServiceUpdateVehicleStatusBody": {
       "type": "object",
       "properties": {
         "status": {
           "type": "string"
+        },
+        "driverId": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "VehicleServiceUploadVehicleDocumentBody": {
+      "type": "object",
+      "properties": {
+        "documentType": {
+          "type": "string"
+        },
+        "documentNumber": {
+          "type": "string"
+        },
+        "fileUrl": {
+          "type": "string"
+        },
+        "issuedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "driverId": {
+          "type": "string",
+          "format": "byte"
         }
       }
     },
@@ -185,11 +931,180 @@
         }
       }
     },
+    "v1AdminGetVehicleStatsResponse": {
+      "type": "object",
+      "properties": {
+        "totalVehicles": {
+          "type": "string",
+          "format": "int64"
+        },
+        "activeVehicles": {
+          "type": "string",
+          "format": "int64"
+        },
+        "maintenanceVehicles": {
+          "type": "string",
+          "format": "int64"
+        },
+        "pendingVerification": {
+          "type": "string",
+          "format": "int64"
+        },
+        "onlineDrivers": {
+          "type": "string",
+          "format": "int64"
+        },
+        "pendingDocuments": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "v1AdminListPendingDocumentsResponse": {
+      "type": "object",
+      "properties": {
+        "documents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1VehicleDocument"
+          }
+        },
+        "pagination": {
+          "$ref": "#/definitions/v1Pagination"
+        }
+      }
+    },
+    "v1AdminListVehiclesResponse": {
+      "type": "object",
+      "properties": {
+        "vehicles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Vehicle"
+          }
+        },
+        "pagination": {
+          "$ref": "#/definitions/v1Pagination"
+        }
+      }
+    },
+    "v1AdminReviewDocumentResponse": {
+      "type": "object",
+      "properties": {
+        "document": {
+          "$ref": "#/definitions/v1VehicleDocument"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "v1AdminVerifyVehicleResponse": {
+      "type": "object",
+      "properties": {
+        "vehicle": {
+          "$ref": "#/definitions/v1Vehicle"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "v1DeleteVehicleDocumentResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "v1DeleteVehicleResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "v1DriverAvailability": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "byte"
+        },
+        "driverId": {
+          "type": "string",
+          "format": "byte"
+        },
+        "vehicleId": {
+          "type": "string",
+          "format": "byte"
+        },
+        "isOnline": {
+          "type": "boolean"
+        },
+        "availableWeightKg": {
+          "type": "number",
+          "format": "double"
+        },
+        "availableVolumeCbm": {
+          "type": "number",
+          "format": "double"
+        },
+        "currentLat": {
+          "type": "number",
+          "format": "double"
+        },
+        "currentLng": {
+          "type": "number",
+          "format": "double"
+        },
+        "zoneId": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "description": "DriverAvailability: tài xế bật/tắt nhận đơn, kèm sức chứa còn trống.\nĐây chính là đầu vào cho matching engine khi tìm \"xe đang chạy\" phù hợp."
+    },
+    "v1GetDriverAvailabilityResponse": {
+      "type": "object",
+      "properties": {
+        "availability": {
+          "$ref": "#/definitions/v1DriverAvailability"
+        }
+      }
+    },
+    "v1GetVehicleLocationResponse": {
+      "type": "object",
+      "properties": {
+        "location": {
+          "$ref": "#/definitions/v1VehicleLocation"
+        }
+      }
+    },
     "v1GetVehicleResponse": {
       "type": "object",
       "properties": {
         "vehicle": {
           "$ref": "#/definitions/v1Vehicle"
+        }
+      }
+    },
+    "v1ListVehicleDocumentsResponse": {
+      "type": "object",
+      "properties": {
+        "documents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1VehicleDocument"
+          }
         }
       }
     },
@@ -202,6 +1117,69 @@
             "type": "object",
             "$ref": "#/definitions/v1Vehicle"
           }
+        },
+        "pagination": {
+          "$ref": "#/definitions/v1Pagination"
+        }
+      }
+    },
+    "v1NearbyVehicle": {
+      "type": "object",
+      "properties": {
+        "vehicleId": {
+          "type": "string",
+          "format": "byte"
+        },
+        "driverId": {
+          "type": "string",
+          "format": "byte"
+        },
+        "licensePlate": {
+          "type": "string"
+        },
+        "vehicleType": {
+          "type": "string"
+        },
+        "distanceKm": {
+          "type": "number",
+          "format": "double"
+        },
+        "availableWeightKg": {
+          "type": "number",
+          "format": "double"
+        },
+        "availableVolumeCbm": {
+          "type": "number",
+          "format": "double"
+        },
+        "latitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "longitude": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "v1Pagination": {
+      "type": "object",
+      "properties": {
+        "page": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "pageSize": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "totalItems": {
+          "type": "string",
+          "format": "int64"
+        },
+        "totalPages": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -221,16 +1199,20 @@
         "model": {
           "type": "string"
         },
+        "manufactureYear": {
+          "type": "integer",
+          "format": "int32"
+        },
         "vehicleType": {
           "type": "string"
         },
         "capacityWeightKg": {
           "type": "number",
-          "format": "float"
+          "format": "double"
         },
         "capacityVolumeCbm": {
           "type": "number",
-          "format": "float"
+          "format": "double"
         }
       }
     },
@@ -243,12 +1225,112 @@
         },
         "message": {
           "type": "string"
+        },
+        "vehicle": {
+          "$ref": "#/definitions/v1Vehicle"
+        }
+      }
+    },
+    "v1ReportLocationResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "zoneId": {
+          "type": "string"
+        }
+      }
+    },
+    "v1SearchNearbyVehiclesRequest": {
+      "type": "object",
+      "properties": {
+        "latitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "longitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "radiusKm": {
+          "type": "number",
+          "format": "double"
+        },
+        "minWeightKg": {
+          "type": "number",
+          "format": "double",
+          "title": "sức chứa còn trống tối thiểu"
+        },
+        "minVolumeCbm": {
+          "type": "number",
+          "format": "double"
+        },
+        "vehicleType": {
+          "type": "string"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "description": "SearchNearbyVehicles là API mà matching_service gọi sang để lấy danh sách xe\nđang online quanh điểm lấy hàng. Truy vấn chạy trên Redis GEO nên trả về\ntrong vài mili-giây kể cả khi có hàng chục nghìn xe."
+    },
+    "v1SearchNearbyVehiclesResponse": {
+      "type": "object",
+      "properties": {
+        "vehicles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1NearbyVehicle"
+          }
+        },
+        "totalFound": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "v1SetDriverAvailabilityResponse": {
+      "type": "object",
+      "properties": {
+        "availability": {
+          "$ref": "#/definitions/v1DriverAvailability"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "v1UpdateVehicleResponse": {
+      "type": "object",
+      "properties": {
+        "vehicle": {
+          "$ref": "#/definitions/v1Vehicle"
+        },
+        "message": {
+          "type": "string"
         }
       }
     },
     "v1UpdateVehicleStatusResponse": {
       "type": "object",
       "properties": {
+        "message": {
+          "type": "string"
+        },
+        "vehicle": {
+          "$ref": "#/definitions/v1Vehicle"
+        }
+      }
+    },
+    "v1UploadVehicleDocumentResponse": {
+      "type": "object",
+      "properties": {
+        "document": {
+          "$ref": "#/definitions/v1VehicleDocument"
+        },
         "message": {
           "type": "string"
         }
@@ -274,22 +1356,120 @@
         "model": {
           "type": "string"
         },
+        "manufactureYear": {
+          "type": "integer",
+          "format": "int32"
+        },
         "vehicleType": {
           "type": "string",
-          "title": "Truck, Van, Bike"
+          "title": "truck | van | bike | container | trailer"
         },
         "capacityWeightKg": {
           "type": "number",
-          "format": "float"
+          "format": "double"
         },
         "capacityVolumeCbm": {
           "type": "number",
-          "format": "float"
+          "format": "double"
         },
         "status": {
-          "type": "string"
+          "type": "string",
+          "title": "active | maintenance | inactive"
+        },
+        "verificationStatus": {
+          "type": "string",
+          "title": "pending | verified | rejected"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
         }
       }
+    },
+    "v1VehicleDocument": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "byte"
+        },
+        "vehicleId": {
+          "type": "string",
+          "format": "byte"
+        },
+        "documentType": {
+          "type": "string",
+          "title": "registration | inspection | insurance | license"
+        },
+        "documentNumber": {
+          "type": "string"
+        },
+        "fileUrl": {
+          "type": "string"
+        },
+        "issuedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "reviewStatus": {
+          "type": "string",
+          "title": "pending | approved | rejected"
+        },
+        "reviewNote": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "description": "VehicleDocument: đăng kiểm, bảo hiểm, giấy phép... Admin duyệt từng giấy tờ,\nxe chỉ được \"verified\" khi mọi giấy tờ bắt buộc đã approved và còn hạn."
+    },
+    "v1VehicleLocation": {
+      "type": "object",
+      "properties": {
+        "vehicleId": {
+          "type": "string",
+          "format": "byte"
+        },
+        "driverId": {
+          "type": "string",
+          "format": "byte"
+        },
+        "latitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "longitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "heading": {
+          "type": "number",
+          "format": "double",
+          "title": "hướng di chuyển, độ"
+        },
+        "speedKph": {
+          "type": "number",
+          "format": "double"
+        },
+        "zoneId": {
+          "type": "string"
+        },
+        "recordedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "description": "VehicleLocation là bản ghi GPS mới nhất của xe (một dòng / xe).\nToạ độ nóng nằm ở Redis GEO; bảng này là bản lưu bền để khởi động lại không mất."
     }
   }
 }

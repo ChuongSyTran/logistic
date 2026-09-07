@@ -10,7 +10,7 @@ import (
 )
 
 type consumerGroupHandler struct {
-	bizHandler func(context context.Context, bucket []byte) error
+	bizHandler biz.EventHandler
 }
 
 func (cgh *consumerGroupHandler) Setup(sarama.ConsumerGroupSession) error {
@@ -30,7 +30,7 @@ func (cgh *consumerGroupHandler) ConsumeClaim(session sarama.ConsumerGroupSessio
 				return nil
 			}
 
-			err := cgh.bizHandler(session.Context(), msg.Value)
+			err := cgh.bizHandler(session.Context(), msg.Topic, msg.Value)
 			if err != nil {
 				if errors.Is(err, biz.ErrNonRetryable) {
 					log.Printf("Business error: %v", err)
@@ -60,7 +60,6 @@ func NewKafkaConsumer(brokers []string, groupId string) (biz.EventConsumer, erro
 	config := sarama.NewConfig()
 	config.Consumer.Return.Errors = true
 
-	// Read from oldest message if this is the first time running this group
 	config.Consumer.Offsets.Initial = sarama.OffsetOldest
 
 	consumerGroup, err := sarama.NewConsumerGroup(brokers, groupId, config)
@@ -71,12 +70,11 @@ func NewKafkaConsumer(brokers []string, groupId string) (biz.EventConsumer, erro
 	return &kafkaConsumer{consumerGroup: consumerGroup}, nil
 }
 
-func (c *kafkaConsumer) Consume(ctx context.Context, topic string, handler func(ctx context.Context, bucket []byte) error) error {
+func (c *kafkaConsumer) Consume(ctx context.Context, topic string, handler biz.EventHandler) error {
 	saramaHandler := &consumerGroupHandler{
 		bizHandler: handler,
 	}
 
-	// Run Sarama's Consume in background because it's a blocking function
 	go func() {
 		for {
 			err := c.consumerGroup.Consume(ctx, []string{topic}, saramaHandler)
@@ -84,7 +82,6 @@ func (c *kafkaConsumer) Consume(ctx context.Context, topic string, handler func(
 				log.Printf("Kafka consumer error: %v", err)
 			}
 			if ctx.Err() != nil {
-				// Main Context cancelled -> Exit loop safely
 				return
 			}
 		}

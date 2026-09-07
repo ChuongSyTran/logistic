@@ -10,13 +10,14 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/google/uuid"
 )
 
 // Users is the model entity for the Users schema.
 type Users struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID int `json:"id,omitempty"`
+	ID uuid.UUID `json:"id,omitempty"`
 	// DeletedAt holds the value of the "deleted_at" field.
 	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// Email holds the value of the "email" field.
@@ -31,6 +32,8 @@ type Users struct {
 	TotpSecret *string `json:"-"`
 	// GoogleID holds the value of the "google_id" field.
 	GoogleID *string `json:"-"`
+	// Role holds the value of the "role" field.
+	Role users.Role `json:"role,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"createdAt"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -43,12 +46,12 @@ func (*Users) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case users.FieldID:
-			values[i] = new(sql.NullInt64)
-		case users.FieldEmail, users.FieldFullName, users.FieldAvatar, users.FieldPassword, users.FieldTotpSecret, users.FieldGoogleID:
+		case users.FieldEmail, users.FieldFullName, users.FieldAvatar, users.FieldPassword, users.FieldTotpSecret, users.FieldGoogleID, users.FieldRole:
 			values[i] = new(sql.NullString)
 		case users.FieldDeletedAt, users.FieldCreatedAt, users.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
+		case users.FieldID:
+			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -65,11 +68,11 @@ func (_m *Users) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case users.FieldID:
-			value, ok := values[i].(*sql.NullInt64)
-			if !ok {
-				return fmt.Errorf("unexpected type %T for field id", value)
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field id", values[i])
+			} else if value != nil {
+				_m.ID = *value
 			}
-			_m.ID = int(value.Int64)
 		case users.FieldDeletedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
@@ -116,6 +119,12 @@ func (_m *Users) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.GoogleID = new(string)
 				*_m.GoogleID = value.String
+			}
+		case users.FieldRole:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field role", values[i])
+			} else if value.Valid {
+				_m.Role = users.Role(value.String)
 			}
 		case users.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -186,6 +195,9 @@ func (_m *Users) String() string {
 	builder.WriteString("totp_secret=<sensitive>")
 	builder.WriteString(", ")
 	builder.WriteString("google_id=<sensitive>")
+	builder.WriteString(", ")
+	builder.WriteString("role=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Role))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))

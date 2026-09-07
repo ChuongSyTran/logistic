@@ -1,24 +1,26 @@
 package errors
 
-import "errors"
-
-// Các Sentinel Errors chuẩn dùng chung cho toàn dự án
-// Được định nghĩa ở common để cả tầng Repo và Middleware đều có thể import mà không bị Cyclic Dependency.
+import "github.com/logistic/pkg/apperr"
 
 var (
-	// General error
-	ErrInvalidID = errors.New("invalid id format")
+	ErrInvalidID = apperr.InvalidArgument("INVALID_ID", "định dạng id không hợp lệ")
 
-	//  Repo
-	ErrRecordNotFound  = errors.New("record not found")
-	ErrInlavidInput    = errors.New("invalid input")
-	ErrDuplicateRecord = errors.New("duplicate record")
+	ErrRecordNotFound  = apperr.NotFound("RECORD_NOT_FOUND", "không tìm thấy bản ghi")
+	ErrInlavidInput    = apperr.InvalidArgument("INVALID_INPUT", "dữ liệu đầu vào không hợp lệ")
+	ErrDuplicateRecord = apperr.AlreadyExists("DUPLICATE_RECORD", "bản ghi đã tồn tại")
 
-	//  Biz
-	ErrValidationFailed    = errors.New("validation failed")
-	ErrUnauthorized        = errors.New("unauthorized action")
-	ErrInsufficientBalance = errors.New("insufficient balance")
+	ErrValidationFailed    = apperr.InvalidArgument("VALIDATION_FAILED", "dữ liệu không hợp lệ")
+	ErrUnauthorized        = apperr.PermissionDenied("UNAUTHORIZED", "không có quyền thực hiện hành động này")
+	ErrInsufficientBalance = apperr.FailedPrecondition("INSUFFICIENT_BALANCE", "số dư ví không đủ để đặt cọc")
 
-	// Internal Server Error
-	ErrInternalServer = errors.New("internal server error")
+	ErrBidNotPending     = apperr.FailedPrecondition("BID_NOT_PENDING", "đơn hàng không còn ở trạng thái chờ")
+	ErrBidNotNegotiating = apperr.FailedPrecondition("BID_NOT_NEGOTIATING", "đơn hàng không ở trạng thái đang thương lượng")
+	ErrOfferAskMismatch  = apperr.FailedPrecondition("OFFER_ASK_MISMATCH", "chuyến này không phải chuyến đang thương lượng với đơn hàng")
+	ErrPriceMismatch     = apperr.Conflict("PRICE_MISMATCH", "giá xác nhận lệch với giá tài xế đã báo")
+
+	// Sự cố tạm thời, người gọi thử lại được — khác lỗi hệ thống.
+	ErrOfferQueueUnavailable = apperr.Unavailable("OFFER_QUEUE_UNAVAILABLE", "hàng đợi báo giá tạm thời không nhận, thử lại sau")
+	ErrWalletUnavailable     = apperr.Unavailable("WALLET_UNAVAILABLE", "chưa kiểm tra được số dư ví, thử lại sau")
+
+	ErrInternalServer = apperr.Internal("INTERNAL_SERVER_ERROR", "lỗi hệ thống")
 )

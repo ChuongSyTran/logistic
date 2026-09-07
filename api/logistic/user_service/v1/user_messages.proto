@@ -3,57 +3,356 @@ syntax = "proto3";
 package logistic.user_service.v1;
 option go_package = "github.com/logistic/api/logistic/user_service/v1;userv1";
 
+import "google/protobuf/timestamp.proto";
+
+// ---------------------------------------------------------------------------
+// GHI CHÚ VỀ KIỂU ID — áp dụng cho MỌI service
+// ---------------------------------------------------------------------------
+// Mọi field định danh dùng `bytes`: đúng 16 byte thô của một UUID v7.
+//
+// Trên dây gRPC, chuỗi UUID tốn 36 byte + header, còn dạng bytes tốn 16 + header
+// — tiết kiệm 20 byte cho MỖI field id. Message Ask/Bid có 5 id một cái, và app
+// tài xế báo GPS vài giây một lần cho từng xe; ở nhịp đó thì đây là con số thật.
+//
+// Ranh giới đổi dạng nằm ĐÚNG ở gateway: bytes bên trong mạng nội bộ, chuỗi
+// canonical khi ra HTTP. Client REST không bao giờ nhìn thấy base64.
+//
+// Bản trước từng đổi sang `string` vì gateway có bug `[]byte(id)` — biến chuỗi
+// 36 ký tự thành 36 byte và gửi đi một UUID sai mà không ai báo lỗi. Cách chữa
+// đúng không phải là đổi kiểu dữ liệu, mà là dồn việc chuyển đổi về một chỗ:
+// pkg/uuidx. Hàm ở đó từ chối thẳng mọi slice không dài đúng 16 byte, nên chính
+// cái bug ấy nay là một test đỏ chứ không phải dữ liệu hỏng nằm im trong DB.
+
+// ---------------------------------------------------------------------------
+// DOMAIN MODELS
+// ---------------------------------------------------------------------------
+
 message User {
-    bytes id = 1;
-    string phone = 2;
-    string email = 3;
-    string role = 4;
-    string status = 5;
-    string created_at = 6;
-    string updated_at = 7;
+  bytes id = 1;
+  string phone = 2;
+  string email = 3;
+  string full_name = 4;
+  string role = 5;   // driver | shipper | admin
+  string status = 6; // active | banned | suspended
+  string avatar_url = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
 }
 
 message DriverProfile {
-    bytes user_id = 1;
-    string license_number = 2;
-    string id_card = 3;
-    float rating = 4;
-    string kyc_status = 5;
+  bytes id = 1;
+  bytes user_id = 2;
+  string license_number = 3;
+  string id_card = 4;
+  double rating = 5;
+  int32 total_trips = 6;
+  string kyc_status = 7; // pending | approved | rejected
+  string kyc_note = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
 }
 
 message ShipperProfile {
-    bytes user_id = 1;
-    string company_name = 2;
-    string tax_code = 3;
+  bytes id = 1;
+  bytes user_id = 2;
+  string company_name = 3;
+  string tax_code = 4;
+  string business_address = 5;
+  int32 total_orders = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
 }
 
+// Address là sổ địa chỉ của người dùng: điểm lấy hàng / giao hàng hay dùng.
+// Có toạ độ sẵn nên khi tạo đơn không phải geocode lại.
+message Address {
+  bytes id = 1;
+  bytes user_id = 2;
+  string label = 3; // "Kho Q7", "Nhà riêng"
+  string contact_name = 4;
+  string contact_phone = 5;
+  string line1 = 6;
+  string ward = 7;
+  string district = 8;
+  string city = 9;
+  double latitude = 10;
+  double longitude = 11;
+  string address_type = 12; // pickup | delivery | both
+  bool is_default = 13;
+  google.protobuf.Timestamp created_at = 14;
+  google.protobuf.Timestamp updated_at = 15;
+}
+
+// UserDevice lưu push token của từng thiết bị. notification_service đọc bảng này
+// (qua gRPC) để biết đẩy push tới đâu.
+message UserDevice {
+  bytes id = 1;
+  bytes user_id = 2;
+  string device_token = 3;
+  string platform = 4; // android | ios | web
+  string device_name = 5;
+  bool is_active = 6;
+  google.protobuf.Timestamp last_seen_at = 7;
+  google.protobuf.Timestamp created_at = 8;
+}
+
+message Pagination {
+  int32 page = 1;
+  int32 page_size = 2;
+  int64 total_items = 3;
+  int32 total_pages = 4;
+}
+
+// ---------------------------------------------------------------------------
+// CLIENT REQUESTS / RESPONSES
+// ---------------------------------------------------------------------------
+
 message RegisterUserRequest {
-    string phone = 1;
-    string email = 2;
-    string password = 3;
-    string role = 4; // "driver" or "shipper"
+  string phone = 1;
+  string email = 2;
+  string password = 3;
+  string role = 4; // driver | shipper
+  string full_name = 5;
+
+  // Danh tính auth_service đã cấp, gateway gắn vào. Có id: chỉ dựng hồ sơ, không
+  // lưu mật khẩu. Bỏ trống: luồng đăng ký độc lập, user_service tự sinh id.
+  bytes id = 6;
 }
 
 message RegisterUserResponse {
-    bytes id = 1;
-    string message = 2;
+  bytes id = 1;
+  string message = 2;
+  User user = 3;
 }
 
 message GetUserRequest {
-    bytes id = 1;
+  bytes id = 1;
 }
 
 message GetUserResponse {
-    User user = 1;
-    DriverProfile driver_profile = 2; // only if role == driver
-    ShipperProfile shipper_profile = 3; // only if role == shipper
+  User user = 1;
+  DriverProfile driver_profile = 2;   // chỉ có khi role == driver
+  ShipperProfile shipper_profile = 3; // chỉ có khi role == shipper
+}
+
+message UpdateUserRequest {
+  bytes id = 1;
+  string full_name = 2;
+  string email = 3;
+  string avatar_url = 4;
+}
+
+message UpdateUserResponse {
+  User user = 1;
+  string message = 2;
+}
+
+message UpdateDriverProfileRequest {
+  bytes user_id = 1;
+  string license_number = 2;
+  string id_card = 3;
+}
+
+message UpdateDriverProfileResponse {
+  DriverProfile driver_profile = 1;
+  string message = 2;
+}
+
+message GetDriverProfileRequest {
+  bytes user_id = 1;
+}
+
+message GetDriverProfileResponse {
+  DriverProfile driver_profile = 1;
+}
+
+message UpdateShipperProfileRequest {
+  bytes user_id = 1;
+  string company_name = 2;
+  string tax_code = 3;
+  string business_address = 4;
+}
+
+message UpdateShipperProfileResponse {
+  ShipperProfile shipper_profile = 1;
+  string message = 2;
+}
+
+message GetShipperProfileRequest {
+  bytes user_id = 1;
+}
+
+message GetShipperProfileResponse {
+  ShipperProfile shipper_profile = 1;
 }
 
 message UpdateDriverKYCRequest {
-    bytes user_id = 1;
-    string kyc_status = 2; // "approved" or "rejected"
+  bytes user_id = 1;
+  string kyc_status = 2; // approved | rejected | pending
+  string note = 3;
 }
 
 message UpdateDriverKYCResponse {
-    string message = 1;
+  string message = 1;
+  DriverProfile driver_profile = 2;
+}
+
+message CreateAddressRequest {
+  bytes user_id = 1;
+  string label = 2;
+  string contact_name = 3;
+  string contact_phone = 4;
+  string line1 = 5;
+  string ward = 6;
+  string district = 7;
+  string city = 8;
+  double latitude = 9;
+  double longitude = 10;
+  string address_type = 11;
+  bool is_default = 12;
+}
+
+message CreateAddressResponse {
+  Address address = 1;
+  string message = 2;
+}
+
+message ListAddressesRequest {
+  bytes user_id = 1;
+  string address_type = 2; // lọc tuỳ chọn
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message ListAddressesResponse {
+  repeated Address addresses = 1;
+  Pagination pagination = 2;
+}
+
+message UpdateAddressRequest {
+  bytes id = 1;
+  bytes user_id = 2;
+  string label = 3;
+  string contact_name = 4;
+  string contact_phone = 5;
+  string line1 = 6;
+  string ward = 7;
+  string district = 8;
+  string city = 9;
+  double latitude = 10;
+  double longitude = 11;
+  string address_type = 12;
+  bool is_default = 13;
+}
+
+message UpdateAddressResponse {
+  Address address = 1;
+  string message = 2;
+}
+
+message DeleteAddressRequest {
+  bytes id = 1;
+  bytes user_id = 2;
+}
+
+message DeleteAddressResponse {
+  string message = 1;
+}
+
+message RegisterDeviceRequest {
+  bytes user_id = 1;
+  string device_token = 2;
+  string platform = 3;
+  string device_name = 4;
+}
+
+message RegisterDeviceResponse {
+  UserDevice device = 1;
+  string message = 2;
+}
+
+message ListDevicesRequest {
+  bytes user_id = 1;
+}
+
+message ListDevicesResponse {
+  repeated UserDevice devices = 1;
+}
+
+message DeleteDeviceRequest {
+  bytes id = 1;
+  bytes user_id = 2;
+}
+
+message DeleteDeviceResponse {
+  string message = 1;
+}
+
+// ---------------------------------------------------------------------------
+// ADMIN REQUESTS / RESPONSES
+// ---------------------------------------------------------------------------
+
+message AdminListUsersRequest {
+  string role = 1;    // lọc theo vai trò
+  string status = 2;  // lọc theo trạng thái
+  string keyword = 3; // tìm theo phone/email/tên
+  int32 page = 4;
+  int32 page_size = 5;
+}
+
+message AdminListUsersResponse {
+  repeated User users = 1;
+  Pagination pagination = 2;
+}
+
+message AdminUpdateUserStatusRequest {
+  bytes id = 1;
+  string status = 2; // active | banned | suspended
+  string reason = 3;
+}
+
+message AdminUpdateUserStatusResponse {
+  User user = 1;
+  string message = 2;
+}
+
+message AdminListPendingKYCRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+}
+
+message AdminListPendingKYCResponse {
+  repeated DriverProfile driver_profiles = 1;
+  Pagination pagination = 2;
+}
+
+message AdminReviewKYCRequest {
+  bytes user_id = 1;
+  bool approved = 2;
+  string note = 3;
+  bytes reviewer_id = 4;
+}
+
+message AdminReviewKYCResponse {
+  DriverProfile driver_profile = 1;
+  string message = 2;
+}
+
+message AdminGetUserStatsRequest {}
+
+message AdminGetUserStatsResponse {
+  int64 total_users = 1;
+  int64 total_drivers = 2;
+  int64 total_shippers = 3;
+  int64 active_users = 4;
+  int64 banned_users = 5;
+  int64 pending_kyc = 6;
+}
+
+message AdminDeleteUserRequest {
+  bytes id = 1;
+}
+
+message AdminDeleteUserResponse {
+  string message = 1;
 }

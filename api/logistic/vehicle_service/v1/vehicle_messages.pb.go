@@ -9,6 +9,7 @@ package vehiclev1
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -22,18 +23,22 @@ const (
 )
 
 type Vehicle struct {
-	state             protoimpl.MessageState `protogen:"open.v1"`
-	Id                []byte                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	DriverId          []byte                 `protobuf:"bytes,2,opt,name=driver_id,json=driverId,proto3" json:"driver_id,omitempty"`
-	LicensePlate      string                 `protobuf:"bytes,3,opt,name=license_plate,json=licensePlate,proto3" json:"license_plate,omitempty"`
-	Brand             string                 `protobuf:"bytes,4,opt,name=brand,proto3" json:"brand,omitempty"`
-	Model             string                 `protobuf:"bytes,5,opt,name=model,proto3" json:"model,omitempty"`
-	VehicleType       string                 `protobuf:"bytes,6,opt,name=vehicle_type,json=vehicleType,proto3" json:"vehicle_type,omitempty"` // Truck, Van, Bike
-	CapacityWeightKg  float32                `protobuf:"fixed32,7,opt,name=capacity_weight_kg,json=capacityWeightKg,proto3" json:"capacity_weight_kg,omitempty"`
-	CapacityVolumeCbm float32                `protobuf:"fixed32,8,opt,name=capacity_volume_cbm,json=capacityVolumeCbm,proto3" json:"capacity_volume_cbm,omitempty"`
-	Status            string                 `protobuf:"bytes,9,opt,name=status,proto3" json:"status,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	Id                 []byte                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	DriverId           []byte                 `protobuf:"bytes,2,opt,name=driver_id,json=driverId,proto3" json:"driver_id,omitempty"`
+	LicensePlate       string                 `protobuf:"bytes,3,opt,name=license_plate,json=licensePlate,proto3" json:"license_plate,omitempty"`
+	Brand              string                 `protobuf:"bytes,4,opt,name=brand,proto3" json:"brand,omitempty"`
+	Model              string                 `protobuf:"bytes,5,opt,name=model,proto3" json:"model,omitempty"`
+	ManufactureYear    int32                  `protobuf:"varint,6,opt,name=manufacture_year,json=manufactureYear,proto3" json:"manufacture_year,omitempty"`
+	VehicleType        string                 `protobuf:"bytes,7,opt,name=vehicle_type,json=vehicleType,proto3" json:"vehicle_type,omitempty"` // truck | van | bike | container | trailer
+	CapacityWeightKg   float64                `protobuf:"fixed64,8,opt,name=capacity_weight_kg,json=capacityWeightKg,proto3" json:"capacity_weight_kg,omitempty"`
+	CapacityVolumeCbm  float64                `protobuf:"fixed64,9,opt,name=capacity_volume_cbm,json=capacityVolumeCbm,proto3" json:"capacity_volume_cbm,omitempty"`
+	Status             string                 `protobuf:"bytes,10,opt,name=status,proto3" json:"status,omitempty"`                                                   // active | maintenance | inactive
+	VerificationStatus string                 `protobuf:"bytes,11,opt,name=verification_status,json=verificationStatus,proto3" json:"verification_status,omitempty"` // pending | verified | rejected
+	CreatedAt          *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt          *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *Vehicle) Reset() {
@@ -101,6 +106,13 @@ func (x *Vehicle) GetModel() string {
 	return ""
 }
 
+func (x *Vehicle) GetManufactureYear() int32 {
+	if x != nil {
+		return x.ManufactureYear
+	}
+	return 0
+}
+
 func (x *Vehicle) GetVehicleType() string {
 	if x != nil {
 		return x.VehicleType
@@ -108,14 +120,14 @@ func (x *Vehicle) GetVehicleType() string {
 	return ""
 }
 
-func (x *Vehicle) GetCapacityWeightKg() float32 {
+func (x *Vehicle) GetCapacityWeightKg() float64 {
 	if x != nil {
 		return x.CapacityWeightKg
 	}
 	return 0
 }
 
-func (x *Vehicle) GetCapacityVolumeCbm() float32 {
+func (x *Vehicle) GetCapacityVolumeCbm() float64 {
 	if x != nil {
 		return x.CapacityVolumeCbm
 	}
@@ -129,22 +141,450 @@ func (x *Vehicle) GetStatus() string {
 	return ""
 }
 
+func (x *Vehicle) GetVerificationStatus() string {
+	if x != nil {
+		return x.VerificationStatus
+	}
+	return ""
+}
+
+func (x *Vehicle) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *Vehicle) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return nil
+}
+
+// VehicleDocument: đăng kiểm, bảo hiểm, giấy phép... Admin duyệt từng giấy tờ,
+// xe chỉ được "verified" khi mọi giấy tờ bắt buộc đã approved và còn hạn.
+type VehicleDocument struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Id             []byte                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	VehicleId      []byte                 `protobuf:"bytes,2,opt,name=vehicle_id,json=vehicleId,proto3" json:"vehicle_id,omitempty"`
+	DocumentType   string                 `protobuf:"bytes,3,opt,name=document_type,json=documentType,proto3" json:"document_type,omitempty"` // registration | inspection | insurance | license
+	DocumentNumber string                 `protobuf:"bytes,4,opt,name=document_number,json=documentNumber,proto3" json:"document_number,omitempty"`
+	FileUrl        string                 `protobuf:"bytes,5,opt,name=file_url,json=fileUrl,proto3" json:"file_url,omitempty"`
+	IssuedAt       *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=issued_at,json=issuedAt,proto3" json:"issued_at,omitempty"`
+	ExpiresAt      *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	ReviewStatus   string                 `protobuf:"bytes,8,opt,name=review_status,json=reviewStatus,proto3" json:"review_status,omitempty"` // pending | approved | rejected
+	ReviewNote     string                 `protobuf:"bytes,9,opt,name=review_note,json=reviewNote,proto3" json:"review_note,omitempty"`
+	CreatedAt      *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *VehicleDocument) Reset() {
+	*x = VehicleDocument{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *VehicleDocument) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VehicleDocument) ProtoMessage() {}
+
+func (x *VehicleDocument) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VehicleDocument.ProtoReflect.Descriptor instead.
+func (*VehicleDocument) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *VehicleDocument) GetId() []byte {
+	if x != nil {
+		return x.Id
+	}
+	return nil
+}
+
+func (x *VehicleDocument) GetVehicleId() []byte {
+	if x != nil {
+		return x.VehicleId
+	}
+	return nil
+}
+
+func (x *VehicleDocument) GetDocumentType() string {
+	if x != nil {
+		return x.DocumentType
+	}
+	return ""
+}
+
+func (x *VehicleDocument) GetDocumentNumber() string {
+	if x != nil {
+		return x.DocumentNumber
+	}
+	return ""
+}
+
+func (x *VehicleDocument) GetFileUrl() string {
+	if x != nil {
+		return x.FileUrl
+	}
+	return ""
+}
+
+func (x *VehicleDocument) GetIssuedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.IssuedAt
+	}
+	return nil
+}
+
+func (x *VehicleDocument) GetExpiresAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ExpiresAt
+	}
+	return nil
+}
+
+func (x *VehicleDocument) GetReviewStatus() string {
+	if x != nil {
+		return x.ReviewStatus
+	}
+	return ""
+}
+
+func (x *VehicleDocument) GetReviewNote() string {
+	if x != nil {
+		return x.ReviewNote
+	}
+	return ""
+}
+
+func (x *VehicleDocument) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+// VehicleLocation là bản ghi GPS mới nhất của xe (một dòng / xe).
+// Toạ độ nóng nằm ở Redis GEO; bảng này là bản lưu bền để khởi động lại không mất.
+type VehicleLocation struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	VehicleId     []byte                 `protobuf:"bytes,1,opt,name=vehicle_id,json=vehicleId,proto3" json:"vehicle_id,omitempty"`
+	DriverId      []byte                 `protobuf:"bytes,2,opt,name=driver_id,json=driverId,proto3" json:"driver_id,omitempty"`
+	Latitude      float64                `protobuf:"fixed64,3,opt,name=latitude,proto3" json:"latitude,omitempty"`
+	Longitude     float64                `protobuf:"fixed64,4,opt,name=longitude,proto3" json:"longitude,omitempty"`
+	Heading       float64                `protobuf:"fixed64,5,opt,name=heading,proto3" json:"heading,omitempty"` // hướng di chuyển, độ
+	SpeedKph      float64                `protobuf:"fixed64,6,opt,name=speed_kph,json=speedKph,proto3" json:"speed_kph,omitempty"`
+	ZoneId        string                 `protobuf:"bytes,7,opt,name=zone_id,json=zoneId,proto3" json:"zone_id,omitempty"`
+	RecordedAt    *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=recorded_at,json=recordedAt,proto3" json:"recorded_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *VehicleLocation) Reset() {
+	*x = VehicleLocation{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *VehicleLocation) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VehicleLocation) ProtoMessage() {}
+
+func (x *VehicleLocation) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VehicleLocation.ProtoReflect.Descriptor instead.
+func (*VehicleLocation) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *VehicleLocation) GetVehicleId() []byte {
+	if x != nil {
+		return x.VehicleId
+	}
+	return nil
+}
+
+func (x *VehicleLocation) GetDriverId() []byte {
+	if x != nil {
+		return x.DriverId
+	}
+	return nil
+}
+
+func (x *VehicleLocation) GetLatitude() float64 {
+	if x != nil {
+		return x.Latitude
+	}
+	return 0
+}
+
+func (x *VehicleLocation) GetLongitude() float64 {
+	if x != nil {
+		return x.Longitude
+	}
+	return 0
+}
+
+func (x *VehicleLocation) GetHeading() float64 {
+	if x != nil {
+		return x.Heading
+	}
+	return 0
+}
+
+func (x *VehicleLocation) GetSpeedKph() float64 {
+	if x != nil {
+		return x.SpeedKph
+	}
+	return 0
+}
+
+func (x *VehicleLocation) GetZoneId() string {
+	if x != nil {
+		return x.ZoneId
+	}
+	return ""
+}
+
+func (x *VehicleLocation) GetRecordedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.RecordedAt
+	}
+	return nil
+}
+
+// DriverAvailability: tài xế bật/tắt nhận đơn, kèm sức chứa còn trống.
+// Đây chính là đầu vào cho matching engine khi tìm "xe đang chạy" phù hợp.
+type DriverAvailability struct {
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	Id                 []byte                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	DriverId           []byte                 `protobuf:"bytes,2,opt,name=driver_id,json=driverId,proto3" json:"driver_id,omitempty"`
+	VehicleId          []byte                 `protobuf:"bytes,3,opt,name=vehicle_id,json=vehicleId,proto3" json:"vehicle_id,omitempty"`
+	IsOnline           bool                   `protobuf:"varint,4,opt,name=is_online,json=isOnline,proto3" json:"is_online,omitempty"`
+	AvailableWeightKg  float64                `protobuf:"fixed64,5,opt,name=available_weight_kg,json=availableWeightKg,proto3" json:"available_weight_kg,omitempty"`
+	AvailableVolumeCbm float64                `protobuf:"fixed64,6,opt,name=available_volume_cbm,json=availableVolumeCbm,proto3" json:"available_volume_cbm,omitempty"`
+	CurrentLat         float64                `protobuf:"fixed64,7,opt,name=current_lat,json=currentLat,proto3" json:"current_lat,omitempty"`
+	CurrentLng         float64                `protobuf:"fixed64,8,opt,name=current_lng,json=currentLng,proto3" json:"current_lng,omitempty"`
+	ZoneId             string                 `protobuf:"bytes,9,opt,name=zone_id,json=zoneId,proto3" json:"zone_id,omitempty"`
+	UpdatedAt          *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
+}
+
+func (x *DriverAvailability) Reset() {
+	*x = DriverAvailability{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DriverAvailability) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DriverAvailability) ProtoMessage() {}
+
+func (x *DriverAvailability) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DriverAvailability.ProtoReflect.Descriptor instead.
+func (*DriverAvailability) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *DriverAvailability) GetId() []byte {
+	if x != nil {
+		return x.Id
+	}
+	return nil
+}
+
+func (x *DriverAvailability) GetDriverId() []byte {
+	if x != nil {
+		return x.DriverId
+	}
+	return nil
+}
+
+func (x *DriverAvailability) GetVehicleId() []byte {
+	if x != nil {
+		return x.VehicleId
+	}
+	return nil
+}
+
+func (x *DriverAvailability) GetIsOnline() bool {
+	if x != nil {
+		return x.IsOnline
+	}
+	return false
+}
+
+func (x *DriverAvailability) GetAvailableWeightKg() float64 {
+	if x != nil {
+		return x.AvailableWeightKg
+	}
+	return 0
+}
+
+func (x *DriverAvailability) GetAvailableVolumeCbm() float64 {
+	if x != nil {
+		return x.AvailableVolumeCbm
+	}
+	return 0
+}
+
+func (x *DriverAvailability) GetCurrentLat() float64 {
+	if x != nil {
+		return x.CurrentLat
+	}
+	return 0
+}
+
+func (x *DriverAvailability) GetCurrentLng() float64 {
+	if x != nil {
+		return x.CurrentLng
+	}
+	return 0
+}
+
+func (x *DriverAvailability) GetZoneId() string {
+	if x != nil {
+		return x.ZoneId
+	}
+	return ""
+}
+
+func (x *DriverAvailability) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return nil
+}
+
+type Pagination struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Page          int32                  `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"`
+	PageSize      int32                  `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	TotalItems    int64                  `protobuf:"varint,3,opt,name=total_items,json=totalItems,proto3" json:"total_items,omitempty"`
+	TotalPages    int32                  `protobuf:"varint,4,opt,name=total_pages,json=totalPages,proto3" json:"total_pages,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Pagination) Reset() {
+	*x = Pagination{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Pagination) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Pagination) ProtoMessage() {}
+
+func (x *Pagination) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Pagination.ProtoReflect.Descriptor instead.
+func (*Pagination) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *Pagination) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *Pagination) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+func (x *Pagination) GetTotalItems() int64 {
+	if x != nil {
+		return x.TotalItems
+	}
+	return 0
+}
+
+func (x *Pagination) GetTotalPages() int32 {
+	if x != nil {
+		return x.TotalPages
+	}
+	return 0
+}
+
 type RegisterVehicleRequest struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
 	DriverId          []byte                 `protobuf:"bytes,1,opt,name=driver_id,json=driverId,proto3" json:"driver_id,omitempty"`
 	LicensePlate      string                 `protobuf:"bytes,2,opt,name=license_plate,json=licensePlate,proto3" json:"license_plate,omitempty"`
 	Brand             string                 `protobuf:"bytes,3,opt,name=brand,proto3" json:"brand,omitempty"`
 	Model             string                 `protobuf:"bytes,4,opt,name=model,proto3" json:"model,omitempty"`
-	VehicleType       string                 `protobuf:"bytes,5,opt,name=vehicle_type,json=vehicleType,proto3" json:"vehicle_type,omitempty"`
-	CapacityWeightKg  float32                `protobuf:"fixed32,6,opt,name=capacity_weight_kg,json=capacityWeightKg,proto3" json:"capacity_weight_kg,omitempty"`
-	CapacityVolumeCbm float32                `protobuf:"fixed32,7,opt,name=capacity_volume_cbm,json=capacityVolumeCbm,proto3" json:"capacity_volume_cbm,omitempty"`
+	ManufactureYear   int32                  `protobuf:"varint,5,opt,name=manufacture_year,json=manufactureYear,proto3" json:"manufacture_year,omitempty"`
+	VehicleType       string                 `protobuf:"bytes,6,opt,name=vehicle_type,json=vehicleType,proto3" json:"vehicle_type,omitempty"`
+	CapacityWeightKg  float64                `protobuf:"fixed64,7,opt,name=capacity_weight_kg,json=capacityWeightKg,proto3" json:"capacity_weight_kg,omitempty"`
+	CapacityVolumeCbm float64                `protobuf:"fixed64,8,opt,name=capacity_volume_cbm,json=capacityVolumeCbm,proto3" json:"capacity_volume_cbm,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
 
 func (x *RegisterVehicleRequest) Reset() {
 	*x = RegisterVehicleRequest{}
-	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[1]
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -156,7 +596,7 @@ func (x *RegisterVehicleRequest) String() string {
 func (*RegisterVehicleRequest) ProtoMessage() {}
 
 func (x *RegisterVehicleRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[1]
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -169,7 +609,7 @@ func (x *RegisterVehicleRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RegisterVehicleRequest.ProtoReflect.Descriptor instead.
 func (*RegisterVehicleRequest) Descriptor() ([]byte, []int) {
-	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{1}
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *RegisterVehicleRequest) GetDriverId() []byte {
@@ -200,6 +640,13 @@ func (x *RegisterVehicleRequest) GetModel() string {
 	return ""
 }
 
+func (x *RegisterVehicleRequest) GetManufactureYear() int32 {
+	if x != nil {
+		return x.ManufactureYear
+	}
+	return 0
+}
+
 func (x *RegisterVehicleRequest) GetVehicleType() string {
 	if x != nil {
 		return x.VehicleType
@@ -207,14 +654,14 @@ func (x *RegisterVehicleRequest) GetVehicleType() string {
 	return ""
 }
 
-func (x *RegisterVehicleRequest) GetCapacityWeightKg() float32 {
+func (x *RegisterVehicleRequest) GetCapacityWeightKg() float64 {
 	if x != nil {
 		return x.CapacityWeightKg
 	}
 	return 0
 }
 
-func (x *RegisterVehicleRequest) GetCapacityVolumeCbm() float32 {
+func (x *RegisterVehicleRequest) GetCapacityVolumeCbm() float64 {
 	if x != nil {
 		return x.CapacityVolumeCbm
 	}
@@ -225,13 +672,14 @@ type RegisterVehicleResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            []byte                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	Vehicle       *Vehicle               `protobuf:"bytes,3,opt,name=vehicle,proto3" json:"vehicle,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *RegisterVehicleResponse) Reset() {
 	*x = RegisterVehicleResponse{}
-	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[2]
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -243,7 +691,7 @@ func (x *RegisterVehicleResponse) String() string {
 func (*RegisterVehicleResponse) ProtoMessage() {}
 
 func (x *RegisterVehicleResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[2]
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -256,7 +704,7 @@ func (x *RegisterVehicleResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RegisterVehicleResponse.ProtoReflect.Descriptor instead.
 func (*RegisterVehicleResponse) Descriptor() ([]byte, []int) {
-	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{2}
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *RegisterVehicleResponse) GetId() []byte {
@@ -273,16 +721,30 @@ func (x *RegisterVehicleResponse) GetMessage() string {
 	return ""
 }
 
+func (x *RegisterVehicleResponse) GetVehicle() *Vehicle {
+	if x != nil {
+		return x.Vehicle
+	}
+	return nil
+}
+
+// driver_id trong các request dưới đây là DANH TÍNH NGƯỜI GỌI, do gateway lấy từ
+// token rồi gắn vào — không phải giá trị client tự khai. vehicle_service so nó với
+// chủ xe và từ chối nếu lệch. Bỏ trống (nil) nghĩa là gọi từ luồng quản trị, bỏ
+// qua kiểm tra; xem DeleteVehicleRequest đã dùng đúng quy ước này từ trước.
+// driver_id dưới đây là danh tính người gọi do gateway lấy từ token, không phải
+// giá trị client khai. vehicle_service so với chủ xe; bỏ trống = luồng quản trị.
 type GetVehicleRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            []byte                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	DriverId      []byte                 `protobuf:"bytes,2,opt,name=driver_id,json=driverId,proto3" json:"driver_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetVehicleRequest) Reset() {
 	*x = GetVehicleRequest{}
-	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[3]
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -294,7 +756,7 @@ func (x *GetVehicleRequest) String() string {
 func (*GetVehicleRequest) ProtoMessage() {}
 
 func (x *GetVehicleRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[3]
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -307,12 +769,19 @@ func (x *GetVehicleRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetVehicleRequest.ProtoReflect.Descriptor instead.
 func (*GetVehicleRequest) Descriptor() ([]byte, []int) {
-	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{3}
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *GetVehicleRequest) GetId() []byte {
 	if x != nil {
 		return x.Id
+	}
+	return nil
+}
+
+func (x *GetVehicleRequest) GetDriverId() []byte {
+	if x != nil {
+		return x.DriverId
 	}
 	return nil
 }
@@ -326,7 +795,7 @@ type GetVehicleResponse struct {
 
 func (x *GetVehicleResponse) Reset() {
 	*x = GetVehicleResponse{}
-	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[4]
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -338,7 +807,7 @@ func (x *GetVehicleResponse) String() string {
 func (*GetVehicleResponse) ProtoMessage() {}
 
 func (x *GetVehicleResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[4]
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -351,7 +820,7 @@ func (x *GetVehicleResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetVehicleResponse.ProtoReflect.Descriptor instead.
 func (*GetVehicleResponse) Descriptor() ([]byte, []int) {
-	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{4}
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *GetVehicleResponse) GetVehicle() *Vehicle {
@@ -364,13 +833,17 @@ func (x *GetVehicleResponse) GetVehicle() *Vehicle {
 type ListVehiclesRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	DriverId      []byte                 `protobuf:"bytes,1,opt,name=driver_id,json=driverId,proto3" json:"driver_id,omitempty"`
+	Status        string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
+	VehicleType   string                 `protobuf:"bytes,3,opt,name=vehicle_type,json=vehicleType,proto3" json:"vehicle_type,omitempty"`
+	Page          int32                  `protobuf:"varint,4,opt,name=page,proto3" json:"page,omitempty"`
+	PageSize      int32                  `protobuf:"varint,5,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ListVehiclesRequest) Reset() {
 	*x = ListVehiclesRequest{}
-	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[5]
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -382,7 +855,7 @@ func (x *ListVehiclesRequest) String() string {
 func (*ListVehiclesRequest) ProtoMessage() {}
 
 func (x *ListVehiclesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[5]
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -395,7 +868,7 @@ func (x *ListVehiclesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListVehiclesRequest.ProtoReflect.Descriptor instead.
 func (*ListVehiclesRequest) Descriptor() ([]byte, []int) {
-	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{5}
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *ListVehiclesRequest) GetDriverId() []byte {
@@ -405,16 +878,45 @@ func (x *ListVehiclesRequest) GetDriverId() []byte {
 	return nil
 }
 
+func (x *ListVehiclesRequest) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *ListVehiclesRequest) GetVehicleType() string {
+	if x != nil {
+		return x.VehicleType
+	}
+	return ""
+}
+
+func (x *ListVehiclesRequest) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *ListVehiclesRequest) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
 type ListVehiclesResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Vehicles      []*Vehicle             `protobuf:"bytes,1,rep,name=vehicles,proto3" json:"vehicles,omitempty"`
+	Pagination    *Pagination            `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ListVehiclesResponse) Reset() {
 	*x = ListVehiclesResponse{}
-	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[6]
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -426,7 +928,7 @@ func (x *ListVehiclesResponse) String() string {
 func (*ListVehiclesResponse) ProtoMessage() {}
 
 func (x *ListVehiclesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[6]
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -439,7 +941,7 @@ func (x *ListVehiclesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListVehiclesResponse.ProtoReflect.Descriptor instead.
 func (*ListVehiclesResponse) Descriptor() ([]byte, []int) {
-	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{6}
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *ListVehiclesResponse) GetVehicles() []*Vehicle {
@@ -449,17 +951,273 @@ func (x *ListVehiclesResponse) GetVehicles() []*Vehicle {
 	return nil
 }
 
+func (x *ListVehiclesResponse) GetPagination() *Pagination {
+	if x != nil {
+		return x.Pagination
+	}
+	return nil
+}
+
+type UpdateVehicleRequest struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	Id                []byte                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Brand             string                 `protobuf:"bytes,2,opt,name=brand,proto3" json:"brand,omitempty"`
+	Model             string                 `protobuf:"bytes,3,opt,name=model,proto3" json:"model,omitempty"`
+	ManufactureYear   int32                  `protobuf:"varint,4,opt,name=manufacture_year,json=manufactureYear,proto3" json:"manufacture_year,omitempty"`
+	VehicleType       string                 `protobuf:"bytes,5,opt,name=vehicle_type,json=vehicleType,proto3" json:"vehicle_type,omitempty"`
+	CapacityWeightKg  float64                `protobuf:"fixed64,6,opt,name=capacity_weight_kg,json=capacityWeightKg,proto3" json:"capacity_weight_kg,omitempty"`
+	CapacityVolumeCbm float64                `protobuf:"fixed64,7,opt,name=capacity_volume_cbm,json=capacityVolumeCbm,proto3" json:"capacity_volume_cbm,omitempty"`
+	DriverId          []byte                 `protobuf:"bytes,8,opt,name=driver_id,json=driverId,proto3" json:"driver_id,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *UpdateVehicleRequest) Reset() {
+	*x = UpdateVehicleRequest{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateVehicleRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateVehicleRequest) ProtoMessage() {}
+
+func (x *UpdateVehicleRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateVehicleRequest.ProtoReflect.Descriptor instead.
+func (*UpdateVehicleRequest) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *UpdateVehicleRequest) GetId() []byte {
+	if x != nil {
+		return x.Id
+	}
+	return nil
+}
+
+func (x *UpdateVehicleRequest) GetBrand() string {
+	if x != nil {
+		return x.Brand
+	}
+	return ""
+}
+
+func (x *UpdateVehicleRequest) GetModel() string {
+	if x != nil {
+		return x.Model
+	}
+	return ""
+}
+
+func (x *UpdateVehicleRequest) GetManufactureYear() int32 {
+	if x != nil {
+		return x.ManufactureYear
+	}
+	return 0
+}
+
+func (x *UpdateVehicleRequest) GetVehicleType() string {
+	if x != nil {
+		return x.VehicleType
+	}
+	return ""
+}
+
+func (x *UpdateVehicleRequest) GetCapacityWeightKg() float64 {
+	if x != nil {
+		return x.CapacityWeightKg
+	}
+	return 0
+}
+
+func (x *UpdateVehicleRequest) GetCapacityVolumeCbm() float64 {
+	if x != nil {
+		return x.CapacityVolumeCbm
+	}
+	return 0
+}
+
+func (x *UpdateVehicleRequest) GetDriverId() []byte {
+	if x != nil {
+		return x.DriverId
+	}
+	return nil
+}
+
+type UpdateVehicleResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Vehicle       *Vehicle               `protobuf:"bytes,1,opt,name=vehicle,proto3" json:"vehicle,omitempty"`
+	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateVehicleResponse) Reset() {
+	*x = UpdateVehicleResponse{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateVehicleResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateVehicleResponse) ProtoMessage() {}
+
+func (x *UpdateVehicleResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateVehicleResponse.ProtoReflect.Descriptor instead.
+func (*UpdateVehicleResponse) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *UpdateVehicleResponse) GetVehicle() *Vehicle {
+	if x != nil {
+		return x.Vehicle
+	}
+	return nil
+}
+
+func (x *UpdateVehicleResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+type DeleteVehicleRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            []byte                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	DriverId      []byte                 `protobuf:"bytes,2,opt,name=driver_id,json=driverId,proto3" json:"driver_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteVehicleRequest) Reset() {
+	*x = DeleteVehicleRequest{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteVehicleRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteVehicleRequest) ProtoMessage() {}
+
+func (x *DeleteVehicleRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteVehicleRequest.ProtoReflect.Descriptor instead.
+func (*DeleteVehicleRequest) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *DeleteVehicleRequest) GetId() []byte {
+	if x != nil {
+		return x.Id
+	}
+	return nil
+}
+
+func (x *DeleteVehicleRequest) GetDriverId() []byte {
+	if x != nil {
+		return x.DriverId
+	}
+	return nil
+}
+
+type DeleteVehicleResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteVehicleResponse) Reset() {
+	*x = DeleteVehicleResponse{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteVehicleResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteVehicleResponse) ProtoMessage() {}
+
+func (x *DeleteVehicleResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteVehicleResponse.ProtoReflect.Descriptor instead.
+func (*DeleteVehicleResponse) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *DeleteVehicleResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
 type UpdateVehicleStatusRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            []byte                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Status        string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
+	DriverId      []byte                 `protobuf:"bytes,3,opt,name=driver_id,json=driverId,proto3" json:"driver_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *UpdateVehicleStatusRequest) Reset() {
 	*x = UpdateVehicleStatusRequest{}
-	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[7]
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -471,7 +1229,7 @@ func (x *UpdateVehicleStatusRequest) String() string {
 func (*UpdateVehicleStatusRequest) ProtoMessage() {}
 
 func (x *UpdateVehicleStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[7]
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -484,7 +1242,7 @@ func (x *UpdateVehicleStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateVehicleStatusRequest.ProtoReflect.Descriptor instead.
 func (*UpdateVehicleStatusRequest) Descriptor() ([]byte, []int) {
-	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{7}
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *UpdateVehicleStatusRequest) GetId() []byte {
@@ -501,16 +1259,24 @@ func (x *UpdateVehicleStatusRequest) GetStatus() string {
 	return ""
 }
 
+func (x *UpdateVehicleStatusRequest) GetDriverId() []byte {
+	if x != nil {
+		return x.DriverId
+	}
+	return nil
+}
+
 type UpdateVehicleStatusResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	Vehicle       *Vehicle               `protobuf:"bytes,2,opt,name=vehicle,proto3" json:"vehicle,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *UpdateVehicleStatusResponse) Reset() {
 	*x = UpdateVehicleStatusResponse{}
-	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[8]
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -522,7 +1288,7 @@ func (x *UpdateVehicleStatusResponse) String() string {
 func (*UpdateVehicleStatusResponse) ProtoMessage() {}
 
 func (x *UpdateVehicleStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[8]
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -535,7 +1301,7 @@ func (x *UpdateVehicleStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateVehicleStatusResponse.ProtoReflect.Descriptor instead.
 func (*UpdateVehicleStatusResponse) Descriptor() ([]byte, []int) {
-	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{8}
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *UpdateVehicleStatusResponse) GetMessage() string {
@@ -545,45 +1311,1932 @@ func (x *UpdateVehicleStatusResponse) GetMessage() string {
 	return ""
 }
 
+func (x *UpdateVehicleStatusResponse) GetVehicle() *Vehicle {
+	if x != nil {
+		return x.Vehicle
+	}
+	return nil
+}
+
+type UploadVehicleDocumentRequest struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	VehicleId      []byte                 `protobuf:"bytes,1,opt,name=vehicle_id,json=vehicleId,proto3" json:"vehicle_id,omitempty"`
+	DocumentType   string                 `protobuf:"bytes,2,opt,name=document_type,json=documentType,proto3" json:"document_type,omitempty"`
+	DocumentNumber string                 `protobuf:"bytes,3,opt,name=document_number,json=documentNumber,proto3" json:"document_number,omitempty"`
+	FileUrl        string                 `protobuf:"bytes,4,opt,name=file_url,json=fileUrl,proto3" json:"file_url,omitempty"`
+	IssuedAt       *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=issued_at,json=issuedAt,proto3" json:"issued_at,omitempty"`
+	ExpiresAt      *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	DriverId       []byte                 `protobuf:"bytes,7,opt,name=driver_id,json=driverId,proto3" json:"driver_id,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *UploadVehicleDocumentRequest) Reset() {
+	*x = UploadVehicleDocumentRequest{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UploadVehicleDocumentRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UploadVehicleDocumentRequest) ProtoMessage() {}
+
+func (x *UploadVehicleDocumentRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UploadVehicleDocumentRequest.ProtoReflect.Descriptor instead.
+func (*UploadVehicleDocumentRequest) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *UploadVehicleDocumentRequest) GetVehicleId() []byte {
+	if x != nil {
+		return x.VehicleId
+	}
+	return nil
+}
+
+func (x *UploadVehicleDocumentRequest) GetDocumentType() string {
+	if x != nil {
+		return x.DocumentType
+	}
+	return ""
+}
+
+func (x *UploadVehicleDocumentRequest) GetDocumentNumber() string {
+	if x != nil {
+		return x.DocumentNumber
+	}
+	return ""
+}
+
+func (x *UploadVehicleDocumentRequest) GetFileUrl() string {
+	if x != nil {
+		return x.FileUrl
+	}
+	return ""
+}
+
+func (x *UploadVehicleDocumentRequest) GetIssuedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.IssuedAt
+	}
+	return nil
+}
+
+func (x *UploadVehicleDocumentRequest) GetExpiresAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ExpiresAt
+	}
+	return nil
+}
+
+func (x *UploadVehicleDocumentRequest) GetDriverId() []byte {
+	if x != nil {
+		return x.DriverId
+	}
+	return nil
+}
+
+type UploadVehicleDocumentResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Document      *VehicleDocument       `protobuf:"bytes,1,opt,name=document,proto3" json:"document,omitempty"`
+	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UploadVehicleDocumentResponse) Reset() {
+	*x = UploadVehicleDocumentResponse{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UploadVehicleDocumentResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UploadVehicleDocumentResponse) ProtoMessage() {}
+
+func (x *UploadVehicleDocumentResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UploadVehicleDocumentResponse.ProtoReflect.Descriptor instead.
+func (*UploadVehicleDocumentResponse) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *UploadVehicleDocumentResponse) GetDocument() *VehicleDocument {
+	if x != nil {
+		return x.Document
+	}
+	return nil
+}
+
+func (x *UploadVehicleDocumentResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+type ListVehicleDocumentsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	VehicleId     []byte                 `protobuf:"bytes,1,opt,name=vehicle_id,json=vehicleId,proto3" json:"vehicle_id,omitempty"`
+	ReviewStatus  string                 `protobuf:"bytes,2,opt,name=review_status,json=reviewStatus,proto3" json:"review_status,omitempty"`
+	DriverId      []byte                 `protobuf:"bytes,3,opt,name=driver_id,json=driverId,proto3" json:"driver_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListVehicleDocumentsRequest) Reset() {
+	*x = ListVehicleDocumentsRequest{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListVehicleDocumentsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListVehicleDocumentsRequest) ProtoMessage() {}
+
+func (x *ListVehicleDocumentsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListVehicleDocumentsRequest.ProtoReflect.Descriptor instead.
+func (*ListVehicleDocumentsRequest) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *ListVehicleDocumentsRequest) GetVehicleId() []byte {
+	if x != nil {
+		return x.VehicleId
+	}
+	return nil
+}
+
+func (x *ListVehicleDocumentsRequest) GetReviewStatus() string {
+	if x != nil {
+		return x.ReviewStatus
+	}
+	return ""
+}
+
+func (x *ListVehicleDocumentsRequest) GetDriverId() []byte {
+	if x != nil {
+		return x.DriverId
+	}
+	return nil
+}
+
+type ListVehicleDocumentsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Documents     []*VehicleDocument     `protobuf:"bytes,1,rep,name=documents,proto3" json:"documents,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListVehicleDocumentsResponse) Reset() {
+	*x = ListVehicleDocumentsResponse{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListVehicleDocumentsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListVehicleDocumentsResponse) ProtoMessage() {}
+
+func (x *ListVehicleDocumentsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListVehicleDocumentsResponse.ProtoReflect.Descriptor instead.
+func (*ListVehicleDocumentsResponse) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *ListVehicleDocumentsResponse) GetDocuments() []*VehicleDocument {
+	if x != nil {
+		return x.Documents
+	}
+	return nil
+}
+
+type DeleteVehicleDocumentRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            []byte                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	DriverId      []byte                 `protobuf:"bytes,2,opt,name=driver_id,json=driverId,proto3" json:"driver_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteVehicleDocumentRequest) Reset() {
+	*x = DeleteVehicleDocumentRequest{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteVehicleDocumentRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteVehicleDocumentRequest) ProtoMessage() {}
+
+func (x *DeleteVehicleDocumentRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteVehicleDocumentRequest.ProtoReflect.Descriptor instead.
+func (*DeleteVehicleDocumentRequest) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *DeleteVehicleDocumentRequest) GetId() []byte {
+	if x != nil {
+		return x.Id
+	}
+	return nil
+}
+
+func (x *DeleteVehicleDocumentRequest) GetDriverId() []byte {
+	if x != nil {
+		return x.DriverId
+	}
+	return nil
+}
+
+type DeleteVehicleDocumentResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteVehicleDocumentResponse) Reset() {
+	*x = DeleteVehicleDocumentResponse{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteVehicleDocumentResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteVehicleDocumentResponse) ProtoMessage() {}
+
+func (x *DeleteVehicleDocumentResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteVehicleDocumentResponse.ProtoReflect.Descriptor instead.
+func (*DeleteVehicleDocumentResponse) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *DeleteVehicleDocumentResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+type ReportLocationRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	VehicleId     []byte                 `protobuf:"bytes,1,opt,name=vehicle_id,json=vehicleId,proto3" json:"vehicle_id,omitempty"`
+	DriverId      []byte                 `protobuf:"bytes,2,opt,name=driver_id,json=driverId,proto3" json:"driver_id,omitempty"`
+	Latitude      float64                `protobuf:"fixed64,3,opt,name=latitude,proto3" json:"latitude,omitempty"`
+	Longitude     float64                `protobuf:"fixed64,4,opt,name=longitude,proto3" json:"longitude,omitempty"`
+	Heading       float64                `protobuf:"fixed64,5,opt,name=heading,proto3" json:"heading,omitempty"`
+	SpeedKph      float64                `protobuf:"fixed64,6,opt,name=speed_kph,json=speedKph,proto3" json:"speed_kph,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReportLocationRequest) Reset() {
+	*x = ReportLocationRequest{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReportLocationRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReportLocationRequest) ProtoMessage() {}
+
+func (x *ReportLocationRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReportLocationRequest.ProtoReflect.Descriptor instead.
+func (*ReportLocationRequest) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *ReportLocationRequest) GetVehicleId() []byte {
+	if x != nil {
+		return x.VehicleId
+	}
+	return nil
+}
+
+func (x *ReportLocationRequest) GetDriverId() []byte {
+	if x != nil {
+		return x.DriverId
+	}
+	return nil
+}
+
+func (x *ReportLocationRequest) GetLatitude() float64 {
+	if x != nil {
+		return x.Latitude
+	}
+	return 0
+}
+
+func (x *ReportLocationRequest) GetLongitude() float64 {
+	if x != nil {
+		return x.Longitude
+	}
+	return 0
+}
+
+func (x *ReportLocationRequest) GetHeading() float64 {
+	if x != nil {
+		return x.Heading
+	}
+	return 0
+}
+
+func (x *ReportLocationRequest) GetSpeedKph() float64 {
+	if x != nil {
+		return x.SpeedKph
+	}
+	return 0
+}
+
+type ReportLocationResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	ZoneId        string                 `protobuf:"bytes,2,opt,name=zone_id,json=zoneId,proto3" json:"zone_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReportLocationResponse) Reset() {
+	*x = ReportLocationResponse{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReportLocationResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReportLocationResponse) ProtoMessage() {}
+
+func (x *ReportLocationResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReportLocationResponse.ProtoReflect.Descriptor instead.
+func (*ReportLocationResponse) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *ReportLocationResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *ReportLocationResponse) GetZoneId() string {
+	if x != nil {
+		return x.ZoneId
+	}
+	return ""
+}
+
+type GetVehicleLocationRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	VehicleId     []byte                 `protobuf:"bytes,1,opt,name=vehicle_id,json=vehicleId,proto3" json:"vehicle_id,omitempty"`
+	DriverId      []byte                 `protobuf:"bytes,2,opt,name=driver_id,json=driverId,proto3" json:"driver_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetVehicleLocationRequest) Reset() {
+	*x = GetVehicleLocationRequest{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetVehicleLocationRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetVehicleLocationRequest) ProtoMessage() {}
+
+func (x *GetVehicleLocationRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetVehicleLocationRequest.ProtoReflect.Descriptor instead.
+func (*GetVehicleLocationRequest) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *GetVehicleLocationRequest) GetVehicleId() []byte {
+	if x != nil {
+		return x.VehicleId
+	}
+	return nil
+}
+
+func (x *GetVehicleLocationRequest) GetDriverId() []byte {
+	if x != nil {
+		return x.DriverId
+	}
+	return nil
+}
+
+type GetVehicleLocationResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Location      *VehicleLocation       `protobuf:"bytes,1,opt,name=location,proto3" json:"location,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetVehicleLocationResponse) Reset() {
+	*x = GetVehicleLocationResponse{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetVehicleLocationResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetVehicleLocationResponse) ProtoMessage() {}
+
+func (x *GetVehicleLocationResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetVehicleLocationResponse.ProtoReflect.Descriptor instead.
+func (*GetVehicleLocationResponse) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *GetVehicleLocationResponse) GetLocation() *VehicleLocation {
+	if x != nil {
+		return x.Location
+	}
+	return nil
+}
+
+type SetDriverAvailabilityRequest struct {
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	DriverId           []byte                 `protobuf:"bytes,1,opt,name=driver_id,json=driverId,proto3" json:"driver_id,omitempty"`
+	VehicleId          []byte                 `protobuf:"bytes,2,opt,name=vehicle_id,json=vehicleId,proto3" json:"vehicle_id,omitempty"`
+	IsOnline           bool                   `protobuf:"varint,3,opt,name=is_online,json=isOnline,proto3" json:"is_online,omitempty"`
+	AvailableWeightKg  float64                `protobuf:"fixed64,4,opt,name=available_weight_kg,json=availableWeightKg,proto3" json:"available_weight_kg,omitempty"`
+	AvailableVolumeCbm float64                `protobuf:"fixed64,5,opt,name=available_volume_cbm,json=availableVolumeCbm,proto3" json:"available_volume_cbm,omitempty"`
+	CurrentLat         float64                `protobuf:"fixed64,6,opt,name=current_lat,json=currentLat,proto3" json:"current_lat,omitempty"`
+	CurrentLng         float64                `protobuf:"fixed64,7,opt,name=current_lng,json=currentLng,proto3" json:"current_lng,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
+}
+
+func (x *SetDriverAvailabilityRequest) Reset() {
+	*x = SetDriverAvailabilityRequest{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetDriverAvailabilityRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetDriverAvailabilityRequest) ProtoMessage() {}
+
+func (x *SetDriverAvailabilityRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetDriverAvailabilityRequest.ProtoReflect.Descriptor instead.
+func (*SetDriverAvailabilityRequest) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *SetDriverAvailabilityRequest) GetDriverId() []byte {
+	if x != nil {
+		return x.DriverId
+	}
+	return nil
+}
+
+func (x *SetDriverAvailabilityRequest) GetVehicleId() []byte {
+	if x != nil {
+		return x.VehicleId
+	}
+	return nil
+}
+
+func (x *SetDriverAvailabilityRequest) GetIsOnline() bool {
+	if x != nil {
+		return x.IsOnline
+	}
+	return false
+}
+
+func (x *SetDriverAvailabilityRequest) GetAvailableWeightKg() float64 {
+	if x != nil {
+		return x.AvailableWeightKg
+	}
+	return 0
+}
+
+func (x *SetDriverAvailabilityRequest) GetAvailableVolumeCbm() float64 {
+	if x != nil {
+		return x.AvailableVolumeCbm
+	}
+	return 0
+}
+
+func (x *SetDriverAvailabilityRequest) GetCurrentLat() float64 {
+	if x != nil {
+		return x.CurrentLat
+	}
+	return 0
+}
+
+func (x *SetDriverAvailabilityRequest) GetCurrentLng() float64 {
+	if x != nil {
+		return x.CurrentLng
+	}
+	return 0
+}
+
+type SetDriverAvailabilityResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Availability  *DriverAvailability    `protobuf:"bytes,1,opt,name=availability,proto3" json:"availability,omitempty"`
+	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetDriverAvailabilityResponse) Reset() {
+	*x = SetDriverAvailabilityResponse{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetDriverAvailabilityResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetDriverAvailabilityResponse) ProtoMessage() {}
+
+func (x *SetDriverAvailabilityResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetDriverAvailabilityResponse.ProtoReflect.Descriptor instead.
+func (*SetDriverAvailabilityResponse) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *SetDriverAvailabilityResponse) GetAvailability() *DriverAvailability {
+	if x != nil {
+		return x.Availability
+	}
+	return nil
+}
+
+func (x *SetDriverAvailabilityResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+type GetDriverAvailabilityRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	DriverId      []byte                 `protobuf:"bytes,1,opt,name=driver_id,json=driverId,proto3" json:"driver_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetDriverAvailabilityRequest) Reset() {
+	*x = GetDriverAvailabilityRequest{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[29]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetDriverAvailabilityRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetDriverAvailabilityRequest) ProtoMessage() {}
+
+func (x *GetDriverAvailabilityRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[29]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetDriverAvailabilityRequest.ProtoReflect.Descriptor instead.
+func (*GetDriverAvailabilityRequest) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *GetDriverAvailabilityRequest) GetDriverId() []byte {
+	if x != nil {
+		return x.DriverId
+	}
+	return nil
+}
+
+type GetDriverAvailabilityResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Availability  *DriverAvailability    `protobuf:"bytes,1,opt,name=availability,proto3" json:"availability,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetDriverAvailabilityResponse) Reset() {
+	*x = GetDriverAvailabilityResponse{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[30]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetDriverAvailabilityResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetDriverAvailabilityResponse) ProtoMessage() {}
+
+func (x *GetDriverAvailabilityResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[30]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetDriverAvailabilityResponse.ProtoReflect.Descriptor instead.
+func (*GetDriverAvailabilityResponse) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *GetDriverAvailabilityResponse) GetAvailability() *DriverAvailability {
+	if x != nil {
+		return x.Availability
+	}
+	return nil
+}
+
+// SearchNearbyVehicles là API mà matching_service gọi sang để lấy danh sách xe
+// đang online quanh điểm lấy hàng. Truy vấn chạy trên Redis GEO nên trả về
+// trong vài mili-giây kể cả khi có hàng chục nghìn xe.
+type SearchNearbyVehiclesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Latitude      float64                `protobuf:"fixed64,1,opt,name=latitude,proto3" json:"latitude,omitempty"`
+	Longitude     float64                `protobuf:"fixed64,2,opt,name=longitude,proto3" json:"longitude,omitempty"`
+	RadiusKm      float64                `protobuf:"fixed64,3,opt,name=radius_km,json=radiusKm,proto3" json:"radius_km,omitempty"`
+	MinWeightKg   float64                `protobuf:"fixed64,4,opt,name=min_weight_kg,json=minWeightKg,proto3" json:"min_weight_kg,omitempty"` // sức chứa còn trống tối thiểu
+	MinVolumeCbm  float64                `protobuf:"fixed64,5,opt,name=min_volume_cbm,json=minVolumeCbm,proto3" json:"min_volume_cbm,omitempty"`
+	VehicleType   string                 `protobuf:"bytes,6,opt,name=vehicle_type,json=vehicleType,proto3" json:"vehicle_type,omitempty"`
+	Limit         int32                  `protobuf:"varint,7,opt,name=limit,proto3" json:"limit,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SearchNearbyVehiclesRequest) Reset() {
+	*x = SearchNearbyVehiclesRequest{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[31]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SearchNearbyVehiclesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SearchNearbyVehiclesRequest) ProtoMessage() {}
+
+func (x *SearchNearbyVehiclesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[31]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SearchNearbyVehiclesRequest.ProtoReflect.Descriptor instead.
+func (*SearchNearbyVehiclesRequest) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{31}
+}
+
+func (x *SearchNearbyVehiclesRequest) GetLatitude() float64 {
+	if x != nil {
+		return x.Latitude
+	}
+	return 0
+}
+
+func (x *SearchNearbyVehiclesRequest) GetLongitude() float64 {
+	if x != nil {
+		return x.Longitude
+	}
+	return 0
+}
+
+func (x *SearchNearbyVehiclesRequest) GetRadiusKm() float64 {
+	if x != nil {
+		return x.RadiusKm
+	}
+	return 0
+}
+
+func (x *SearchNearbyVehiclesRequest) GetMinWeightKg() float64 {
+	if x != nil {
+		return x.MinWeightKg
+	}
+	return 0
+}
+
+func (x *SearchNearbyVehiclesRequest) GetMinVolumeCbm() float64 {
+	if x != nil {
+		return x.MinVolumeCbm
+	}
+	return 0
+}
+
+func (x *SearchNearbyVehiclesRequest) GetVehicleType() string {
+	if x != nil {
+		return x.VehicleType
+	}
+	return ""
+}
+
+func (x *SearchNearbyVehiclesRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+type NearbyVehicle struct {
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	VehicleId          []byte                 `protobuf:"bytes,1,opt,name=vehicle_id,json=vehicleId,proto3" json:"vehicle_id,omitempty"`
+	DriverId           []byte                 `protobuf:"bytes,2,opt,name=driver_id,json=driverId,proto3" json:"driver_id,omitempty"`
+	LicensePlate       string                 `protobuf:"bytes,3,opt,name=license_plate,json=licensePlate,proto3" json:"license_plate,omitempty"`
+	VehicleType        string                 `protobuf:"bytes,4,opt,name=vehicle_type,json=vehicleType,proto3" json:"vehicle_type,omitempty"`
+	DistanceKm         float64                `protobuf:"fixed64,5,opt,name=distance_km,json=distanceKm,proto3" json:"distance_km,omitempty"`
+	AvailableWeightKg  float64                `protobuf:"fixed64,6,opt,name=available_weight_kg,json=availableWeightKg,proto3" json:"available_weight_kg,omitempty"`
+	AvailableVolumeCbm float64                `protobuf:"fixed64,7,opt,name=available_volume_cbm,json=availableVolumeCbm,proto3" json:"available_volume_cbm,omitempty"`
+	Latitude           float64                `protobuf:"fixed64,8,opt,name=latitude,proto3" json:"latitude,omitempty"`
+	Longitude          float64                `protobuf:"fixed64,9,opt,name=longitude,proto3" json:"longitude,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
+}
+
+func (x *NearbyVehicle) Reset() {
+	*x = NearbyVehicle{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[32]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *NearbyVehicle) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*NearbyVehicle) ProtoMessage() {}
+
+func (x *NearbyVehicle) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[32]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NearbyVehicle.ProtoReflect.Descriptor instead.
+func (*NearbyVehicle) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{32}
+}
+
+func (x *NearbyVehicle) GetVehicleId() []byte {
+	if x != nil {
+		return x.VehicleId
+	}
+	return nil
+}
+
+func (x *NearbyVehicle) GetDriverId() []byte {
+	if x != nil {
+		return x.DriverId
+	}
+	return nil
+}
+
+func (x *NearbyVehicle) GetLicensePlate() string {
+	if x != nil {
+		return x.LicensePlate
+	}
+	return ""
+}
+
+func (x *NearbyVehicle) GetVehicleType() string {
+	if x != nil {
+		return x.VehicleType
+	}
+	return ""
+}
+
+func (x *NearbyVehicle) GetDistanceKm() float64 {
+	if x != nil {
+		return x.DistanceKm
+	}
+	return 0
+}
+
+func (x *NearbyVehicle) GetAvailableWeightKg() float64 {
+	if x != nil {
+		return x.AvailableWeightKg
+	}
+	return 0
+}
+
+func (x *NearbyVehicle) GetAvailableVolumeCbm() float64 {
+	if x != nil {
+		return x.AvailableVolumeCbm
+	}
+	return 0
+}
+
+func (x *NearbyVehicle) GetLatitude() float64 {
+	if x != nil {
+		return x.Latitude
+	}
+	return 0
+}
+
+func (x *NearbyVehicle) GetLongitude() float64 {
+	if x != nil {
+		return x.Longitude
+	}
+	return 0
+}
+
+type SearchNearbyVehiclesResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Vehicles      []*NearbyVehicle       `protobuf:"bytes,1,rep,name=vehicles,proto3" json:"vehicles,omitempty"`
+	TotalFound    int32                  `protobuf:"varint,2,opt,name=total_found,json=totalFound,proto3" json:"total_found,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SearchNearbyVehiclesResponse) Reset() {
+	*x = SearchNearbyVehiclesResponse{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[33]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SearchNearbyVehiclesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SearchNearbyVehiclesResponse) ProtoMessage() {}
+
+func (x *SearchNearbyVehiclesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[33]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SearchNearbyVehiclesResponse.ProtoReflect.Descriptor instead.
+func (*SearchNearbyVehiclesResponse) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{33}
+}
+
+func (x *SearchNearbyVehiclesResponse) GetVehicles() []*NearbyVehicle {
+	if x != nil {
+		return x.Vehicles
+	}
+	return nil
+}
+
+func (x *SearchNearbyVehiclesResponse) GetTotalFound() int32 {
+	if x != nil {
+		return x.TotalFound
+	}
+	return 0
+}
+
+type AdminListVehiclesRequest struct {
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	Status             string                 `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	VerificationStatus string                 `protobuf:"bytes,2,opt,name=verification_status,json=verificationStatus,proto3" json:"verification_status,omitempty"`
+	VehicleType        string                 `protobuf:"bytes,3,opt,name=vehicle_type,json=vehicleType,proto3" json:"vehicle_type,omitempty"`
+	Keyword            string                 `protobuf:"bytes,4,opt,name=keyword,proto3" json:"keyword,omitempty"` // biển số
+	Page               int32                  `protobuf:"varint,5,opt,name=page,proto3" json:"page,omitempty"`
+	PageSize           int32                  `protobuf:"varint,6,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
+}
+
+func (x *AdminListVehiclesRequest) Reset() {
+	*x = AdminListVehiclesRequest{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[34]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminListVehiclesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminListVehiclesRequest) ProtoMessage() {}
+
+func (x *AdminListVehiclesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[34]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminListVehiclesRequest.ProtoReflect.Descriptor instead.
+func (*AdminListVehiclesRequest) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{34}
+}
+
+func (x *AdminListVehiclesRequest) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *AdminListVehiclesRequest) GetVerificationStatus() string {
+	if x != nil {
+		return x.VerificationStatus
+	}
+	return ""
+}
+
+func (x *AdminListVehiclesRequest) GetVehicleType() string {
+	if x != nil {
+		return x.VehicleType
+	}
+	return ""
+}
+
+func (x *AdminListVehiclesRequest) GetKeyword() string {
+	if x != nil {
+		return x.Keyword
+	}
+	return ""
+}
+
+func (x *AdminListVehiclesRequest) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *AdminListVehiclesRequest) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+type AdminListVehiclesResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Vehicles      []*Vehicle             `protobuf:"bytes,1,rep,name=vehicles,proto3" json:"vehicles,omitempty"`
+	Pagination    *Pagination            `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AdminListVehiclesResponse) Reset() {
+	*x = AdminListVehiclesResponse{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[35]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminListVehiclesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminListVehiclesResponse) ProtoMessage() {}
+
+func (x *AdminListVehiclesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[35]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminListVehiclesResponse.ProtoReflect.Descriptor instead.
+func (*AdminListVehiclesResponse) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{35}
+}
+
+func (x *AdminListVehiclesResponse) GetVehicles() []*Vehicle {
+	if x != nil {
+		return x.Vehicles
+	}
+	return nil
+}
+
+func (x *AdminListVehiclesResponse) GetPagination() *Pagination {
+	if x != nil {
+		return x.Pagination
+	}
+	return nil
+}
+
+type AdminVerifyVehicleRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            []byte                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Approved      bool                   `protobuf:"varint,2,opt,name=approved,proto3" json:"approved,omitempty"`
+	Note          string                 `protobuf:"bytes,3,opt,name=note,proto3" json:"note,omitempty"`
+	ReviewerId    []byte                 `protobuf:"bytes,4,opt,name=reviewer_id,json=reviewerId,proto3" json:"reviewer_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AdminVerifyVehicleRequest) Reset() {
+	*x = AdminVerifyVehicleRequest{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[36]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminVerifyVehicleRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminVerifyVehicleRequest) ProtoMessage() {}
+
+func (x *AdminVerifyVehicleRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[36]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminVerifyVehicleRequest.ProtoReflect.Descriptor instead.
+func (*AdminVerifyVehicleRequest) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{36}
+}
+
+func (x *AdminVerifyVehicleRequest) GetId() []byte {
+	if x != nil {
+		return x.Id
+	}
+	return nil
+}
+
+func (x *AdminVerifyVehicleRequest) GetApproved() bool {
+	if x != nil {
+		return x.Approved
+	}
+	return false
+}
+
+func (x *AdminVerifyVehicleRequest) GetNote() string {
+	if x != nil {
+		return x.Note
+	}
+	return ""
+}
+
+func (x *AdminVerifyVehicleRequest) GetReviewerId() []byte {
+	if x != nil {
+		return x.ReviewerId
+	}
+	return nil
+}
+
+type AdminVerifyVehicleResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Vehicle       *Vehicle               `protobuf:"bytes,1,opt,name=vehicle,proto3" json:"vehicle,omitempty"`
+	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AdminVerifyVehicleResponse) Reset() {
+	*x = AdminVerifyVehicleResponse{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[37]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminVerifyVehicleResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminVerifyVehicleResponse) ProtoMessage() {}
+
+func (x *AdminVerifyVehicleResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[37]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminVerifyVehicleResponse.ProtoReflect.Descriptor instead.
+func (*AdminVerifyVehicleResponse) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{37}
+}
+
+func (x *AdminVerifyVehicleResponse) GetVehicle() *Vehicle {
+	if x != nil {
+		return x.Vehicle
+	}
+	return nil
+}
+
+func (x *AdminVerifyVehicleResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+type AdminListPendingDocumentsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Page          int32                  `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"`
+	PageSize      int32                  `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AdminListPendingDocumentsRequest) Reset() {
+	*x = AdminListPendingDocumentsRequest{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[38]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminListPendingDocumentsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminListPendingDocumentsRequest) ProtoMessage() {}
+
+func (x *AdminListPendingDocumentsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[38]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminListPendingDocumentsRequest.ProtoReflect.Descriptor instead.
+func (*AdminListPendingDocumentsRequest) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{38}
+}
+
+func (x *AdminListPendingDocumentsRequest) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *AdminListPendingDocumentsRequest) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+type AdminListPendingDocumentsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Documents     []*VehicleDocument     `protobuf:"bytes,1,rep,name=documents,proto3" json:"documents,omitempty"`
+	Pagination    *Pagination            `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AdminListPendingDocumentsResponse) Reset() {
+	*x = AdminListPendingDocumentsResponse{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[39]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminListPendingDocumentsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminListPendingDocumentsResponse) ProtoMessage() {}
+
+func (x *AdminListPendingDocumentsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[39]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminListPendingDocumentsResponse.ProtoReflect.Descriptor instead.
+func (*AdminListPendingDocumentsResponse) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{39}
+}
+
+func (x *AdminListPendingDocumentsResponse) GetDocuments() []*VehicleDocument {
+	if x != nil {
+		return x.Documents
+	}
+	return nil
+}
+
+func (x *AdminListPendingDocumentsResponse) GetPagination() *Pagination {
+	if x != nil {
+		return x.Pagination
+	}
+	return nil
+}
+
+type AdminReviewDocumentRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            []byte                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Approved      bool                   `protobuf:"varint,2,opt,name=approved,proto3" json:"approved,omitempty"`
+	Note          string                 `protobuf:"bytes,3,opt,name=note,proto3" json:"note,omitempty"`
+	ReviewerId    []byte                 `protobuf:"bytes,4,opt,name=reviewer_id,json=reviewerId,proto3" json:"reviewer_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AdminReviewDocumentRequest) Reset() {
+	*x = AdminReviewDocumentRequest{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[40]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminReviewDocumentRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminReviewDocumentRequest) ProtoMessage() {}
+
+func (x *AdminReviewDocumentRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[40]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminReviewDocumentRequest.ProtoReflect.Descriptor instead.
+func (*AdminReviewDocumentRequest) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{40}
+}
+
+func (x *AdminReviewDocumentRequest) GetId() []byte {
+	if x != nil {
+		return x.Id
+	}
+	return nil
+}
+
+func (x *AdminReviewDocumentRequest) GetApproved() bool {
+	if x != nil {
+		return x.Approved
+	}
+	return false
+}
+
+func (x *AdminReviewDocumentRequest) GetNote() string {
+	if x != nil {
+		return x.Note
+	}
+	return ""
+}
+
+func (x *AdminReviewDocumentRequest) GetReviewerId() []byte {
+	if x != nil {
+		return x.ReviewerId
+	}
+	return nil
+}
+
+type AdminReviewDocumentResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Document      *VehicleDocument       `protobuf:"bytes,1,opt,name=document,proto3" json:"document,omitempty"`
+	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AdminReviewDocumentResponse) Reset() {
+	*x = AdminReviewDocumentResponse{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[41]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminReviewDocumentResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminReviewDocumentResponse) ProtoMessage() {}
+
+func (x *AdminReviewDocumentResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[41]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminReviewDocumentResponse.ProtoReflect.Descriptor instead.
+func (*AdminReviewDocumentResponse) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{41}
+}
+
+func (x *AdminReviewDocumentResponse) GetDocument() *VehicleDocument {
+	if x != nil {
+		return x.Document
+	}
+	return nil
+}
+
+func (x *AdminReviewDocumentResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+type AdminGetVehicleStatsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AdminGetVehicleStatsRequest) Reset() {
+	*x = AdminGetVehicleStatsRequest{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[42]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminGetVehicleStatsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminGetVehicleStatsRequest) ProtoMessage() {}
+
+func (x *AdminGetVehicleStatsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[42]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminGetVehicleStatsRequest.ProtoReflect.Descriptor instead.
+func (*AdminGetVehicleStatsRequest) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{42}
+}
+
+type AdminGetVehicleStatsResponse struct {
+	state               protoimpl.MessageState `protogen:"open.v1"`
+	TotalVehicles       int64                  `protobuf:"varint,1,opt,name=total_vehicles,json=totalVehicles,proto3" json:"total_vehicles,omitempty"`
+	ActiveVehicles      int64                  `protobuf:"varint,2,opt,name=active_vehicles,json=activeVehicles,proto3" json:"active_vehicles,omitempty"`
+	MaintenanceVehicles int64                  `protobuf:"varint,3,opt,name=maintenance_vehicles,json=maintenanceVehicles,proto3" json:"maintenance_vehicles,omitempty"`
+	PendingVerification int64                  `protobuf:"varint,4,opt,name=pending_verification,json=pendingVerification,proto3" json:"pending_verification,omitempty"`
+	OnlineDrivers       int64                  `protobuf:"varint,5,opt,name=online_drivers,json=onlineDrivers,proto3" json:"online_drivers,omitempty"`
+	PendingDocuments    int64                  `protobuf:"varint,6,opt,name=pending_documents,json=pendingDocuments,proto3" json:"pending_documents,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
+}
+
+func (x *AdminGetVehicleStatsResponse) Reset() {
+	*x = AdminGetVehicleStatsResponse{}
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[43]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminGetVehicleStatsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminGetVehicleStatsResponse) ProtoMessage() {}
+
+func (x *AdminGetVehicleStatsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes[43]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminGetVehicleStatsResponse.ProtoReflect.Descriptor instead.
+func (*AdminGetVehicleStatsResponse) Descriptor() ([]byte, []int) {
+	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP(), []int{43}
+}
+
+func (x *AdminGetVehicleStatsResponse) GetTotalVehicles() int64 {
+	if x != nil {
+		return x.TotalVehicles
+	}
+	return 0
+}
+
+func (x *AdminGetVehicleStatsResponse) GetActiveVehicles() int64 {
+	if x != nil {
+		return x.ActiveVehicles
+	}
+	return 0
+}
+
+func (x *AdminGetVehicleStatsResponse) GetMaintenanceVehicles() int64 {
+	if x != nil {
+		return x.MaintenanceVehicles
+	}
+	return 0
+}
+
+func (x *AdminGetVehicleStatsResponse) GetPendingVerification() int64 {
+	if x != nil {
+		return x.PendingVerification
+	}
+	return 0
+}
+
+func (x *AdminGetVehicleStatsResponse) GetOnlineDrivers() int64 {
+	if x != nil {
+		return x.OnlineDrivers
+	}
+	return 0
+}
+
+func (x *AdminGetVehicleStatsResponse) GetPendingDocuments() int64 {
+	if x != nil {
+		return x.PendingDocuments
+	}
+	return 0
+}
+
 var File_logistic_vehicle_service_v1_vehicle_messages_proto protoreflect.FileDescriptor
 
 const file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDesc = "" +
 	"\n" +
-	"2logistic/vehicle_service/v1/vehicle_messages.proto\x12\x1blogistic.vehicle_service.v1\"\xa0\x02\n" +
+	"2logistic/vehicle_service/v1/vehicle_messages.proto\x12\x1blogistic.vehicle_service.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xf2\x03\n" +
 	"\aVehicle\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\fR\x02id\x12\x1b\n" +
 	"\tdriver_id\x18\x02 \x01(\fR\bdriverId\x12#\n" +
 	"\rlicense_plate\x18\x03 \x01(\tR\flicensePlate\x12\x14\n" +
 	"\x05brand\x18\x04 \x01(\tR\x05brand\x12\x14\n" +
-	"\x05model\x18\x05 \x01(\tR\x05model\x12!\n" +
-	"\fvehicle_type\x18\x06 \x01(\tR\vvehicleType\x12,\n" +
-	"\x12capacity_weight_kg\x18\a \x01(\x02R\x10capacityWeightKg\x12.\n" +
-	"\x13capacity_volume_cbm\x18\b \x01(\x02R\x11capacityVolumeCbm\x12\x16\n" +
-	"\x06status\x18\t \x01(\tR\x06status\"\x87\x02\n" +
+	"\x05model\x18\x05 \x01(\tR\x05model\x12)\n" +
+	"\x10manufacture_year\x18\x06 \x01(\x05R\x0fmanufactureYear\x12!\n" +
+	"\fvehicle_type\x18\a \x01(\tR\vvehicleType\x12,\n" +
+	"\x12capacity_weight_kg\x18\b \x01(\x01R\x10capacityWeightKg\x12.\n" +
+	"\x13capacity_volume_cbm\x18\t \x01(\x01R\x11capacityVolumeCbm\x12\x16\n" +
+	"\x06status\x18\n" +
+	" \x01(\tR\x06status\x12/\n" +
+	"\x13verification_status\x18\v \x01(\tR\x12verificationStatus\x129\n" +
+	"\n" +
+	"created_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"\n" +
+	"updated_at\x18\r \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\x9e\x03\n" +
+	"\x0fVehicleDocument\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\fR\x02id\x12\x1d\n" +
+	"\n" +
+	"vehicle_id\x18\x02 \x01(\fR\tvehicleId\x12#\n" +
+	"\rdocument_type\x18\x03 \x01(\tR\fdocumentType\x12'\n" +
+	"\x0fdocument_number\x18\x04 \x01(\tR\x0edocumentNumber\x12\x19\n" +
+	"\bfile_url\x18\x05 \x01(\tR\afileUrl\x127\n" +
+	"\tissued_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\bissuedAt\x129\n" +
+	"\n" +
+	"expires_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\x12#\n" +
+	"\rreview_status\x18\b \x01(\tR\freviewStatus\x12\x1f\n" +
+	"\vreview_note\x18\t \x01(\tR\n" +
+	"reviewNote\x129\n" +
+	"\n" +
+	"created_at\x18\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"\x94\x02\n" +
+	"\x0fVehicleLocation\x12\x1d\n" +
+	"\n" +
+	"vehicle_id\x18\x01 \x01(\fR\tvehicleId\x12\x1b\n" +
+	"\tdriver_id\x18\x02 \x01(\fR\bdriverId\x12\x1a\n" +
+	"\blatitude\x18\x03 \x01(\x01R\blatitude\x12\x1c\n" +
+	"\tlongitude\x18\x04 \x01(\x01R\tlongitude\x12\x18\n" +
+	"\aheading\x18\x05 \x01(\x01R\aheading\x12\x1b\n" +
+	"\tspeed_kph\x18\x06 \x01(\x01R\bspeedKph\x12\x17\n" +
+	"\azone_id\x18\a \x01(\tR\x06zoneId\x12;\n" +
+	"\vrecorded_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"recordedAt\"\xf5\x02\n" +
+	"\x12DriverAvailability\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\fR\x02id\x12\x1b\n" +
+	"\tdriver_id\x18\x02 \x01(\fR\bdriverId\x12\x1d\n" +
+	"\n" +
+	"vehicle_id\x18\x03 \x01(\fR\tvehicleId\x12\x1b\n" +
+	"\tis_online\x18\x04 \x01(\bR\bisOnline\x12.\n" +
+	"\x13available_weight_kg\x18\x05 \x01(\x01R\x11availableWeightKg\x120\n" +
+	"\x14available_volume_cbm\x18\x06 \x01(\x01R\x12availableVolumeCbm\x12\x1f\n" +
+	"\vcurrent_lat\x18\a \x01(\x01R\n" +
+	"currentLat\x12\x1f\n" +
+	"\vcurrent_lng\x18\b \x01(\x01R\n" +
+	"currentLng\x12\x17\n" +
+	"\azone_id\x18\t \x01(\tR\x06zoneId\x129\n" +
+	"\n" +
+	"updated_at\x18\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\x7f\n" +
+	"\n" +
+	"Pagination\x12\x12\n" +
+	"\x04page\x18\x01 \x01(\x05R\x04page\x12\x1b\n" +
+	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\x12\x1f\n" +
+	"\vtotal_items\x18\x03 \x01(\x03R\n" +
+	"totalItems\x12\x1f\n" +
+	"\vtotal_pages\x18\x04 \x01(\x05R\n" +
+	"totalPages\"\xb2\x02\n" +
 	"\x16RegisterVehicleRequest\x12\x1b\n" +
 	"\tdriver_id\x18\x01 \x01(\fR\bdriverId\x12#\n" +
 	"\rlicense_plate\x18\x02 \x01(\tR\flicensePlate\x12\x14\n" +
 	"\x05brand\x18\x03 \x01(\tR\x05brand\x12\x14\n" +
-	"\x05model\x18\x04 \x01(\tR\x05model\x12!\n" +
-	"\fvehicle_type\x18\x05 \x01(\tR\vvehicleType\x12,\n" +
-	"\x12capacity_weight_kg\x18\x06 \x01(\x02R\x10capacityWeightKg\x12.\n" +
-	"\x13capacity_volume_cbm\x18\a \x01(\x02R\x11capacityVolumeCbm\"C\n" +
+	"\x05model\x18\x04 \x01(\tR\x05model\x12)\n" +
+	"\x10manufacture_year\x18\x05 \x01(\x05R\x0fmanufactureYear\x12!\n" +
+	"\fvehicle_type\x18\x06 \x01(\tR\vvehicleType\x12,\n" +
+	"\x12capacity_weight_kg\x18\a \x01(\x01R\x10capacityWeightKg\x12.\n" +
+	"\x13capacity_volume_cbm\x18\b \x01(\x01R\x11capacityVolumeCbm\"\x83\x01\n" +
 	"\x17RegisterVehicleResponse\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\fR\x02id\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"#\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\x12>\n" +
+	"\avehicle\x18\x03 \x01(\v2$.logistic.vehicle_service.v1.VehicleR\avehicle\"@\n" +
 	"\x11GetVehicleRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\fR\x02id\"T\n" +
+	"\x02id\x18\x01 \x01(\fR\x02id\x12\x1b\n" +
+	"\tdriver_id\x18\x02 \x01(\fR\bdriverId\"T\n" +
 	"\x12GetVehicleResponse\x12>\n" +
-	"\avehicle\x18\x01 \x01(\v2$.logistic.vehicle_service.v1.VehicleR\avehicle\"2\n" +
+	"\avehicle\x18\x01 \x01(\v2$.logistic.vehicle_service.v1.VehicleR\avehicle\"\x9e\x01\n" +
 	"\x13ListVehiclesRequest\x12\x1b\n" +
-	"\tdriver_id\x18\x01 \x01(\fR\bdriverId\"X\n" +
+	"\tdriver_id\x18\x01 \x01(\fR\bdriverId\x12\x16\n" +
+	"\x06status\x18\x02 \x01(\tR\x06status\x12!\n" +
+	"\fvehicle_type\x18\x03 \x01(\tR\vvehicleType\x12\x12\n" +
+	"\x04page\x18\x04 \x01(\x05R\x04page\x12\x1b\n" +
+	"\tpage_size\x18\x05 \x01(\x05R\bpageSize\"\xa1\x01\n" +
 	"\x14ListVehiclesResponse\x12@\n" +
-	"\bvehicles\x18\x01 \x03(\v2$.logistic.vehicle_service.v1.VehicleR\bvehicles\"D\n" +
+	"\bvehicles\x18\x01 \x03(\v2$.logistic.vehicle_service.v1.VehicleR\bvehicles\x12G\n" +
+	"\n" +
+	"pagination\x18\x02 \x01(\v2'.logistic.vehicle_service.v1.PaginationR\n" +
+	"pagination\"\x9b\x02\n" +
+	"\x14UpdateVehicleRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\fR\x02id\x12\x14\n" +
+	"\x05brand\x18\x02 \x01(\tR\x05brand\x12\x14\n" +
+	"\x05model\x18\x03 \x01(\tR\x05model\x12)\n" +
+	"\x10manufacture_year\x18\x04 \x01(\x05R\x0fmanufactureYear\x12!\n" +
+	"\fvehicle_type\x18\x05 \x01(\tR\vvehicleType\x12,\n" +
+	"\x12capacity_weight_kg\x18\x06 \x01(\x01R\x10capacityWeightKg\x12.\n" +
+	"\x13capacity_volume_cbm\x18\a \x01(\x01R\x11capacityVolumeCbm\x12\x1b\n" +
+	"\tdriver_id\x18\b \x01(\fR\bdriverId\"q\n" +
+	"\x15UpdateVehicleResponse\x12>\n" +
+	"\avehicle\x18\x01 \x01(\v2$.logistic.vehicle_service.v1.VehicleR\avehicle\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"C\n" +
+	"\x14DeleteVehicleRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\fR\x02id\x12\x1b\n" +
+	"\tdriver_id\x18\x02 \x01(\fR\bdriverId\"1\n" +
+	"\x15DeleteVehicleResponse\x12\x18\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"a\n" +
 	"\x1aUpdateVehicleStatusRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\fR\x02id\x12\x16\n" +
-	"\x06status\x18\x02 \x01(\tR\x06status\"7\n" +
+	"\x06status\x18\x02 \x01(\tR\x06status\x12\x1b\n" +
+	"\tdriver_id\x18\x03 \x01(\fR\bdriverId\"w\n" +
 	"\x1bUpdateVehicleStatusResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessageB?Z=github.com/logistic/api/logistic/vehicle_service/v1;vehiclev1b\x06proto3"
+	"\amessage\x18\x01 \x01(\tR\amessage\x12>\n" +
+	"\avehicle\x18\x02 \x01(\v2$.logistic.vehicle_service.v1.VehicleR\avehicle\"\xb7\x02\n" +
+	"\x1cUploadVehicleDocumentRequest\x12\x1d\n" +
+	"\n" +
+	"vehicle_id\x18\x01 \x01(\fR\tvehicleId\x12#\n" +
+	"\rdocument_type\x18\x02 \x01(\tR\fdocumentType\x12'\n" +
+	"\x0fdocument_number\x18\x03 \x01(\tR\x0edocumentNumber\x12\x19\n" +
+	"\bfile_url\x18\x04 \x01(\tR\afileUrl\x127\n" +
+	"\tissued_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\bissuedAt\x129\n" +
+	"\n" +
+	"expires_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\x12\x1b\n" +
+	"\tdriver_id\x18\a \x01(\fR\bdriverId\"\x83\x01\n" +
+	"\x1dUploadVehicleDocumentResponse\x12H\n" +
+	"\bdocument\x18\x01 \x01(\v2,.logistic.vehicle_service.v1.VehicleDocumentR\bdocument\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"~\n" +
+	"\x1bListVehicleDocumentsRequest\x12\x1d\n" +
+	"\n" +
+	"vehicle_id\x18\x01 \x01(\fR\tvehicleId\x12#\n" +
+	"\rreview_status\x18\x02 \x01(\tR\freviewStatus\x12\x1b\n" +
+	"\tdriver_id\x18\x03 \x01(\fR\bdriverId\"j\n" +
+	"\x1cListVehicleDocumentsResponse\x12J\n" +
+	"\tdocuments\x18\x01 \x03(\v2,.logistic.vehicle_service.v1.VehicleDocumentR\tdocuments\"K\n" +
+	"\x1cDeleteVehicleDocumentRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\fR\x02id\x12\x1b\n" +
+	"\tdriver_id\x18\x02 \x01(\fR\bdriverId\"9\n" +
+	"\x1dDeleteVehicleDocumentResponse\x12\x18\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"\xc4\x01\n" +
+	"\x15ReportLocationRequest\x12\x1d\n" +
+	"\n" +
+	"vehicle_id\x18\x01 \x01(\fR\tvehicleId\x12\x1b\n" +
+	"\tdriver_id\x18\x02 \x01(\fR\bdriverId\x12\x1a\n" +
+	"\blatitude\x18\x03 \x01(\x01R\blatitude\x12\x1c\n" +
+	"\tlongitude\x18\x04 \x01(\x01R\tlongitude\x12\x18\n" +
+	"\aheading\x18\x05 \x01(\x01R\aheading\x12\x1b\n" +
+	"\tspeed_kph\x18\x06 \x01(\x01R\bspeedKph\"K\n" +
+	"\x16ReportLocationResponse\x12\x18\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\x12\x17\n" +
+	"\azone_id\x18\x02 \x01(\tR\x06zoneId\"W\n" +
+	"\x19GetVehicleLocationRequest\x12\x1d\n" +
+	"\n" +
+	"vehicle_id\x18\x01 \x01(\fR\tvehicleId\x12\x1b\n" +
+	"\tdriver_id\x18\x02 \x01(\fR\bdriverId\"f\n" +
+	"\x1aGetVehicleLocationResponse\x12H\n" +
+	"\blocation\x18\x01 \x01(\v2,.logistic.vehicle_service.v1.VehicleLocationR\blocation\"\x9b\x02\n" +
+	"\x1cSetDriverAvailabilityRequest\x12\x1b\n" +
+	"\tdriver_id\x18\x01 \x01(\fR\bdriverId\x12\x1d\n" +
+	"\n" +
+	"vehicle_id\x18\x02 \x01(\fR\tvehicleId\x12\x1b\n" +
+	"\tis_online\x18\x03 \x01(\bR\bisOnline\x12.\n" +
+	"\x13available_weight_kg\x18\x04 \x01(\x01R\x11availableWeightKg\x120\n" +
+	"\x14available_volume_cbm\x18\x05 \x01(\x01R\x12availableVolumeCbm\x12\x1f\n" +
+	"\vcurrent_lat\x18\x06 \x01(\x01R\n" +
+	"currentLat\x12\x1f\n" +
+	"\vcurrent_lng\x18\a \x01(\x01R\n" +
+	"currentLng\"\x8e\x01\n" +
+	"\x1dSetDriverAvailabilityResponse\x12S\n" +
+	"\favailability\x18\x01 \x01(\v2/.logistic.vehicle_service.v1.DriverAvailabilityR\favailability\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\";\n" +
+	"\x1cGetDriverAvailabilityRequest\x12\x1b\n" +
+	"\tdriver_id\x18\x01 \x01(\fR\bdriverId\"t\n" +
+	"\x1dGetDriverAvailabilityResponse\x12S\n" +
+	"\favailability\x18\x01 \x01(\v2/.logistic.vehicle_service.v1.DriverAvailabilityR\favailability\"\xf7\x01\n" +
+	"\x1bSearchNearbyVehiclesRequest\x12\x1a\n" +
+	"\blatitude\x18\x01 \x01(\x01R\blatitude\x12\x1c\n" +
+	"\tlongitude\x18\x02 \x01(\x01R\tlongitude\x12\x1b\n" +
+	"\tradius_km\x18\x03 \x01(\x01R\bradiusKm\x12\"\n" +
+	"\rmin_weight_kg\x18\x04 \x01(\x01R\vminWeightKg\x12$\n" +
+	"\x0emin_volume_cbm\x18\x05 \x01(\x01R\fminVolumeCbm\x12!\n" +
+	"\fvehicle_type\x18\x06 \x01(\tR\vvehicleType\x12\x14\n" +
+	"\x05limit\x18\a \x01(\x05R\x05limit\"\xd0\x02\n" +
+	"\rNearbyVehicle\x12\x1d\n" +
+	"\n" +
+	"vehicle_id\x18\x01 \x01(\fR\tvehicleId\x12\x1b\n" +
+	"\tdriver_id\x18\x02 \x01(\fR\bdriverId\x12#\n" +
+	"\rlicense_plate\x18\x03 \x01(\tR\flicensePlate\x12!\n" +
+	"\fvehicle_type\x18\x04 \x01(\tR\vvehicleType\x12\x1f\n" +
+	"\vdistance_km\x18\x05 \x01(\x01R\n" +
+	"distanceKm\x12.\n" +
+	"\x13available_weight_kg\x18\x06 \x01(\x01R\x11availableWeightKg\x120\n" +
+	"\x14available_volume_cbm\x18\a \x01(\x01R\x12availableVolumeCbm\x12\x1a\n" +
+	"\blatitude\x18\b \x01(\x01R\blatitude\x12\x1c\n" +
+	"\tlongitude\x18\t \x01(\x01R\tlongitude\"\x87\x01\n" +
+	"\x1cSearchNearbyVehiclesResponse\x12F\n" +
+	"\bvehicles\x18\x01 \x03(\v2*.logistic.vehicle_service.v1.NearbyVehicleR\bvehicles\x12\x1f\n" +
+	"\vtotal_found\x18\x02 \x01(\x05R\n" +
+	"totalFound\"\xd1\x01\n" +
+	"\x18AdminListVehiclesRequest\x12\x16\n" +
+	"\x06status\x18\x01 \x01(\tR\x06status\x12/\n" +
+	"\x13verification_status\x18\x02 \x01(\tR\x12verificationStatus\x12!\n" +
+	"\fvehicle_type\x18\x03 \x01(\tR\vvehicleType\x12\x18\n" +
+	"\akeyword\x18\x04 \x01(\tR\akeyword\x12\x12\n" +
+	"\x04page\x18\x05 \x01(\x05R\x04page\x12\x1b\n" +
+	"\tpage_size\x18\x06 \x01(\x05R\bpageSize\"\xa6\x01\n" +
+	"\x19AdminListVehiclesResponse\x12@\n" +
+	"\bvehicles\x18\x01 \x03(\v2$.logistic.vehicle_service.v1.VehicleR\bvehicles\x12G\n" +
+	"\n" +
+	"pagination\x18\x02 \x01(\v2'.logistic.vehicle_service.v1.PaginationR\n" +
+	"pagination\"|\n" +
+	"\x19AdminVerifyVehicleRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\fR\x02id\x12\x1a\n" +
+	"\bapproved\x18\x02 \x01(\bR\bapproved\x12\x12\n" +
+	"\x04note\x18\x03 \x01(\tR\x04note\x12\x1f\n" +
+	"\vreviewer_id\x18\x04 \x01(\fR\n" +
+	"reviewerId\"v\n" +
+	"\x1aAdminVerifyVehicleResponse\x12>\n" +
+	"\avehicle\x18\x01 \x01(\v2$.logistic.vehicle_service.v1.VehicleR\avehicle\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"S\n" +
+	" AdminListPendingDocumentsRequest\x12\x12\n" +
+	"\x04page\x18\x01 \x01(\x05R\x04page\x12\x1b\n" +
+	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\"\xb8\x01\n" +
+	"!AdminListPendingDocumentsResponse\x12J\n" +
+	"\tdocuments\x18\x01 \x03(\v2,.logistic.vehicle_service.v1.VehicleDocumentR\tdocuments\x12G\n" +
+	"\n" +
+	"pagination\x18\x02 \x01(\v2'.logistic.vehicle_service.v1.PaginationR\n" +
+	"pagination\"}\n" +
+	"\x1aAdminReviewDocumentRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\fR\x02id\x12\x1a\n" +
+	"\bapproved\x18\x02 \x01(\bR\bapproved\x12\x12\n" +
+	"\x04note\x18\x03 \x01(\tR\x04note\x12\x1f\n" +
+	"\vreviewer_id\x18\x04 \x01(\fR\n" +
+	"reviewerId\"\x81\x01\n" +
+	"\x1bAdminReviewDocumentResponse\x12H\n" +
+	"\bdocument\x18\x01 \x01(\v2,.logistic.vehicle_service.v1.VehicleDocumentR\bdocument\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"\x1d\n" +
+	"\x1bAdminGetVehicleStatsRequest\"\xa8\x02\n" +
+	"\x1cAdminGetVehicleStatsResponse\x12%\n" +
+	"\x0etotal_vehicles\x18\x01 \x01(\x03R\rtotalVehicles\x12'\n" +
+	"\x0factive_vehicles\x18\x02 \x01(\x03R\x0eactiveVehicles\x121\n" +
+	"\x14maintenance_vehicles\x18\x03 \x01(\x03R\x13maintenanceVehicles\x121\n" +
+	"\x14pending_verification\x18\x04 \x01(\x03R\x13pendingVerification\x12%\n" +
+	"\x0eonline_drivers\x18\x05 \x01(\x03R\ronlineDrivers\x12+\n" +
+	"\x11pending_documents\x18\x06 \x01(\x03R\x10pendingDocumentsB?Z=github.com/logistic/api/logistic/vehicle_service/v1;vehiclev1b\x06proto3"
 
 var (
 	file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescOnce sync.Once
@@ -597,26 +3250,87 @@ func file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescGZIP() []byt
 	return file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDescData
 }
 
-var file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_logistic_vehicle_service_v1_vehicle_messages_proto_msgTypes = make([]protoimpl.MessageInfo, 44)
 var file_logistic_vehicle_service_v1_vehicle_messages_proto_goTypes = []any{
-	(*Vehicle)(nil),                     // 0: logistic.vehicle_service.v1.Vehicle
-	(*RegisterVehicleRequest)(nil),      // 1: logistic.vehicle_service.v1.RegisterVehicleRequest
-	(*RegisterVehicleResponse)(nil),     // 2: logistic.vehicle_service.v1.RegisterVehicleResponse
-	(*GetVehicleRequest)(nil),           // 3: logistic.vehicle_service.v1.GetVehicleRequest
-	(*GetVehicleResponse)(nil),          // 4: logistic.vehicle_service.v1.GetVehicleResponse
-	(*ListVehiclesRequest)(nil),         // 5: logistic.vehicle_service.v1.ListVehiclesRequest
-	(*ListVehiclesResponse)(nil),        // 6: logistic.vehicle_service.v1.ListVehiclesResponse
-	(*UpdateVehicleStatusRequest)(nil),  // 7: logistic.vehicle_service.v1.UpdateVehicleStatusRequest
-	(*UpdateVehicleStatusResponse)(nil), // 8: logistic.vehicle_service.v1.UpdateVehicleStatusResponse
+	(*Vehicle)(nil),                           // 0: logistic.vehicle_service.v1.Vehicle
+	(*VehicleDocument)(nil),                   // 1: logistic.vehicle_service.v1.VehicleDocument
+	(*VehicleLocation)(nil),                   // 2: logistic.vehicle_service.v1.VehicleLocation
+	(*DriverAvailability)(nil),                // 3: logistic.vehicle_service.v1.DriverAvailability
+	(*Pagination)(nil),                        // 4: logistic.vehicle_service.v1.Pagination
+	(*RegisterVehicleRequest)(nil),            // 5: logistic.vehicle_service.v1.RegisterVehicleRequest
+	(*RegisterVehicleResponse)(nil),           // 6: logistic.vehicle_service.v1.RegisterVehicleResponse
+	(*GetVehicleRequest)(nil),                 // 7: logistic.vehicle_service.v1.GetVehicleRequest
+	(*GetVehicleResponse)(nil),                // 8: logistic.vehicle_service.v1.GetVehicleResponse
+	(*ListVehiclesRequest)(nil),               // 9: logistic.vehicle_service.v1.ListVehiclesRequest
+	(*ListVehiclesResponse)(nil),              // 10: logistic.vehicle_service.v1.ListVehiclesResponse
+	(*UpdateVehicleRequest)(nil),              // 11: logistic.vehicle_service.v1.UpdateVehicleRequest
+	(*UpdateVehicleResponse)(nil),             // 12: logistic.vehicle_service.v1.UpdateVehicleResponse
+	(*DeleteVehicleRequest)(nil),              // 13: logistic.vehicle_service.v1.DeleteVehicleRequest
+	(*DeleteVehicleResponse)(nil),             // 14: logistic.vehicle_service.v1.DeleteVehicleResponse
+	(*UpdateVehicleStatusRequest)(nil),        // 15: logistic.vehicle_service.v1.UpdateVehicleStatusRequest
+	(*UpdateVehicleStatusResponse)(nil),       // 16: logistic.vehicle_service.v1.UpdateVehicleStatusResponse
+	(*UploadVehicleDocumentRequest)(nil),      // 17: logistic.vehicle_service.v1.UploadVehicleDocumentRequest
+	(*UploadVehicleDocumentResponse)(nil),     // 18: logistic.vehicle_service.v1.UploadVehicleDocumentResponse
+	(*ListVehicleDocumentsRequest)(nil),       // 19: logistic.vehicle_service.v1.ListVehicleDocumentsRequest
+	(*ListVehicleDocumentsResponse)(nil),      // 20: logistic.vehicle_service.v1.ListVehicleDocumentsResponse
+	(*DeleteVehicleDocumentRequest)(nil),      // 21: logistic.vehicle_service.v1.DeleteVehicleDocumentRequest
+	(*DeleteVehicleDocumentResponse)(nil),     // 22: logistic.vehicle_service.v1.DeleteVehicleDocumentResponse
+	(*ReportLocationRequest)(nil),             // 23: logistic.vehicle_service.v1.ReportLocationRequest
+	(*ReportLocationResponse)(nil),            // 24: logistic.vehicle_service.v1.ReportLocationResponse
+	(*GetVehicleLocationRequest)(nil),         // 25: logistic.vehicle_service.v1.GetVehicleLocationRequest
+	(*GetVehicleLocationResponse)(nil),        // 26: logistic.vehicle_service.v1.GetVehicleLocationResponse
+	(*SetDriverAvailabilityRequest)(nil),      // 27: logistic.vehicle_service.v1.SetDriverAvailabilityRequest
+	(*SetDriverAvailabilityResponse)(nil),     // 28: logistic.vehicle_service.v1.SetDriverAvailabilityResponse
+	(*GetDriverAvailabilityRequest)(nil),      // 29: logistic.vehicle_service.v1.GetDriverAvailabilityRequest
+	(*GetDriverAvailabilityResponse)(nil),     // 30: logistic.vehicle_service.v1.GetDriverAvailabilityResponse
+	(*SearchNearbyVehiclesRequest)(nil),       // 31: logistic.vehicle_service.v1.SearchNearbyVehiclesRequest
+	(*NearbyVehicle)(nil),                     // 32: logistic.vehicle_service.v1.NearbyVehicle
+	(*SearchNearbyVehiclesResponse)(nil),      // 33: logistic.vehicle_service.v1.SearchNearbyVehiclesResponse
+	(*AdminListVehiclesRequest)(nil),          // 34: logistic.vehicle_service.v1.AdminListVehiclesRequest
+	(*AdminListVehiclesResponse)(nil),         // 35: logistic.vehicle_service.v1.AdminListVehiclesResponse
+	(*AdminVerifyVehicleRequest)(nil),         // 36: logistic.vehicle_service.v1.AdminVerifyVehicleRequest
+	(*AdminVerifyVehicleResponse)(nil),        // 37: logistic.vehicle_service.v1.AdminVerifyVehicleResponse
+	(*AdminListPendingDocumentsRequest)(nil),  // 38: logistic.vehicle_service.v1.AdminListPendingDocumentsRequest
+	(*AdminListPendingDocumentsResponse)(nil), // 39: logistic.vehicle_service.v1.AdminListPendingDocumentsResponse
+	(*AdminReviewDocumentRequest)(nil),        // 40: logistic.vehicle_service.v1.AdminReviewDocumentRequest
+	(*AdminReviewDocumentResponse)(nil),       // 41: logistic.vehicle_service.v1.AdminReviewDocumentResponse
+	(*AdminGetVehicleStatsRequest)(nil),       // 42: logistic.vehicle_service.v1.AdminGetVehicleStatsRequest
+	(*AdminGetVehicleStatsResponse)(nil),      // 43: logistic.vehicle_service.v1.AdminGetVehicleStatsResponse
+	(*timestamppb.Timestamp)(nil),             // 44: google.protobuf.Timestamp
 }
 var file_logistic_vehicle_service_v1_vehicle_messages_proto_depIdxs = []int32{
-	0, // 0: logistic.vehicle_service.v1.GetVehicleResponse.vehicle:type_name -> logistic.vehicle_service.v1.Vehicle
-	0, // 1: logistic.vehicle_service.v1.ListVehiclesResponse.vehicles:type_name -> logistic.vehicle_service.v1.Vehicle
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	44, // 0: logistic.vehicle_service.v1.Vehicle.created_at:type_name -> google.protobuf.Timestamp
+	44, // 1: logistic.vehicle_service.v1.Vehicle.updated_at:type_name -> google.protobuf.Timestamp
+	44, // 2: logistic.vehicle_service.v1.VehicleDocument.issued_at:type_name -> google.protobuf.Timestamp
+	44, // 3: logistic.vehicle_service.v1.VehicleDocument.expires_at:type_name -> google.protobuf.Timestamp
+	44, // 4: logistic.vehicle_service.v1.VehicleDocument.created_at:type_name -> google.protobuf.Timestamp
+	44, // 5: logistic.vehicle_service.v1.VehicleLocation.recorded_at:type_name -> google.protobuf.Timestamp
+	44, // 6: logistic.vehicle_service.v1.DriverAvailability.updated_at:type_name -> google.protobuf.Timestamp
+	0,  // 7: logistic.vehicle_service.v1.RegisterVehicleResponse.vehicle:type_name -> logistic.vehicle_service.v1.Vehicle
+	0,  // 8: logistic.vehicle_service.v1.GetVehicleResponse.vehicle:type_name -> logistic.vehicle_service.v1.Vehicle
+	0,  // 9: logistic.vehicle_service.v1.ListVehiclesResponse.vehicles:type_name -> logistic.vehicle_service.v1.Vehicle
+	4,  // 10: logistic.vehicle_service.v1.ListVehiclesResponse.pagination:type_name -> logistic.vehicle_service.v1.Pagination
+	0,  // 11: logistic.vehicle_service.v1.UpdateVehicleResponse.vehicle:type_name -> logistic.vehicle_service.v1.Vehicle
+	0,  // 12: logistic.vehicle_service.v1.UpdateVehicleStatusResponse.vehicle:type_name -> logistic.vehicle_service.v1.Vehicle
+	44, // 13: logistic.vehicle_service.v1.UploadVehicleDocumentRequest.issued_at:type_name -> google.protobuf.Timestamp
+	44, // 14: logistic.vehicle_service.v1.UploadVehicleDocumentRequest.expires_at:type_name -> google.protobuf.Timestamp
+	1,  // 15: logistic.vehicle_service.v1.UploadVehicleDocumentResponse.document:type_name -> logistic.vehicle_service.v1.VehicleDocument
+	1,  // 16: logistic.vehicle_service.v1.ListVehicleDocumentsResponse.documents:type_name -> logistic.vehicle_service.v1.VehicleDocument
+	2,  // 17: logistic.vehicle_service.v1.GetVehicleLocationResponse.location:type_name -> logistic.vehicle_service.v1.VehicleLocation
+	3,  // 18: logistic.vehicle_service.v1.SetDriverAvailabilityResponse.availability:type_name -> logistic.vehicle_service.v1.DriverAvailability
+	3,  // 19: logistic.vehicle_service.v1.GetDriverAvailabilityResponse.availability:type_name -> logistic.vehicle_service.v1.DriverAvailability
+	32, // 20: logistic.vehicle_service.v1.SearchNearbyVehiclesResponse.vehicles:type_name -> logistic.vehicle_service.v1.NearbyVehicle
+	0,  // 21: logistic.vehicle_service.v1.AdminListVehiclesResponse.vehicles:type_name -> logistic.vehicle_service.v1.Vehicle
+	4,  // 22: logistic.vehicle_service.v1.AdminListVehiclesResponse.pagination:type_name -> logistic.vehicle_service.v1.Pagination
+	0,  // 23: logistic.vehicle_service.v1.AdminVerifyVehicleResponse.vehicle:type_name -> logistic.vehicle_service.v1.Vehicle
+	1,  // 24: logistic.vehicle_service.v1.AdminListPendingDocumentsResponse.documents:type_name -> logistic.vehicle_service.v1.VehicleDocument
+	4,  // 25: logistic.vehicle_service.v1.AdminListPendingDocumentsResponse.pagination:type_name -> logistic.vehicle_service.v1.Pagination
+	1,  // 26: logistic.vehicle_service.v1.AdminReviewDocumentResponse.document:type_name -> logistic.vehicle_service.v1.VehicleDocument
+	27, // [27:27] is the sub-list for method output_type
+	27, // [27:27] is the sub-list for method input_type
+	27, // [27:27] is the sub-list for extension type_name
+	27, // [27:27] is the sub-list for extension extendee
+	0,  // [0:27] is the sub-list for field type_name
 }
 
 func init() { file_logistic_vehicle_service_v1_vehicle_messages_proto_init() }
@@ -630,7 +3344,7 @@ func file_logistic_vehicle_service_v1_vehicle_messages_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDesc), len(file_logistic_vehicle_service_v1_vehicle_messages_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   9,
+			NumMessages:   44,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

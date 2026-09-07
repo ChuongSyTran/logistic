@@ -19,18 +19,57 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	UserService_RegisterUser_FullMethodName    = "/logistic.user_service.v1.UserService/RegisterUser"
-	UserService_GetUser_FullMethodName         = "/logistic.user_service.v1.UserService/GetUser"
-	UserService_UpdateDriverKYC_FullMethodName = "/logistic.user_service.v1.UserService/UpdateDriverKYC"
+	UserService_RegisterUser_FullMethodName          = "/logistic.user_service.v1.UserService/RegisterUser"
+	UserService_GetUser_FullMethodName               = "/logistic.user_service.v1.UserService/GetUser"
+	UserService_UpdateUser_FullMethodName            = "/logistic.user_service.v1.UserService/UpdateUser"
+	UserService_GetDriverProfile_FullMethodName      = "/logistic.user_service.v1.UserService/GetDriverProfile"
+	UserService_UpdateDriverProfile_FullMethodName   = "/logistic.user_service.v1.UserService/UpdateDriverProfile"
+	UserService_GetShipperProfile_FullMethodName     = "/logistic.user_service.v1.UserService/GetShipperProfile"
+	UserService_UpdateShipperProfile_FullMethodName  = "/logistic.user_service.v1.UserService/UpdateShipperProfile"
+	UserService_CreateAddress_FullMethodName         = "/logistic.user_service.v1.UserService/CreateAddress"
+	UserService_ListAddresses_FullMethodName         = "/logistic.user_service.v1.UserService/ListAddresses"
+	UserService_UpdateAddress_FullMethodName         = "/logistic.user_service.v1.UserService/UpdateAddress"
+	UserService_DeleteAddress_FullMethodName         = "/logistic.user_service.v1.UserService/DeleteAddress"
+	UserService_RegisterDevice_FullMethodName        = "/logistic.user_service.v1.UserService/RegisterDevice"
+	UserService_ListDevices_FullMethodName           = "/logistic.user_service.v1.UserService/ListDevices"
+	UserService_DeleteDevice_FullMethodName          = "/logistic.user_service.v1.UserService/DeleteDevice"
+	UserService_AdminListUsers_FullMethodName        = "/logistic.user_service.v1.UserService/AdminListUsers"
+	UserService_AdminUpdateUserStatus_FullMethodName = "/logistic.user_service.v1.UserService/AdminUpdateUserStatus"
+	UserService_AdminGetUserStats_FullMethodName     = "/logistic.user_service.v1.UserService/AdminGetUserStats"
+	UserService_AdminDeleteUser_FullMethodName       = "/logistic.user_service.v1.UserService/AdminDeleteUser"
 )
 
 // UserServiceClient is the client API for UserService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// UserService quản lý danh tính, hồ sơ, sổ địa chỉ và thiết bị nhận push.
+//
+// Quy ước đường dẫn:
+//
+//	/v1/...        -> API cho client (app tài xế / app chủ hàng)
+//	/v1/admin/...  -> API cho trang quản trị
+//
+// Gateway chặn nhóm /admin bằng middleware RequireRole("admin").
 type UserServiceClient interface {
 	RegisterUser(ctx context.Context, in *RegisterUserRequest, opts ...grpc.CallOption) (*RegisterUserResponse, error)
 	GetUser(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*GetUserResponse, error)
-	UpdateDriverKYC(ctx context.Context, in *UpdateDriverKYCRequest, opts ...grpc.CallOption) (*UpdateDriverKYCResponse, error)
+	UpdateUser(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*UpdateUserResponse, error)
+	GetDriverProfile(ctx context.Context, in *GetDriverProfileRequest, opts ...grpc.CallOption) (*GetDriverProfileResponse, error)
+	UpdateDriverProfile(ctx context.Context, in *UpdateDriverProfileRequest, opts ...grpc.CallOption) (*UpdateDriverProfileResponse, error)
+	GetShipperProfile(ctx context.Context, in *GetShipperProfileRequest, opts ...grpc.CallOption) (*GetShipperProfileResponse, error)
+	UpdateShipperProfile(ctx context.Context, in *UpdateShipperProfileRequest, opts ...grpc.CallOption) (*UpdateShipperProfileResponse, error)
+	CreateAddress(ctx context.Context, in *CreateAddressRequest, opts ...grpc.CallOption) (*CreateAddressResponse, error)
+	ListAddresses(ctx context.Context, in *ListAddressesRequest, opts ...grpc.CallOption) (*ListAddressesResponse, error)
+	UpdateAddress(ctx context.Context, in *UpdateAddressRequest, opts ...grpc.CallOption) (*UpdateAddressResponse, error)
+	DeleteAddress(ctx context.Context, in *DeleteAddressRequest, opts ...grpc.CallOption) (*DeleteAddressResponse, error)
+	RegisterDevice(ctx context.Context, in *RegisterDeviceRequest, opts ...grpc.CallOption) (*RegisterDeviceResponse, error)
+	ListDevices(ctx context.Context, in *ListDevicesRequest, opts ...grpc.CallOption) (*ListDevicesResponse, error)
+	DeleteDevice(ctx context.Context, in *DeleteDeviceRequest, opts ...grpc.CallOption) (*DeleteDeviceResponse, error)
+	AdminListUsers(ctx context.Context, in *AdminListUsersRequest, opts ...grpc.CallOption) (*AdminListUsersResponse, error)
+	AdminUpdateUserStatus(ctx context.Context, in *AdminUpdateUserStatusRequest, opts ...grpc.CallOption) (*AdminUpdateUserStatusResponse, error)
+	AdminGetUserStats(ctx context.Context, in *AdminGetUserStatsRequest, opts ...grpc.CallOption) (*AdminGetUserStatsResponse, error)
+	AdminDeleteUser(ctx context.Context, in *AdminDeleteUserRequest, opts ...grpc.CallOption) (*AdminDeleteUserResponse, error)
 }
 
 type userServiceClient struct {
@@ -61,10 +100,160 @@ func (c *userServiceClient) GetUser(ctx context.Context, in *GetUserRequest, opt
 	return out, nil
 }
 
-func (c *userServiceClient) UpdateDriverKYC(ctx context.Context, in *UpdateDriverKYCRequest, opts ...grpc.CallOption) (*UpdateDriverKYCResponse, error) {
+func (c *userServiceClient) UpdateUser(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*UpdateUserResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(UpdateDriverKYCResponse)
-	err := c.cc.Invoke(ctx, UserService_UpdateDriverKYC_FullMethodName, in, out, cOpts...)
+	out := new(UpdateUserResponse)
+	err := c.cc.Invoke(ctx, UserService_UpdateUser_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) GetDriverProfile(ctx context.Context, in *GetDriverProfileRequest, opts ...grpc.CallOption) (*GetDriverProfileResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetDriverProfileResponse)
+	err := c.cc.Invoke(ctx, UserService_GetDriverProfile_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) UpdateDriverProfile(ctx context.Context, in *UpdateDriverProfileRequest, opts ...grpc.CallOption) (*UpdateDriverProfileResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateDriverProfileResponse)
+	err := c.cc.Invoke(ctx, UserService_UpdateDriverProfile_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) GetShipperProfile(ctx context.Context, in *GetShipperProfileRequest, opts ...grpc.CallOption) (*GetShipperProfileResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetShipperProfileResponse)
+	err := c.cc.Invoke(ctx, UserService_GetShipperProfile_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) UpdateShipperProfile(ctx context.Context, in *UpdateShipperProfileRequest, opts ...grpc.CallOption) (*UpdateShipperProfileResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateShipperProfileResponse)
+	err := c.cc.Invoke(ctx, UserService_UpdateShipperProfile_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) CreateAddress(ctx context.Context, in *CreateAddressRequest, opts ...grpc.CallOption) (*CreateAddressResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateAddressResponse)
+	err := c.cc.Invoke(ctx, UserService_CreateAddress_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) ListAddresses(ctx context.Context, in *ListAddressesRequest, opts ...grpc.CallOption) (*ListAddressesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListAddressesResponse)
+	err := c.cc.Invoke(ctx, UserService_ListAddresses_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) UpdateAddress(ctx context.Context, in *UpdateAddressRequest, opts ...grpc.CallOption) (*UpdateAddressResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateAddressResponse)
+	err := c.cc.Invoke(ctx, UserService_UpdateAddress_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) DeleteAddress(ctx context.Context, in *DeleteAddressRequest, opts ...grpc.CallOption) (*DeleteAddressResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteAddressResponse)
+	err := c.cc.Invoke(ctx, UserService_DeleteAddress_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) RegisterDevice(ctx context.Context, in *RegisterDeviceRequest, opts ...grpc.CallOption) (*RegisterDeviceResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RegisterDeviceResponse)
+	err := c.cc.Invoke(ctx, UserService_RegisterDevice_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) ListDevices(ctx context.Context, in *ListDevicesRequest, opts ...grpc.CallOption) (*ListDevicesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListDevicesResponse)
+	err := c.cc.Invoke(ctx, UserService_ListDevices_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) DeleteDevice(ctx context.Context, in *DeleteDeviceRequest, opts ...grpc.CallOption) (*DeleteDeviceResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteDeviceResponse)
+	err := c.cc.Invoke(ctx, UserService_DeleteDevice_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) AdminListUsers(ctx context.Context, in *AdminListUsersRequest, opts ...grpc.CallOption) (*AdminListUsersResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminListUsersResponse)
+	err := c.cc.Invoke(ctx, UserService_AdminListUsers_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) AdminUpdateUserStatus(ctx context.Context, in *AdminUpdateUserStatusRequest, opts ...grpc.CallOption) (*AdminUpdateUserStatusResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminUpdateUserStatusResponse)
+	err := c.cc.Invoke(ctx, UserService_AdminUpdateUserStatus_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) AdminGetUserStats(ctx context.Context, in *AdminGetUserStatsRequest, opts ...grpc.CallOption) (*AdminGetUserStatsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminGetUserStatsResponse)
+	err := c.cc.Invoke(ctx, UserService_AdminGetUserStats_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) AdminDeleteUser(ctx context.Context, in *AdminDeleteUserRequest, opts ...grpc.CallOption) (*AdminDeleteUserResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminDeleteUserResponse)
+	err := c.cc.Invoke(ctx, UserService_AdminDeleteUser_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -74,10 +263,34 @@ func (c *userServiceClient) UpdateDriverKYC(ctx context.Context, in *UpdateDrive
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
+//
+// UserService quản lý danh tính, hồ sơ, sổ địa chỉ và thiết bị nhận push.
+//
+// Quy ước đường dẫn:
+//
+//	/v1/...        -> API cho client (app tài xế / app chủ hàng)
+//	/v1/admin/...  -> API cho trang quản trị
+//
+// Gateway chặn nhóm /admin bằng middleware RequireRole("admin").
 type UserServiceServer interface {
 	RegisterUser(context.Context, *RegisterUserRequest) (*RegisterUserResponse, error)
 	GetUser(context.Context, *GetUserRequest) (*GetUserResponse, error)
-	UpdateDriverKYC(context.Context, *UpdateDriverKYCRequest) (*UpdateDriverKYCResponse, error)
+	UpdateUser(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error)
+	GetDriverProfile(context.Context, *GetDriverProfileRequest) (*GetDriverProfileResponse, error)
+	UpdateDriverProfile(context.Context, *UpdateDriverProfileRequest) (*UpdateDriverProfileResponse, error)
+	GetShipperProfile(context.Context, *GetShipperProfileRequest) (*GetShipperProfileResponse, error)
+	UpdateShipperProfile(context.Context, *UpdateShipperProfileRequest) (*UpdateShipperProfileResponse, error)
+	CreateAddress(context.Context, *CreateAddressRequest) (*CreateAddressResponse, error)
+	ListAddresses(context.Context, *ListAddressesRequest) (*ListAddressesResponse, error)
+	UpdateAddress(context.Context, *UpdateAddressRequest) (*UpdateAddressResponse, error)
+	DeleteAddress(context.Context, *DeleteAddressRequest) (*DeleteAddressResponse, error)
+	RegisterDevice(context.Context, *RegisterDeviceRequest) (*RegisterDeviceResponse, error)
+	ListDevices(context.Context, *ListDevicesRequest) (*ListDevicesResponse, error)
+	DeleteDevice(context.Context, *DeleteDeviceRequest) (*DeleteDeviceResponse, error)
+	AdminListUsers(context.Context, *AdminListUsersRequest) (*AdminListUsersResponse, error)
+	AdminUpdateUserStatus(context.Context, *AdminUpdateUserStatusRequest) (*AdminUpdateUserStatusResponse, error)
+	AdminGetUserStats(context.Context, *AdminGetUserStatsRequest) (*AdminGetUserStatsResponse, error)
+	AdminDeleteUser(context.Context, *AdminDeleteUserRequest) (*AdminDeleteUserResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -94,8 +307,53 @@ func (UnimplementedUserServiceServer) RegisterUser(context.Context, *RegisterUse
 func (UnimplementedUserServiceServer) GetUser(context.Context, *GetUserRequest) (*GetUserResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetUser not implemented")
 }
-func (UnimplementedUserServiceServer) UpdateDriverKYC(context.Context, *UpdateDriverKYCRequest) (*UpdateDriverKYCResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method UpdateDriverKYC not implemented")
+func (UnimplementedUserServiceServer) UpdateUser(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateUser not implemented")
+}
+func (UnimplementedUserServiceServer) GetDriverProfile(context.Context, *GetDriverProfileRequest) (*GetDriverProfileResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetDriverProfile not implemented")
+}
+func (UnimplementedUserServiceServer) UpdateDriverProfile(context.Context, *UpdateDriverProfileRequest) (*UpdateDriverProfileResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateDriverProfile not implemented")
+}
+func (UnimplementedUserServiceServer) GetShipperProfile(context.Context, *GetShipperProfileRequest) (*GetShipperProfileResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetShipperProfile not implemented")
+}
+func (UnimplementedUserServiceServer) UpdateShipperProfile(context.Context, *UpdateShipperProfileRequest) (*UpdateShipperProfileResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateShipperProfile not implemented")
+}
+func (UnimplementedUserServiceServer) CreateAddress(context.Context, *CreateAddressRequest) (*CreateAddressResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateAddress not implemented")
+}
+func (UnimplementedUserServiceServer) ListAddresses(context.Context, *ListAddressesRequest) (*ListAddressesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListAddresses not implemented")
+}
+func (UnimplementedUserServiceServer) UpdateAddress(context.Context, *UpdateAddressRequest) (*UpdateAddressResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateAddress not implemented")
+}
+func (UnimplementedUserServiceServer) DeleteAddress(context.Context, *DeleteAddressRequest) (*DeleteAddressResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteAddress not implemented")
+}
+func (UnimplementedUserServiceServer) RegisterDevice(context.Context, *RegisterDeviceRequest) (*RegisterDeviceResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RegisterDevice not implemented")
+}
+func (UnimplementedUserServiceServer) ListDevices(context.Context, *ListDevicesRequest) (*ListDevicesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListDevices not implemented")
+}
+func (UnimplementedUserServiceServer) DeleteDevice(context.Context, *DeleteDeviceRequest) (*DeleteDeviceResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteDevice not implemented")
+}
+func (UnimplementedUserServiceServer) AdminListUsers(context.Context, *AdminListUsersRequest) (*AdminListUsersResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AdminListUsers not implemented")
+}
+func (UnimplementedUserServiceServer) AdminUpdateUserStatus(context.Context, *AdminUpdateUserStatusRequest) (*AdminUpdateUserStatusResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AdminUpdateUserStatus not implemented")
+}
+func (UnimplementedUserServiceServer) AdminGetUserStats(context.Context, *AdminGetUserStatsRequest) (*AdminGetUserStatsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AdminGetUserStats not implemented")
+}
+func (UnimplementedUserServiceServer) AdminDeleteUser(context.Context, *AdminDeleteUserRequest) (*AdminDeleteUserResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AdminDeleteUser not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
@@ -154,20 +412,290 @@ func _UserService_GetUser_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_UpdateDriverKYC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateDriverKYCRequest)
+func _UserService_UpdateUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateUserRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).UpdateDriverKYC(ctx, in)
+		return srv.(UserServiceServer).UpdateUser(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: UserService_UpdateDriverKYC_FullMethodName,
+		FullMethod: UserService_UpdateUser_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).UpdateDriverKYC(ctx, req.(*UpdateDriverKYCRequest))
+		return srv.(UserServiceServer).UpdateUser(ctx, req.(*UpdateUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_GetDriverProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDriverProfileRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetDriverProfile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetDriverProfile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetDriverProfile(ctx, req.(*GetDriverProfileRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_UpdateDriverProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateDriverProfileRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).UpdateDriverProfile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_UpdateDriverProfile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).UpdateDriverProfile(ctx, req.(*UpdateDriverProfileRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_GetShipperProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetShipperProfileRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetShipperProfile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetShipperProfile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetShipperProfile(ctx, req.(*GetShipperProfileRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_UpdateShipperProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateShipperProfileRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).UpdateShipperProfile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_UpdateShipperProfile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).UpdateShipperProfile(ctx, req.(*UpdateShipperProfileRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_CreateAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateAddressRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).CreateAddress(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_CreateAddress_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).CreateAddress(ctx, req.(*CreateAddressRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_ListAddresses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAddressesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).ListAddresses(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_ListAddresses_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).ListAddresses(ctx, req.(*ListAddressesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_UpdateAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateAddressRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).UpdateAddress(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_UpdateAddress_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).UpdateAddress(ctx, req.(*UpdateAddressRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_DeleteAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteAddressRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).DeleteAddress(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_DeleteAddress_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).DeleteAddress(ctx, req.(*DeleteAddressRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_RegisterDevice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RegisterDeviceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).RegisterDevice(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_RegisterDevice_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).RegisterDevice(ctx, req.(*RegisterDeviceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_ListDevices_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListDevicesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).ListDevices(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_ListDevices_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).ListDevices(ctx, req.(*ListDevicesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_DeleteDevice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteDeviceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).DeleteDevice(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_DeleteDevice_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).DeleteDevice(ctx, req.(*DeleteDeviceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_AdminListUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminListUsersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).AdminListUsers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_AdminListUsers_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).AdminListUsers(ctx, req.(*AdminListUsersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_AdminUpdateUserStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminUpdateUserStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).AdminUpdateUserStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_AdminUpdateUserStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).AdminUpdateUserStatus(ctx, req.(*AdminUpdateUserStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_AdminGetUserStats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminGetUserStatsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).AdminGetUserStats(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_AdminGetUserStats_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).AdminGetUserStats(ctx, req.(*AdminGetUserStatsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_AdminDeleteUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminDeleteUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).AdminDeleteUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_AdminDeleteUser_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).AdminDeleteUser(ctx, req.(*AdminDeleteUserRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -188,8 +716,68 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _UserService_GetUser_Handler,
 		},
 		{
-			MethodName: "UpdateDriverKYC",
-			Handler:    _UserService_UpdateDriverKYC_Handler,
+			MethodName: "UpdateUser",
+			Handler:    _UserService_UpdateUser_Handler,
+		},
+		{
+			MethodName: "GetDriverProfile",
+			Handler:    _UserService_GetDriverProfile_Handler,
+		},
+		{
+			MethodName: "UpdateDriverProfile",
+			Handler:    _UserService_UpdateDriverProfile_Handler,
+		},
+		{
+			MethodName: "GetShipperProfile",
+			Handler:    _UserService_GetShipperProfile_Handler,
+		},
+		{
+			MethodName: "UpdateShipperProfile",
+			Handler:    _UserService_UpdateShipperProfile_Handler,
+		},
+		{
+			MethodName: "CreateAddress",
+			Handler:    _UserService_CreateAddress_Handler,
+		},
+		{
+			MethodName: "ListAddresses",
+			Handler:    _UserService_ListAddresses_Handler,
+		},
+		{
+			MethodName: "UpdateAddress",
+			Handler:    _UserService_UpdateAddress_Handler,
+		},
+		{
+			MethodName: "DeleteAddress",
+			Handler:    _UserService_DeleteAddress_Handler,
+		},
+		{
+			MethodName: "RegisterDevice",
+			Handler:    _UserService_RegisterDevice_Handler,
+		},
+		{
+			MethodName: "ListDevices",
+			Handler:    _UserService_ListDevices_Handler,
+		},
+		{
+			MethodName: "DeleteDevice",
+			Handler:    _UserService_DeleteDevice_Handler,
+		},
+		{
+			MethodName: "AdminListUsers",
+			Handler:    _UserService_AdminListUsers_Handler,
+		},
+		{
+			MethodName: "AdminUpdateUserStatus",
+			Handler:    _UserService_AdminUpdateUserStatus_Handler,
+		},
+		{
+			MethodName: "AdminGetUserStats",
+			Handler:    _UserService_AdminGetUserStats_Handler,
+		},
+		{
+			MethodName: "AdminDeleteUser",
+			Handler:    _UserService_AdminDeleteUser_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -4,8 +4,11 @@ package ent
 
 import (
 	"time"
+	"vehicle_service/ent/driveravailability"
 	"vehicle_service/ent/schema"
 	"vehicle_service/ent/vehicle"
+	"vehicle_service/ent/vehicledocument"
+	"vehicle_service/ent/vehiclelocation"
 
 	"github.com/google/uuid"
 )
@@ -14,22 +17,58 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	driveravailabilityFields := schema.DriverAvailability{}.Fields()
+	_ = driveravailabilityFields
+	// driveravailabilityDescIsOnline is the schema descriptor for is_online field.
+	driveravailabilityDescIsOnline := driveravailabilityFields[3].Descriptor()
+	// driveravailability.DefaultIsOnline holds the default value on creation for the is_online field.
+	driveravailability.DefaultIsOnline = driveravailabilityDescIsOnline.Default.(bool)
+	// driveravailabilityDescAvailableWeightKg is the schema descriptor for available_weight_kg field.
+	driveravailabilityDescAvailableWeightKg := driveravailabilityFields[4].Descriptor()
+	// driveravailability.DefaultAvailableWeightKg holds the default value on creation for the available_weight_kg field.
+	driveravailability.DefaultAvailableWeightKg = driveravailabilityDescAvailableWeightKg.Default.(float64)
+	// driveravailabilityDescAvailableVolumeCbm is the schema descriptor for available_volume_cbm field.
+	driveravailabilityDescAvailableVolumeCbm := driveravailabilityFields[5].Descriptor()
+	// driveravailability.DefaultAvailableVolumeCbm holds the default value on creation for the available_volume_cbm field.
+	driveravailability.DefaultAvailableVolumeCbm = driveravailabilityDescAvailableVolumeCbm.Default.(float64)
+	// driveravailabilityDescCurrentLat is the schema descriptor for current_lat field.
+	driveravailabilityDescCurrentLat := driveravailabilityFields[6].Descriptor()
+	// driveravailability.DefaultCurrentLat holds the default value on creation for the current_lat field.
+	driveravailability.DefaultCurrentLat = driveravailabilityDescCurrentLat.Default.(float64)
+	// driveravailabilityDescCurrentLng is the schema descriptor for current_lng field.
+	driveravailabilityDescCurrentLng := driveravailabilityFields[7].Descriptor()
+	// driveravailability.DefaultCurrentLng holds the default value on creation for the current_lng field.
+	driveravailability.DefaultCurrentLng = driveravailabilityDescCurrentLng.Default.(float64)
+	// driveravailabilityDescCreatedAt is the schema descriptor for created_at field.
+	driveravailabilityDescCreatedAt := driveravailabilityFields[9].Descriptor()
+	// driveravailability.DefaultCreatedAt holds the default value on creation for the created_at field.
+	driveravailability.DefaultCreatedAt = driveravailabilityDescCreatedAt.Default.(func() time.Time)
+	// driveravailabilityDescUpdatedAt is the schema descriptor for updated_at field.
+	driveravailabilityDescUpdatedAt := driveravailabilityFields[10].Descriptor()
+	// driveravailability.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	driveravailability.DefaultUpdatedAt = driveravailabilityDescUpdatedAt.Default.(func() time.Time)
+	// driveravailability.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	driveravailability.UpdateDefaultUpdatedAt = driveravailabilityDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// driveravailabilityDescID is the schema descriptor for id field.
+	driveravailabilityDescID := driveravailabilityFields[0].Descriptor()
+	// driveravailability.DefaultID holds the default value on creation for the id field.
+	driveravailability.DefaultID = driveravailabilityDescID.Default.(func() uuid.UUID)
 	vehicleFields := schema.Vehicle{}.Fields()
 	_ = vehicleFields
 	// vehicleDescCapacityWeightKg is the schema descriptor for capacity_weight_kg field.
-	vehicleDescCapacityWeightKg := vehicleFields[6].Descriptor()
+	vehicleDescCapacityWeightKg := vehicleFields[7].Descriptor()
 	// vehicle.DefaultCapacityWeightKg holds the default value on creation for the capacity_weight_kg field.
 	vehicle.DefaultCapacityWeightKg = vehicleDescCapacityWeightKg.Default.(float64)
 	// vehicleDescCapacityVolumeCbm is the schema descriptor for capacity_volume_cbm field.
-	vehicleDescCapacityVolumeCbm := vehicleFields[7].Descriptor()
+	vehicleDescCapacityVolumeCbm := vehicleFields[8].Descriptor()
 	// vehicle.DefaultCapacityVolumeCbm holds the default value on creation for the capacity_volume_cbm field.
 	vehicle.DefaultCapacityVolumeCbm = vehicleDescCapacityVolumeCbm.Default.(float64)
 	// vehicleDescCreatedAt is the schema descriptor for created_at field.
-	vehicleDescCreatedAt := vehicleFields[9].Descriptor()
+	vehicleDescCreatedAt := vehicleFields[14].Descriptor()
 	// vehicle.DefaultCreatedAt holds the default value on creation for the created_at field.
 	vehicle.DefaultCreatedAt = vehicleDescCreatedAt.Default.(func() time.Time)
 	// vehicleDescUpdatedAt is the schema descriptor for updated_at field.
-	vehicleDescUpdatedAt := vehicleFields[10].Descriptor()
+	vehicleDescUpdatedAt := vehicleFields[15].Descriptor()
 	// vehicle.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	vehicle.DefaultUpdatedAt = vehicleDescUpdatedAt.Default.(func() time.Time)
 	// vehicle.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -38,4 +77,40 @@ func init() {
 	vehicleDescID := vehicleFields[0].Descriptor()
 	// vehicle.DefaultID holds the default value on creation for the id field.
 	vehicle.DefaultID = vehicleDescID.Default.(func() uuid.UUID)
+	vehicledocumentFields := schema.VehicleDocument{}.Fields()
+	_ = vehicledocumentFields
+	// vehicledocumentDescCreatedAt is the schema descriptor for created_at field.
+	vehicledocumentDescCreatedAt := vehicledocumentFields[11].Descriptor()
+	// vehicledocument.DefaultCreatedAt holds the default value on creation for the created_at field.
+	vehicledocument.DefaultCreatedAt = vehicledocumentDescCreatedAt.Default.(func() time.Time)
+	// vehicledocumentDescUpdatedAt is the schema descriptor for updated_at field.
+	vehicledocumentDescUpdatedAt := vehicledocumentFields[12].Descriptor()
+	// vehicledocument.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	vehicledocument.DefaultUpdatedAt = vehicledocumentDescUpdatedAt.Default.(func() time.Time)
+	// vehicledocument.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	vehicledocument.UpdateDefaultUpdatedAt = vehicledocumentDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// vehicledocumentDescID is the schema descriptor for id field.
+	vehicledocumentDescID := vehicledocumentFields[0].Descriptor()
+	// vehicledocument.DefaultID holds the default value on creation for the id field.
+	vehicledocument.DefaultID = vehicledocumentDescID.Default.(func() uuid.UUID)
+	vehiclelocationFields := schema.VehicleLocation{}.Fields()
+	_ = vehiclelocationFields
+	// vehiclelocationDescHeading is the schema descriptor for heading field.
+	vehiclelocationDescHeading := vehiclelocationFields[5].Descriptor()
+	// vehiclelocation.DefaultHeading holds the default value on creation for the heading field.
+	vehiclelocation.DefaultHeading = vehiclelocationDescHeading.Default.(float64)
+	// vehiclelocationDescSpeedKph is the schema descriptor for speed_kph field.
+	vehiclelocationDescSpeedKph := vehiclelocationFields[6].Descriptor()
+	// vehiclelocation.DefaultSpeedKph holds the default value on creation for the speed_kph field.
+	vehiclelocation.DefaultSpeedKph = vehiclelocationDescSpeedKph.Default.(float64)
+	// vehiclelocationDescRecordedAt is the schema descriptor for recorded_at field.
+	vehiclelocationDescRecordedAt := vehiclelocationFields[8].Descriptor()
+	// vehiclelocation.DefaultRecordedAt holds the default value on creation for the recorded_at field.
+	vehiclelocation.DefaultRecordedAt = vehiclelocationDescRecordedAt.Default.(func() time.Time)
+	// vehiclelocation.UpdateDefaultRecordedAt holds the default value on update for the recorded_at field.
+	vehiclelocation.UpdateDefaultRecordedAt = vehiclelocationDescRecordedAt.UpdateDefault.(func() time.Time)
+	// vehiclelocationDescID is the schema descriptor for id field.
+	vehiclelocationDescID := vehiclelocationFields[0].Descriptor()
+	// vehiclelocation.DefaultID holds the default value on creation for the id field.
+	vehiclelocation.DefaultID = vehiclelocationDescID.Default.(func() uuid.UUID)
 }

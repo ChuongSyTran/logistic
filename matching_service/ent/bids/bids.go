@@ -62,6 +62,10 @@ const (
 	FieldDestinationLat = "destination_lat"
 	// FieldDestinationLng holds the string denoting the destination_lng field in the database.
 	FieldDestinationLng = "destination_lng"
+	// FieldOfferedPrice holds the string denoting the offered_price field in the database.
+	FieldOfferedPrice = "offered_price"
+	// FieldOfferedAskID holds the string denoting the offered_ask_id field in the database.
+	FieldOfferedAskID = "offered_ask_id"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
 	// FieldExpiresAt holds the string denoting the expires_at field in the database.
@@ -114,6 +118,8 @@ var Columns = []string{
 	FieldOriginLng,
 	FieldDestinationLat,
 	FieldDestinationLng,
+	FieldOfferedPrice,
+	FieldOfferedAskID,
 	FieldStatus,
 	FieldExpiresAt,
 }
@@ -273,6 +279,16 @@ func ByDestinationLat(opts ...sql.OrderTermOption) OrderOption {
 // ByDestinationLng orders the results by the destination_lng field.
 func ByDestinationLng(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDestinationLng, opts...).ToFunc()
+}
+
+// ByOfferedPrice orders the results by the offered_price field.
+func ByOfferedPrice(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOfferedPrice, opts...).ToFunc()
+}
+
+// ByOfferedAskID orders the results by the offered_ask_id field.
+func ByOfferedAskID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOfferedAskID, opts...).ToFunc()
 }
 
 // ByStatus orders the results by the status field.

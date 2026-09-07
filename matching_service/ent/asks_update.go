@@ -411,6 +411,12 @@ func (_u *AsksUpdate) SetRouteID(v []byte) *AsksUpdate {
 	return _u
 }
 
+// ClearRouteID clears the value of the "route_id" field.
+func (_u *AsksUpdate) ClearRouteID() *AsksUpdate {
+	_u.mutation.ClearRouteID()
+	return _u
+}
+
 // SetStatus sets the "status" field.
 func (_u *AsksUpdate) SetStatus(v int8) *AsksUpdate {
 	_u.mutation.ResetStatus()
@@ -443,6 +449,12 @@ func (_u *AsksUpdate) SetNillableExpiresAt(v *time.Time) *AsksUpdate {
 	if v != nil {
 		_u.SetExpiresAt(*v)
 	}
+	return _u
+}
+
+// ClearExpiresAt clears the value of the "expires_at" field.
+func (_u *AsksUpdate) ClearExpiresAt() *AsksUpdate {
+	_u.mutation.ClearExpiresAt()
 	return _u
 }
 
@@ -643,6 +655,9 @@ func (_u *AsksUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.RouteID(); ok {
 		_spec.SetField(asks.FieldRouteID, field.TypeBytes, value)
 	}
+	if _u.mutation.RouteIDCleared() {
+		_spec.ClearField(asks.FieldRouteID, field.TypeBytes)
+	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(asks.FieldStatus, field.TypeInt8, value)
 	}
@@ -651,6 +666,9 @@ func (_u *AsksUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.ExpiresAt(); ok {
 		_spec.SetField(asks.FieldExpiresAt, field.TypeTime, value)
+	}
+	if _u.mutation.ExpiresAtCleared() {
+		_spec.ClearField(asks.FieldExpiresAt, field.TypeTime)
 	}
 	if _u.mutation.MatchesCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1098,6 +1116,12 @@ func (_u *AsksUpdateOne) SetRouteID(v []byte) *AsksUpdateOne {
 	return _u
 }
 
+// ClearRouteID clears the value of the "route_id" field.
+func (_u *AsksUpdateOne) ClearRouteID() *AsksUpdateOne {
+	_u.mutation.ClearRouteID()
+	return _u
+}
+
 // SetStatus sets the "status" field.
 func (_u *AsksUpdateOne) SetStatus(v int8) *AsksUpdateOne {
 	_u.mutation.ResetStatus()
@@ -1130,6 +1154,12 @@ func (_u *AsksUpdateOne) SetNillableExpiresAt(v *time.Time) *AsksUpdateOne {
 	if v != nil {
 		_u.SetExpiresAt(*v)
 	}
+	return _u
+}
+
+// ClearExpiresAt clears the value of the "expires_at" field.
+func (_u *AsksUpdateOne) ClearExpiresAt() *AsksUpdateOne {
+	_u.mutation.ClearExpiresAt()
 	return _u
 }
 
@@ -1360,6 +1390,9 @@ func (_u *AsksUpdateOne) sqlSave(ctx context.Context) (_node *Asks, err error) {
 	if value, ok := _u.mutation.RouteID(); ok {
 		_spec.SetField(asks.FieldRouteID, field.TypeBytes, value)
 	}
+	if _u.mutation.RouteIDCleared() {
+		_spec.ClearField(asks.FieldRouteID, field.TypeBytes)
+	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(asks.FieldStatus, field.TypeInt8, value)
 	}
@@ -1368,6 +1401,9 @@ func (_u *AsksUpdateOne) sqlSave(ctx context.Context) (_node *Asks, err error) {
 	}
 	if value, ok := _u.mutation.ExpiresAt(); ok {
 		_spec.SetField(asks.FieldExpiresAt, field.TypeTime, value)
+	}
+	if _u.mutation.ExpiresAtCleared() {
+		_spec.ClearField(asks.FieldExpiresAt, field.TypeTime)
 	}
 	if _u.mutation.MatchesCleared() {
 		edge := &sqlgraph.EdgeSpec{

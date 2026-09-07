@@ -6,7 +6,7 @@ sleep 10s
 
 if [ ! -s "$PGDATA/PG_VERSION" ]; then
     echo "Starting sync data from Master (pg_basebackup)..."
-    pg_basebackup -h user-db-master -D "$PGDATA" -U "repl_user" -vP -w -R
+    pg_basebackup -h user-db-master -D "$PGDATA" -U "$REPLICATION_USER" -vP -w -R
 else
     echo "The data already exists, skip the data scraping step."
 fi

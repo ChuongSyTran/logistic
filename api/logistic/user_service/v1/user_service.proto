@@ -6,24 +6,110 @@ option go_package = "github.com/logistic/api/logistic/user_service/v1;userv1";
 import "logistic/user_service/v1/user_messages.proto";
 import "google/api/annotations.proto";
 
+// UserService quản lý danh tính, hồ sơ, sổ địa chỉ và thiết bị nhận push.
+//
+// Quy ước đường dẫn:
+//   /v1/...        -> API cho client (app tài xế / app chủ hàng)
+//   /v1/admin/...  -> API cho trang quản trị
+// Gateway chặn nhóm /admin bằng middleware RequireRole("admin").
 service UserService {
-    rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse) {
-        option (google.api.http) = {
-            post: "/v1/users/register"
-            body: "*"
-        };
-    }
+  // ======================= CLIENT =======================
 
-    rpc GetUser(GetUserRequest) returns (GetUserResponse) {
-        option (google.api.http) = {
-            get: "/v1/users/{id}"
-        };
-    }
+  rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse) {
+    option (google.api.http) = {
+      post: "/v1/users/register"
+      body: "*"
+    };
+  }
 
-    rpc UpdateDriverKYC(UpdateDriverKYCRequest) returns (UpdateDriverKYCResponse) {
-        option (google.api.http) = {
-            put: "/v1/users/{user_id}/kyc"
-            body: "*"
-        };
-    }
+  rpc GetUser(GetUserRequest) returns (GetUserResponse) {
+    option (google.api.http) = {get: "/v1/users/{id}"};
+  }
+
+  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {
+    option (google.api.http) = {
+      put: "/v1/users/{id}"
+      body: "*"
+    };
+  }
+
+  rpc GetDriverProfile(GetDriverProfileRequest) returns (GetDriverProfileResponse) {
+    option (google.api.http) = {get: "/v1/users/{user_id}/driver-profile"};
+  }
+
+  rpc UpdateDriverProfile(UpdateDriverProfileRequest) returns (UpdateDriverProfileResponse) {
+    option (google.api.http) = {
+      put: "/v1/users/{user_id}/driver-profile"
+      body: "*"
+    };
+  }
+
+  rpc GetShipperProfile(GetShipperProfileRequest) returns (GetShipperProfileResponse) {
+    option (google.api.http) = {get: "/v1/users/{user_id}/shipper-profile"};
+  }
+
+  rpc UpdateShipperProfile(UpdateShipperProfileRequest) returns (UpdateShipperProfileResponse) {
+    option (google.api.http) = {
+      put: "/v1/users/{user_id}/shipper-profile"
+      body: "*"
+    };
+  }
+
+  rpc CreateAddress(CreateAddressRequest) returns (CreateAddressResponse) {
+    option (google.api.http) = {
+      post: "/v1/users/{user_id}/addresses"
+      body: "*"
+    };
+  }
+
+  rpc ListAddresses(ListAddressesRequest) returns (ListAddressesResponse) {
+    option (google.api.http) = {get: "/v1/users/{user_id}/addresses"};
+  }
+
+  rpc UpdateAddress(UpdateAddressRequest) returns (UpdateAddressResponse) {
+    option (google.api.http) = {
+      put: "/v1/addresses/{id}"
+      body: "*"
+    };
+  }
+
+  rpc DeleteAddress(DeleteAddressRequest) returns (DeleteAddressResponse) {
+    option (google.api.http) = {delete: "/v1/addresses/{id}"};
+  }
+
+  rpc RegisterDevice(RegisterDeviceRequest) returns (RegisterDeviceResponse) {
+    option (google.api.http) = {
+      post: "/v1/users/{user_id}/devices"
+      body: "*"
+    };
+  }
+
+  rpc ListDevices(ListDevicesRequest) returns (ListDevicesResponse) {
+    option (google.api.http) = {get: "/v1/users/{user_id}/devices"};
+  }
+
+  rpc DeleteDevice(DeleteDeviceRequest) returns (DeleteDeviceResponse) {
+    option (google.api.http) = {delete: "/v1/devices/{id}"};
+  }
+
+  // ======================= ADMIN =======================
+
+  rpc AdminListUsers(AdminListUsersRequest) returns (AdminListUsersResponse) {
+    option (google.api.http) = {get: "/v1/admin/users"};
+  }
+
+  rpc AdminUpdateUserStatus(AdminUpdateUserStatusRequest) returns (AdminUpdateUserStatusResponse) {
+    option (google.api.http) = {
+      put: "/v1/admin/users/{id}/status"
+      body: "*"
+    };
+  }
+
+  rpc AdminGetUserStats(AdminGetUserStatsRequest) returns (AdminGetUserStatsResponse) {
+    option (google.api.http) = {get: "/v1/admin/users/stats"};
+  }
+
+  rpc AdminDeleteUser(AdminDeleteUserRequest) returns (AdminDeleteUserResponse) {
+    option (google.api.http) = {delete: "/v1/admin/users/{id}"};
+  }
 }

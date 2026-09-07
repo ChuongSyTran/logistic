@@ -6,6 +6,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// Address is the predicate function for address builders.
+type Address func(*sql.Selector)
+
 // DriverProfile is the predicate function for driverprofile builders.
 type DriverProfile func(*sql.Selector)
 
@@ -14,3 +17,6 @@ type ShipperProfile func(*sql.Selector)
 
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
+
+// UserDevice is the predicate function for userdevice builders.
+type UserDevice func(*sql.Selector)

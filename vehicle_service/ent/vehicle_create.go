@@ -7,7 +7,10 @@ import (
 	"errors"
 	"fmt"
 	"time"
+	"vehicle_service/ent/driveravailability"
 	"vehicle_service/ent/vehicle"
+	"vehicle_service/ent/vehicledocument"
+	"vehicle_service/ent/vehiclelocation"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -61,6 +64,20 @@ func (_c *VehicleCreate) SetNillableModel(v *string) *VehicleCreate {
 	return _c
 }
 
+// SetManufactureYear sets the "manufacture_year" field.
+func (_c *VehicleCreate) SetManufactureYear(v int) *VehicleCreate {
+	_c.mutation.SetManufactureYear(v)
+	return _c
+}
+
+// SetNillableManufactureYear sets the "manufacture_year" field if the given value is not nil.
+func (_c *VehicleCreate) SetNillableManufactureYear(v *int) *VehicleCreate {
+	if v != nil {
+		_c.SetManufactureYear(*v)
+	}
+	return _c
+}
+
 // SetVehicleType sets the "vehicle_type" field.
 func (_c *VehicleCreate) SetVehicleType(v vehicle.VehicleType) *VehicleCreate {
 	_c.mutation.SetVehicleType(v)
@@ -109,6 +126,62 @@ func (_c *VehicleCreate) SetNillableStatus(v *vehicle.Status) *VehicleCreate {
 	return _c
 }
 
+// SetVerificationStatus sets the "verification_status" field.
+func (_c *VehicleCreate) SetVerificationStatus(v vehicle.VerificationStatus) *VehicleCreate {
+	_c.mutation.SetVerificationStatus(v)
+	return _c
+}
+
+// SetNillableVerificationStatus sets the "verification_status" field if the given value is not nil.
+func (_c *VehicleCreate) SetNillableVerificationStatus(v *vehicle.VerificationStatus) *VehicleCreate {
+	if v != nil {
+		_c.SetVerificationStatus(*v)
+	}
+	return _c
+}
+
+// SetVerificationNote sets the "verification_note" field.
+func (_c *VehicleCreate) SetVerificationNote(v string) *VehicleCreate {
+	_c.mutation.SetVerificationNote(v)
+	return _c
+}
+
+// SetNillableVerificationNote sets the "verification_note" field if the given value is not nil.
+func (_c *VehicleCreate) SetNillableVerificationNote(v *string) *VehicleCreate {
+	if v != nil {
+		_c.SetVerificationNote(*v)
+	}
+	return _c
+}
+
+// SetVerifiedBy sets the "verified_by" field.
+func (_c *VehicleCreate) SetVerifiedBy(v uuid.UUID) *VehicleCreate {
+	_c.mutation.SetVerifiedBy(v)
+	return _c
+}
+
+// SetNillableVerifiedBy sets the "verified_by" field if the given value is not nil.
+func (_c *VehicleCreate) SetNillableVerifiedBy(v *uuid.UUID) *VehicleCreate {
+	if v != nil {
+		_c.SetVerifiedBy(*v)
+	}
+	return _c
+}
+
+// SetVerifiedAt sets the "verified_at" field.
+func (_c *VehicleCreate) SetVerifiedAt(v time.Time) *VehicleCreate {
+	_c.mutation.SetVerifiedAt(v)
+	return _c
+}
+
+// SetNillableVerifiedAt sets the "verified_at" field if the given value is not nil.
+func (_c *VehicleCreate) SetNillableVerifiedAt(v *time.Time) *VehicleCreate {
+	if v != nil {
+		_c.SetVerifiedAt(*v)
+	}
+	return _c
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_c *VehicleCreate) SetCreatedAt(v time.Time) *VehicleCreate {
 	_c.mutation.SetCreatedAt(v)
@@ -149,6 +222,59 @@ func (_c *VehicleCreate) SetNillableID(v *uuid.UUID) *VehicleCreate {
 		_c.SetID(*v)
 	}
 	return _c
+}
+
+// AddDocumentIDs adds the "documents" edge to the VehicleDocument entity by IDs.
+func (_c *VehicleCreate) AddDocumentIDs(ids ...uuid.UUID) *VehicleCreate {
+	_c.mutation.AddDocumentIDs(ids...)
+	return _c
+}
+
+// AddDocuments adds the "documents" edges to the VehicleDocument entity.
+func (_c *VehicleCreate) AddDocuments(v ...*VehicleDocument) *VehicleCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddDocumentIDs(ids...)
+}
+
+// SetLocationID sets the "location" edge to the VehicleLocation entity by ID.
+func (_c *VehicleCreate) SetLocationID(id uuid.UUID) *VehicleCreate {
+	_c.mutation.SetLocationID(id)
+	return _c
+}
+
+// SetNillableLocationID sets the "location" edge to the VehicleLocation entity by ID if the given value is not nil.
+func (_c *VehicleCreate) SetNillableLocationID(id *uuid.UUID) *VehicleCreate {
+	if id != nil {
+		_c = _c.SetLocationID(*id)
+	}
+	return _c
+}
+
+// SetLocation sets the "location" edge to the VehicleLocation entity.
+func (_c *VehicleCreate) SetLocation(v *VehicleLocation) *VehicleCreate {
+	return _c.SetLocationID(v.ID)
+}
+
+// SetAvailabilityID sets the "availability" edge to the DriverAvailability entity by ID.
+func (_c *VehicleCreate) SetAvailabilityID(id uuid.UUID) *VehicleCreate {
+	_c.mutation.SetAvailabilityID(id)
+	return _c
+}
+
+// SetNillableAvailabilityID sets the "availability" edge to the DriverAvailability entity by ID if the given value is not nil.
+func (_c *VehicleCreate) SetNillableAvailabilityID(id *uuid.UUID) *VehicleCreate {
+	if id != nil {
+		_c = _c.SetAvailabilityID(*id)
+	}
+	return _c
+}
+
+// SetAvailability sets the "availability" edge to the DriverAvailability entity.
+func (_c *VehicleCreate) SetAvailability(v *DriverAvailability) *VehicleCreate {
+	return _c.SetAvailabilityID(v.ID)
 }
 
 // Mutation returns the VehicleMutation object of the builder.
@@ -198,6 +324,10 @@ func (_c *VehicleCreate) defaults() {
 		v := vehicle.DefaultStatus
 		_c.mutation.SetStatus(v)
 	}
+	if _, ok := _c.mutation.VerificationStatus(); !ok {
+		v := vehicle.DefaultVerificationStatus
+		_c.mutation.SetVerificationStatus(v)
+	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := vehicle.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
@@ -240,6 +370,14 @@ func (_c *VehicleCreate) check() error {
 	if v, ok := _c.mutation.Status(); ok {
 		if err := vehicle.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Vehicle.status": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.VerificationStatus(); !ok {
+		return &ValidationError{Name: "verification_status", err: errors.New(`ent: missing required field "Vehicle.verification_status"`)}
+	}
+	if v, ok := _c.mutation.VerificationStatus(); ok {
+		if err := vehicle.VerificationStatusValidator(v); err != nil {
+			return &ValidationError{Name: "verification_status", err: fmt.Errorf(`ent: validator failed for field "Vehicle.verification_status": %w`, err)}
 		}
 	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
@@ -299,6 +437,10 @@ func (_c *VehicleCreate) createSpec() (*Vehicle, *sqlgraph.CreateSpec) {
 		_spec.SetField(vehicle.FieldModel, field.TypeString, value)
 		_node.Model = value
 	}
+	if value, ok := _c.mutation.ManufactureYear(); ok {
+		_spec.SetField(vehicle.FieldManufactureYear, field.TypeInt, value)
+		_node.ManufactureYear = value
+	}
 	if value, ok := _c.mutation.VehicleType(); ok {
 		_spec.SetField(vehicle.FieldVehicleType, field.TypeEnum, value)
 		_node.VehicleType = value
@@ -315,6 +457,22 @@ func (_c *VehicleCreate) createSpec() (*Vehicle, *sqlgraph.CreateSpec) {
 		_spec.SetField(vehicle.FieldStatus, field.TypeEnum, value)
 		_node.Status = value
 	}
+	if value, ok := _c.mutation.VerificationStatus(); ok {
+		_spec.SetField(vehicle.FieldVerificationStatus, field.TypeEnum, value)
+		_node.VerificationStatus = value
+	}
+	if value, ok := _c.mutation.VerificationNote(); ok {
+		_spec.SetField(vehicle.FieldVerificationNote, field.TypeString, value)
+		_node.VerificationNote = value
+	}
+	if value, ok := _c.mutation.VerifiedBy(); ok {
+		_spec.SetField(vehicle.FieldVerifiedBy, field.TypeUUID, value)
+		_node.VerifiedBy = &value
+	}
+	if value, ok := _c.mutation.VerifiedAt(); ok {
+		_spec.SetField(vehicle.FieldVerifiedAt, field.TypeTime, value)
+		_node.VerifiedAt = &value
+	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(vehicle.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
@@ -322,6 +480,54 @@ func (_c *VehicleCreate) createSpec() (*Vehicle, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(vehicle.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if nodes := _c.mutation.DocumentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   vehicle.DocumentsTable,
+			Columns: []string{vehicle.DocumentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(vehicledocument.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.LocationIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: false,
+			Table:   vehicle.LocationTable,
+			Columns: []string{vehicle.LocationColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(vehiclelocation.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.AvailabilityIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: false,
+			Table:   vehicle.AvailabilityTable,
+			Columns: []string{vehicle.AvailabilityColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(driveravailability.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

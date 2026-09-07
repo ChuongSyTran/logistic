@@ -15,10 +15,16 @@ const (
 	Label = "shipper_profile"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldUserID holds the string denoting the user_id field in the database.
+	FieldUserID = "user_id"
 	// FieldCompanyName holds the string denoting the company_name field in the database.
 	FieldCompanyName = "company_name"
 	// FieldTaxCode holds the string denoting the tax_code field in the database.
 	FieldTaxCode = "tax_code"
+	// FieldBusinessAddress holds the string denoting the business_address field in the database.
+	FieldBusinessAddress = "business_address"
+	// FieldTotalOrders holds the string denoting the total_orders field in the database.
+	FieldTotalOrders = "total_orders"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -33,22 +39,19 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	UserInverseTable = "users"
 	// UserColumn is the table column denoting the user relation/edge.
-	UserColumn = "user_shipper_profile"
+	UserColumn = "user_id"
 )
 
 // Columns holds all SQL columns for shipperprofile fields.
 var Columns = []string{
 	FieldID,
+	FieldUserID,
 	FieldCompanyName,
 	FieldTaxCode,
+	FieldBusinessAddress,
+	FieldTotalOrders,
 	FieldCreatedAt,
 	FieldUpdatedAt,
-}
-
-// ForeignKeys holds the SQL foreign-keys that are owned by the "shipper_profiles"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"user_shipper_profile",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -58,15 +61,12 @@ func ValidColumn(column string) bool {
 			return true
 		}
 	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
-			return true
-		}
-	}
 	return false
 }
 
 var (
+	// DefaultTotalOrders holds the default value on creation for the "total_orders" field.
+	DefaultTotalOrders int
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -85,6 +85,11 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
 }
 
+// ByUserID orders the results by the user_id field.
+func ByUserID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUserID, opts...).ToFunc()
+}
+
 // ByCompanyName orders the results by the company_name field.
 func ByCompanyName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCompanyName, opts...).ToFunc()
@@ -93,6 +98,16 @@ func ByCompanyName(opts ...sql.OrderTermOption) OrderOption {
 // ByTaxCode orders the results by the tax_code field.
 func ByTaxCode(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTaxCode, opts...).ToFunc()
+}
+
+// ByBusinessAddress orders the results by the business_address field.
+func ByBusinessAddress(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldBusinessAddress, opts...).ToFunc()
+}
+
+// ByTotalOrders orders the results by the total_orders field.
+func ByTotalOrders(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTotalOrders, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

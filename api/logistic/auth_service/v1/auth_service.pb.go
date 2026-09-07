@@ -22,14 +22,21 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// UserProfile là danh tính công khai của một người dùng.
+//
+// `id` là 16 byte thô của UUID v7 — CÙNG một không gian định danh với
+// user_service. Bản cũ dùng int64 tự tăng riêng của auth_service, nên id trong
+// token không tra được ở bất kỳ service nào khác.
 type UserProfile struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
-	FullName      *string                `protobuf:"bytes,3,opt,name=full_name,json=fullName,proto3,oneof" json:"full_name,omitempty"`
-	Avatar        *string                `protobuf:"bytes,4,opt,name=avatar,proto3,oneof" json:"avatar,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Id       []byte                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Email    string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
+	FullName *string                `protobuf:"bytes,3,opt,name=full_name,json=fullName,proto3,oneof" json:"full_name,omitempty"`
+	Avatar   *string                `protobuf:"bytes,4,opt,name=avatar,proto3,oneof" json:"avatar,omitempty"`
+	// role quyết định quyền truy cập: driver | shipper | admin.
+	Role          string                 `protobuf:"bytes,5,opt,name=role,proto3" json:"role,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -64,11 +71,11 @@ func (*UserProfile) Descriptor() ([]byte, []int) {
 	return file_logistic_auth_service_v1_auth_service_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *UserProfile) GetId() int64 {
+func (x *UserProfile) GetId() []byte {
 	if x != nil {
 		return x.Id
 	}
-	return 0
+	return nil
 }
 
 func (x *UserProfile) GetEmail() string {
@@ -92,6 +99,13 @@ func (x *UserProfile) GetAvatar() string {
 	return ""
 }
 
+func (x *UserProfile) GetRole() string {
+	if x != nil {
+		return x.Role
+	}
+	return ""
+}
+
 func (x *UserProfile) GetCreatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.CreatedAt
@@ -107,10 +121,13 @@ func (x *UserProfile) GetUpdatedAt() *timestamppb.Timestamp {
 }
 
 type AuthTokenPair struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	AccessToken   string                 `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
-	RefreshToken  string                 `protobuf:"bytes,2,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
-	ExpiresIn     int64                  `protobuf:"varint,3,opt,name=expires_in,json=expiresIn,proto3" json:"expires_in,omitempty"`
+	state        protoimpl.MessageState `protogen:"open.v1"`
+	AccessToken  string                 `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	RefreshToken string                 `protobuf:"bytes,2,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	// expires_at là mốc Unix (giây) mà access token hết hiệu lực.
+	// Tên cũ là expires_in nhưng chứa mốc tuyệt đối chứ không phải khoảng thời
+	// gian — client tính sai hạn dùng vì cái tên đó.
+	ExpiresAt     int64 `protobuf:"varint,3,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -159,19 +176,21 @@ func (x *AuthTokenPair) GetRefreshToken() string {
 	return ""
 }
 
-func (x *AuthTokenPair) GetExpiresIn() int64 {
+func (x *AuthTokenPair) GetExpiresAt() int64 {
 	if x != nil {
-		return x.ExpiresIn
+		return x.ExpiresAt
 	}
 	return 0
 }
 
 type RegisterRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Email         string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
-	FullName      string                 `protobuf:"bytes,2,opt,name=full_name,json=fullName,proto3" json:"full_name,omitempty"`
-	Password      string                 `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty"`
-	GoogleId      string                 `protobuf:"bytes,4,opt,name=google_id,json=googleId,proto3" json:"google_id,omitempty"`
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Email    string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
+	FullName string                 `protobuf:"bytes,2,opt,name=full_name,json=fullName,proto3" json:"full_name,omitempty"`
+	Password string                 `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty"`
+	GoogleId string                 `protobuf:"bytes,4,opt,name=google_id,json=googleId,proto3" json:"google_id,omitempty"`
+	// role mặc định là "shipper" nếu để trống.
+	Role          string `protobuf:"bytes,5,opt,name=role,proto3" json:"role,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -230,6 +249,13 @@ func (x *RegisterRequest) GetPassword() string {
 func (x *RegisterRequest) GetGoogleId() string {
 	if x != nil {
 		return x.GoogleId
+	}
+	return ""
+}
+
+func (x *RegisterRequest) GetRole() string {
+	if x != nil {
+		return x.Role
 	}
 	return ""
 }
@@ -333,6 +359,7 @@ func (x *LoginRequest) GetPassword() string {
 type LoginResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	TokenPair     *AuthTokenPair         `protobuf:"bytes,1,opt,name=token_pair,json=tokenPair,proto3" json:"token_pair,omitempty"`
+	Profile       *UserProfile           `protobuf:"bytes,2,opt,name=profile,proto3" json:"profile,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -370,6 +397,13 @@ func (*LoginResponse) Descriptor() ([]byte, []int) {
 func (x *LoginResponse) GetTokenPair() *AuthTokenPair {
 	if x != nil {
 		return x.TokenPair
+	}
+	return nil
+}
+
+func (x *LoginResponse) GetProfile() *UserProfile {
+	if x != nil {
+		return x.Profile
 	}
 	return nil
 }
@@ -509,6 +543,7 @@ func (x *GoogleCallbackRequest) GetCode() string {
 type GoogleCallbackResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	TokenPair     *AuthTokenPair         `protobuf:"bytes,1,opt,name=token_pair,json=tokenPair,proto3" json:"token_pair,omitempty"`
+	Profile       *UserProfile           `protobuf:"bytes,2,opt,name=profile,proto3" json:"profile,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -546,6 +581,13 @@ func (*GoogleCallbackResponse) Descriptor() ([]byte, []int) {
 func (x *GoogleCallbackResponse) GetTokenPair() *AuthTokenPair {
 	if x != nil {
 		return x.TokenPair
+	}
+	return nil
+}
+
+func (x *GoogleCallbackResponse) GetProfile() *UserProfile {
+	if x != nil {
+		return x.Profile
 	}
 	return nil
 }
@@ -638,20 +680,362 @@ func (x *VerifyTokenResponse) GetProfile() *UserProfile {
 	return nil
 }
 
+type RefreshTokenRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RefreshToken  string                 `protobuf:"bytes,1,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RefreshTokenRequest) Reset() {
+	*x = RefreshTokenRequest{}
+	mi := &file_logistic_auth_service_v1_auth_service_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RefreshTokenRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RefreshTokenRequest) ProtoMessage() {}
+
+func (x *RefreshTokenRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_auth_service_v1_auth_service_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RefreshTokenRequest.ProtoReflect.Descriptor instead.
+func (*RefreshTokenRequest) Descriptor() ([]byte, []int) {
+	return file_logistic_auth_service_v1_auth_service_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *RefreshTokenRequest) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
+}
+
+type RefreshTokenResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TokenPair     *AuthTokenPair         `protobuf:"bytes,1,opt,name=token_pair,json=tokenPair,proto3" json:"token_pair,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RefreshTokenResponse) Reset() {
+	*x = RefreshTokenResponse{}
+	mi := &file_logistic_auth_service_v1_auth_service_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RefreshTokenResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RefreshTokenResponse) ProtoMessage() {}
+
+func (x *RefreshTokenResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_auth_service_v1_auth_service_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RefreshTokenResponse.ProtoReflect.Descriptor instead.
+func (*RefreshTokenResponse) Descriptor() ([]byte, []int) {
+	return file_logistic_auth_service_v1_auth_service_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *RefreshTokenResponse) GetTokenPair() *AuthTokenPair {
+	if x != nil {
+		return x.TokenPair
+	}
+	return nil
+}
+
+type LogoutRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RefreshToken  string                 `protobuf:"bytes,1,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LogoutRequest) Reset() {
+	*x = LogoutRequest{}
+	mi := &file_logistic_auth_service_v1_auth_service_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LogoutRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LogoutRequest) ProtoMessage() {}
+
+func (x *LogoutRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_auth_service_v1_auth_service_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LogoutRequest.ProtoReflect.Descriptor instead.
+func (*LogoutRequest) Descriptor() ([]byte, []int) {
+	return file_logistic_auth_service_v1_auth_service_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *LogoutRequest) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
+}
+
+type LogoutResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LogoutResponse) Reset() {
+	*x = LogoutResponse{}
+	mi := &file_logistic_auth_service_v1_auth_service_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LogoutResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LogoutResponse) ProtoMessage() {}
+
+func (x *LogoutResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_auth_service_v1_auth_service_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LogoutResponse.ProtoReflect.Descriptor instead.
+func (*LogoutResponse) Descriptor() ([]byte, []int) {
+	return file_logistic_auth_service_v1_auth_service_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *LogoutResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+type GetPublicKeysRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetPublicKeysRequest) Reset() {
+	*x = GetPublicKeysRequest{}
+	mi := &file_logistic_auth_service_v1_auth_service_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetPublicKeysRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetPublicKeysRequest) ProtoMessage() {}
+
+func (x *GetPublicKeysRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_auth_service_v1_auth_service_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetPublicKeysRequest.ProtoReflect.Descriptor instead.
+func (*GetPublicKeysRequest) Descriptor() ([]byte, []int) {
+	return file_logistic_auth_service_v1_auth_service_proto_rawDescGZIP(), []int{16}
+}
+
+// JSONWebKey theo RFC 7517, phần dành cho RSA.
+type JSONWebKey struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Kid           string                 `protobuf:"bytes,1,opt,name=kid,proto3" json:"kid,omitempty"`
+	Kty           string                 `protobuf:"bytes,2,opt,name=kty,proto3" json:"kty,omitempty"` // luôn là "RSA"
+	Alg           string                 `protobuf:"bytes,3,opt,name=alg,proto3" json:"alg,omitempty"` // luôn là "RS256"
+	Use           string                 `protobuf:"bytes,4,opt,name=use,proto3" json:"use,omitempty"` // luôn là "sig"
+	N             string                 `protobuf:"bytes,5,opt,name=n,proto3" json:"n,omitempty"`     // modulus, base64url không padding
+	E             string                 `protobuf:"bytes,6,opt,name=e,proto3" json:"e,omitempty"`     // exponent, base64url không padding
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *JSONWebKey) Reset() {
+	*x = JSONWebKey{}
+	mi := &file_logistic_auth_service_v1_auth_service_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *JSONWebKey) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*JSONWebKey) ProtoMessage() {}
+
+func (x *JSONWebKey) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_auth_service_v1_auth_service_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use JSONWebKey.ProtoReflect.Descriptor instead.
+func (*JSONWebKey) Descriptor() ([]byte, []int) {
+	return file_logistic_auth_service_v1_auth_service_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *JSONWebKey) GetKid() string {
+	if x != nil {
+		return x.Kid
+	}
+	return ""
+}
+
+func (x *JSONWebKey) GetKty() string {
+	if x != nil {
+		return x.Kty
+	}
+	return ""
+}
+
+func (x *JSONWebKey) GetAlg() string {
+	if x != nil {
+		return x.Alg
+	}
+	return ""
+}
+
+func (x *JSONWebKey) GetUse() string {
+	if x != nil {
+		return x.Use
+	}
+	return ""
+}
+
+func (x *JSONWebKey) GetN() string {
+	if x != nil {
+		return x.N
+	}
+	return ""
+}
+
+func (x *JSONWebKey) GetE() string {
+	if x != nil {
+		return x.E
+	}
+	return ""
+}
+
+type GetPublicKeysResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Keys          []*JSONWebKey          `protobuf:"bytes,1,rep,name=keys,proto3" json:"keys,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetPublicKeysResponse) Reset() {
+	*x = GetPublicKeysResponse{}
+	mi := &file_logistic_auth_service_v1_auth_service_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetPublicKeysResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetPublicKeysResponse) ProtoMessage() {}
+
+func (x *GetPublicKeysResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_logistic_auth_service_v1_auth_service_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetPublicKeysResponse.ProtoReflect.Descriptor instead.
+func (*GetPublicKeysResponse) Descriptor() ([]byte, []int) {
+	return file_logistic_auth_service_v1_auth_service_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *GetPublicKeysResponse) GetKeys() []*JSONWebKey {
+	if x != nil {
+		return x.Keys
+	}
+	return nil
+}
+
 var File_logistic_auth_service_v1_auth_service_proto protoreflect.FileDescriptor
 
 const file_logistic_auth_service_v1_auth_service_proto_rawDesc = "" +
 	"\n" +
-	"+logistic/auth_service/v1/auth_service.proto\x12\x18logistic.auth_service.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\x81\x02\n" +
+	"+logistic/auth_service/v1/auth_service.proto\x12\x18logistic.auth_service.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\x95\x02\n" +
 	"\vUserProfile\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x14\n" +
+	"\x02id\x18\x01 \x01(\fR\x02id\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12 \n" +
 	"\tfull_name\x18\x03 \x01(\tH\x00R\bfullName\x88\x01\x01\x12\x1b\n" +
-	"\x06avatar\x18\x04 \x01(\tH\x01R\x06avatar\x88\x01\x01\x129\n" +
+	"\x06avatar\x18\x04 \x01(\tH\x01R\x06avatar\x88\x01\x01\x12\x12\n" +
+	"\x04role\x18\x05 \x01(\tR\x04role\x129\n" +
 	"\n" +
-	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"created_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAtB\f\n" +
+	"updated_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAtB\f\n" +
 	"\n" +
 	"_full_nameB\t\n" +
 	"\a_avatar\"v\n" +
@@ -659,39 +1043,65 @@ const file_logistic_auth_service_v1_auth_service_proto_rawDesc = "" +
 	"\faccess_token\x18\x01 \x01(\tR\vaccessToken\x12#\n" +
 	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\x12\x1d\n" +
 	"\n" +
-	"expires_in\x18\x03 \x01(\x03R\texpiresIn\"}\n" +
+	"expires_at\x18\x03 \x01(\x03R\texpiresAt\"\x91\x01\n" +
 	"\x0fRegisterRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1b\n" +
 	"\tfull_name\x18\x02 \x01(\tR\bfullName\x12\x1a\n" +
 	"\bpassword\x18\x03 \x01(\tR\bpassword\x12\x1b\n" +
-	"\tgoogle_id\x18\x04 \x01(\tR\bgoogleId\"S\n" +
+	"\tgoogle_id\x18\x04 \x01(\tR\bgoogleId\x12\x12\n" +
+	"\x04role\x18\x05 \x01(\tR\x04role\"S\n" +
 	"\x10RegisterResponse\x12?\n" +
 	"\aprofile\x18\x01 \x01(\v2%.logistic.auth_service.v1.UserProfileR\aprofile\"@\n" +
 	"\fLoginRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
-	"\bpassword\x18\x02 \x01(\tR\bpassword\"W\n" +
+	"\bpassword\x18\x02 \x01(\tR\bpassword\"\x98\x01\n" +
 	"\rLoginResponse\x12F\n" +
 	"\n" +
-	"token_pair\x18\x01 \x01(\v2'.logistic.auth_service.v1.AuthTokenPairR\ttokenPair\"0\n" +
+	"token_pair\x18\x01 \x01(\v2'.logistic.auth_service.v1.AuthTokenPairR\ttokenPair\x12?\n" +
+	"\aprofile\x18\x02 \x01(\v2%.logistic.auth_service.v1.UserProfileR\aprofile\"0\n" +
 	"\x18GetGoogleLoginURLRequest\x12\x14\n" +
 	"\x05state\x18\x01 \x01(\tR\x05state\"-\n" +
 	"\x19GetGoogleLoginURLResponse\x12\x10\n" +
 	"\x03url\x18\x01 \x01(\tR\x03url\"+\n" +
 	"\x15GoogleCallbackRequest\x12\x12\n" +
-	"\x04code\x18\x01 \x01(\tR\x04code\"`\n" +
+	"\x04code\x18\x01 \x01(\tR\x04code\"\xa1\x01\n" +
 	"\x16GoogleCallbackResponse\x12F\n" +
 	"\n" +
-	"token_pair\x18\x01 \x01(\v2'.logistic.auth_service.v1.AuthTokenPairR\ttokenPair\"*\n" +
+	"token_pair\x18\x01 \x01(\v2'.logistic.auth_service.v1.AuthTokenPairR\ttokenPair\x12?\n" +
+	"\aprofile\x18\x02 \x01(\v2%.logistic.auth_service.v1.UserProfileR\aprofile\"*\n" +
 	"\x12VerifyTokenRequest\x12\x14\n" +
 	"\x05token\x18\x01 \x01(\tR\x05token\"V\n" +
 	"\x13VerifyTokenResponse\x12?\n" +
-	"\aprofile\x18\x01 \x01(\v2%.logistic.auth_service.v1.UserProfileR\aprofile2\xa9\x04\n" +
+	"\aprofile\x18\x01 \x01(\v2%.logistic.auth_service.v1.UserProfileR\aprofile\":\n" +
+	"\x13RefreshTokenRequest\x12#\n" +
+	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"^\n" +
+	"\x14RefreshTokenResponse\x12F\n" +
+	"\n" +
+	"token_pair\x18\x01 \x01(\v2'.logistic.auth_service.v1.AuthTokenPairR\ttokenPair\"4\n" +
+	"\rLogoutRequest\x12#\n" +
+	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"*\n" +
+	"\x0eLogoutResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"\x16\n" +
+	"\x14GetPublicKeysRequest\"p\n" +
+	"\n" +
+	"JSONWebKey\x12\x10\n" +
+	"\x03kid\x18\x01 \x01(\tR\x03kid\x12\x10\n" +
+	"\x03kty\x18\x02 \x01(\tR\x03kty\x12\x10\n" +
+	"\x03alg\x18\x03 \x01(\tR\x03alg\x12\x10\n" +
+	"\x03use\x18\x04 \x01(\tR\x03use\x12\f\n" +
+	"\x01n\x18\x05 \x01(\tR\x01n\x12\f\n" +
+	"\x01e\x18\x06 \x01(\tR\x01e\"Q\n" +
+	"\x15GetPublicKeysResponse\x128\n" +
+	"\x04keys\x18\x01 \x03(\v2$.logistic.auth_service.v1.JSONWebKeyR\x04keys2\xe7\x06\n" +
 	"\vAuthService\x12a\n" +
 	"\bRegister\x12).logistic.auth_service.v1.RegisterRequest\x1a*.logistic.auth_service.v1.RegisterResponse\x12X\n" +
 	"\x05Login\x12&.logistic.auth_service.v1.LoginRequest\x1a'.logistic.auth_service.v1.LoginResponse\x12|\n" +
 	"\x11GetGoogleLoginURL\x122.logistic.auth_service.v1.GetGoogleLoginURLRequest\x1a3.logistic.auth_service.v1.GetGoogleLoginURLResponse\x12s\n" +
 	"\x0eGoogleCallback\x12/.logistic.auth_service.v1.GoogleCallbackRequest\x1a0.logistic.auth_service.v1.GoogleCallbackResponse\x12j\n" +
-	"\vVerifyToken\x12,.logistic.auth_service.v1.VerifyTokenRequest\x1a-.logistic.auth_service.v1.VerifyTokenResponseBAZ?github.com/logistic/api/logistic/auth_service/v1;auth_servicev1b\x06proto3"
+	"\vVerifyToken\x12,.logistic.auth_service.v1.VerifyTokenRequest\x1a-.logistic.auth_service.v1.VerifyTokenResponse\x12m\n" +
+	"\fRefreshToken\x12-.logistic.auth_service.v1.RefreshTokenRequest\x1a..logistic.auth_service.v1.RefreshTokenResponse\x12[\n" +
+	"\x06Logout\x12'.logistic.auth_service.v1.LogoutRequest\x1a(.logistic.auth_service.v1.LogoutResponse\x12p\n" +
+	"\rGetPublicKeys\x12..logistic.auth_service.v1.GetPublicKeysRequest\x1a/.logistic.auth_service.v1.GetPublicKeysResponseBAZ?github.com/logistic/api/logistic/auth_service/v1;auth_servicev1b\x06proto3"
 
 var (
 	file_logistic_auth_service_v1_auth_service_proto_rawDescOnce sync.Once
@@ -705,7 +1115,7 @@ func file_logistic_auth_service_v1_auth_service_proto_rawDescGZIP() []byte {
 	return file_logistic_auth_service_v1_auth_service_proto_rawDescData
 }
 
-var file_logistic_auth_service_v1_auth_service_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_logistic_auth_service_v1_auth_service_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
 var file_logistic_auth_service_v1_auth_service_proto_goTypes = []any{
 	(*UserProfile)(nil),               // 0: logistic.auth_service.v1.UserProfile
 	(*AuthTokenPair)(nil),             // 1: logistic.auth_service.v1.AuthTokenPair
@@ -719,30 +1129,47 @@ var file_logistic_auth_service_v1_auth_service_proto_goTypes = []any{
 	(*GoogleCallbackResponse)(nil),    // 9: logistic.auth_service.v1.GoogleCallbackResponse
 	(*VerifyTokenRequest)(nil),        // 10: logistic.auth_service.v1.VerifyTokenRequest
 	(*VerifyTokenResponse)(nil),       // 11: logistic.auth_service.v1.VerifyTokenResponse
-	(*timestamppb.Timestamp)(nil),     // 12: google.protobuf.Timestamp
+	(*RefreshTokenRequest)(nil),       // 12: logistic.auth_service.v1.RefreshTokenRequest
+	(*RefreshTokenResponse)(nil),      // 13: logistic.auth_service.v1.RefreshTokenResponse
+	(*LogoutRequest)(nil),             // 14: logistic.auth_service.v1.LogoutRequest
+	(*LogoutResponse)(nil),            // 15: logistic.auth_service.v1.LogoutResponse
+	(*GetPublicKeysRequest)(nil),      // 16: logistic.auth_service.v1.GetPublicKeysRequest
+	(*JSONWebKey)(nil),                // 17: logistic.auth_service.v1.JSONWebKey
+	(*GetPublicKeysResponse)(nil),     // 18: logistic.auth_service.v1.GetPublicKeysResponse
+	(*timestamppb.Timestamp)(nil),     // 19: google.protobuf.Timestamp
 }
 var file_logistic_auth_service_v1_auth_service_proto_depIdxs = []int32{
-	12, // 0: logistic.auth_service.v1.UserProfile.created_at:type_name -> google.protobuf.Timestamp
-	12, // 1: logistic.auth_service.v1.UserProfile.updated_at:type_name -> google.protobuf.Timestamp
+	19, // 0: logistic.auth_service.v1.UserProfile.created_at:type_name -> google.protobuf.Timestamp
+	19, // 1: logistic.auth_service.v1.UserProfile.updated_at:type_name -> google.protobuf.Timestamp
 	0,  // 2: logistic.auth_service.v1.RegisterResponse.profile:type_name -> logistic.auth_service.v1.UserProfile
 	1,  // 3: logistic.auth_service.v1.LoginResponse.token_pair:type_name -> logistic.auth_service.v1.AuthTokenPair
-	1,  // 4: logistic.auth_service.v1.GoogleCallbackResponse.token_pair:type_name -> logistic.auth_service.v1.AuthTokenPair
-	0,  // 5: logistic.auth_service.v1.VerifyTokenResponse.profile:type_name -> logistic.auth_service.v1.UserProfile
-	2,  // 6: logistic.auth_service.v1.AuthService.Register:input_type -> logistic.auth_service.v1.RegisterRequest
-	4,  // 7: logistic.auth_service.v1.AuthService.Login:input_type -> logistic.auth_service.v1.LoginRequest
-	6,  // 8: logistic.auth_service.v1.AuthService.GetGoogleLoginURL:input_type -> logistic.auth_service.v1.GetGoogleLoginURLRequest
-	8,  // 9: logistic.auth_service.v1.AuthService.GoogleCallback:input_type -> logistic.auth_service.v1.GoogleCallbackRequest
-	10, // 10: logistic.auth_service.v1.AuthService.VerifyToken:input_type -> logistic.auth_service.v1.VerifyTokenRequest
-	3,  // 11: logistic.auth_service.v1.AuthService.Register:output_type -> logistic.auth_service.v1.RegisterResponse
-	5,  // 12: logistic.auth_service.v1.AuthService.Login:output_type -> logistic.auth_service.v1.LoginResponse
-	7,  // 13: logistic.auth_service.v1.AuthService.GetGoogleLoginURL:output_type -> logistic.auth_service.v1.GetGoogleLoginURLResponse
-	9,  // 14: logistic.auth_service.v1.AuthService.GoogleCallback:output_type -> logistic.auth_service.v1.GoogleCallbackResponse
-	11, // 15: logistic.auth_service.v1.AuthService.VerifyToken:output_type -> logistic.auth_service.v1.VerifyTokenResponse
-	11, // [11:16] is the sub-list for method output_type
-	6,  // [6:11] is the sub-list for method input_type
-	6,  // [6:6] is the sub-list for extension type_name
-	6,  // [6:6] is the sub-list for extension extendee
-	0,  // [0:6] is the sub-list for field type_name
+	0,  // 4: logistic.auth_service.v1.LoginResponse.profile:type_name -> logistic.auth_service.v1.UserProfile
+	1,  // 5: logistic.auth_service.v1.GoogleCallbackResponse.token_pair:type_name -> logistic.auth_service.v1.AuthTokenPair
+	0,  // 6: logistic.auth_service.v1.GoogleCallbackResponse.profile:type_name -> logistic.auth_service.v1.UserProfile
+	0,  // 7: logistic.auth_service.v1.VerifyTokenResponse.profile:type_name -> logistic.auth_service.v1.UserProfile
+	1,  // 8: logistic.auth_service.v1.RefreshTokenResponse.token_pair:type_name -> logistic.auth_service.v1.AuthTokenPair
+	17, // 9: logistic.auth_service.v1.GetPublicKeysResponse.keys:type_name -> logistic.auth_service.v1.JSONWebKey
+	2,  // 10: logistic.auth_service.v1.AuthService.Register:input_type -> logistic.auth_service.v1.RegisterRequest
+	4,  // 11: logistic.auth_service.v1.AuthService.Login:input_type -> logistic.auth_service.v1.LoginRequest
+	6,  // 12: logistic.auth_service.v1.AuthService.GetGoogleLoginURL:input_type -> logistic.auth_service.v1.GetGoogleLoginURLRequest
+	8,  // 13: logistic.auth_service.v1.AuthService.GoogleCallback:input_type -> logistic.auth_service.v1.GoogleCallbackRequest
+	10, // 14: logistic.auth_service.v1.AuthService.VerifyToken:input_type -> logistic.auth_service.v1.VerifyTokenRequest
+	12, // 15: logistic.auth_service.v1.AuthService.RefreshToken:input_type -> logistic.auth_service.v1.RefreshTokenRequest
+	14, // 16: logistic.auth_service.v1.AuthService.Logout:input_type -> logistic.auth_service.v1.LogoutRequest
+	16, // 17: logistic.auth_service.v1.AuthService.GetPublicKeys:input_type -> logistic.auth_service.v1.GetPublicKeysRequest
+	3,  // 18: logistic.auth_service.v1.AuthService.Register:output_type -> logistic.auth_service.v1.RegisterResponse
+	5,  // 19: logistic.auth_service.v1.AuthService.Login:output_type -> logistic.auth_service.v1.LoginResponse
+	7,  // 20: logistic.auth_service.v1.AuthService.GetGoogleLoginURL:output_type -> logistic.auth_service.v1.GetGoogleLoginURLResponse
+	9,  // 21: logistic.auth_service.v1.AuthService.GoogleCallback:output_type -> logistic.auth_service.v1.GoogleCallbackResponse
+	11, // 22: logistic.auth_service.v1.AuthService.VerifyToken:output_type -> logistic.auth_service.v1.VerifyTokenResponse
+	13, // 23: logistic.auth_service.v1.AuthService.RefreshToken:output_type -> logistic.auth_service.v1.RefreshTokenResponse
+	15, // 24: logistic.auth_service.v1.AuthService.Logout:output_type -> logistic.auth_service.v1.LogoutResponse
+	18, // 25: logistic.auth_service.v1.AuthService.GetPublicKeys:output_type -> logistic.auth_service.v1.GetPublicKeysResponse
+	18, // [18:26] is the sub-list for method output_type
+	10, // [10:18] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_logistic_auth_service_v1_auth_service_proto_init() }
@@ -757,7 +1184,7 @@ func file_logistic_auth_service_v1_auth_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_logistic_auth_service_v1_auth_service_proto_rawDesc), len(file_logistic_auth_service_v1_auth_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   12,
+			NumMessages:   19,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

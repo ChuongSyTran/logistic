@@ -7,9 +7,9 @@ import (
 	uuid "github.com/google/uuid"
 	v1 "github.com/logistic/api/logistic/wallet_service/v1"
 	ent "wallet_service/ent"
+	search "wallet_service/internal/adapter/search"
 	entity "wallet_service/internal/entity"
 	mapper "wallet_service/internal/mapper"
-	search "wallet_service/internal/search"
 )
 
 type WalletMapperImpl struct{}
@@ -78,38 +78,6 @@ func (c *WalletMapperImpl) EntToWalletEntity(source *ent.Wallet) *entity.Wallet 
 		pEntityWallet = &entityWallet
 	}
 	return pEntityWallet
-}
-func (c *WalletMapperImpl) EntityToESTransaction(source *entity.Transaction) *search.TransactionDocument {
-	var pSearchTransactionDocument *search.TransactionDocument
-	if source != nil {
-		var searchTransactionDocument search.TransactionDocument
-		searchTransactionDocument.ID = mapper.UUIDToString((*source).ID)
-		searchTransactionDocument.WalletID = mapper.UUIDToString((*source).WalletID)
-		searchTransactionDocument.Amount = (*source).Amount
-		searchTransactionDocument.TransactionType = (*source).TransactionType
-		searchTransactionDocument.ReferenceID = (*source).ReferenceID
-		searchTransactionDocument.Description = (*source).Description
-		searchTransactionDocument.Status = (*source).Status
-		searchTransactionDocument.CreatedAt = mapper.IdentityTime((*source).CreatedAt)
-		pSearchTransactionDocument = &searchTransactionDocument
-	}
-	return pSearchTransactionDocument
-}
-func (c *WalletMapperImpl) EntityToESWallet(source *entity.Wallet) *search.WalletDocument {
-	var pSearchWalletDocument *search.WalletDocument
-	if source != nil {
-		var searchWalletDocument search.WalletDocument
-		searchWalletDocument.ID = mapper.UUIDToString((*source).ID)
-		searchWalletDocument.UserID = mapper.UUIDToString((*source).UserID)
-		searchWalletDocument.UserType = (*source).UserType
-		searchWalletDocument.Balance = (*source).Balance
-		searchWalletDocument.Currency = (*source).Currency
-		searchWalletDocument.Status = (*source).Status
-		searchWalletDocument.CreatedAt = mapper.IdentityTime((*source).CreatedAt)
-		searchWalletDocument.UpdatedAt = mapper.IdentityTime((*source).UpdatedAt)
-		pSearchWalletDocument = &searchWalletDocument
-	}
-	return pSearchWalletDocument
 }
 func (c *WalletMapperImpl) EntityToProtoWallet(source *entity.Wallet) *v1.WalletInfo {
 	var pWalletv1WalletInfo *v1.WalletInfo

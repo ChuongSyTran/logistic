@@ -4,9 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
 	pb "github.com/logistic/api/logistic/matching_service/v1"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"matching_service/internal/biz"
+	cerr "matching_service/internal/common/errors"
 	"matching_service/internal/mapper"
 	"matching_service/internal/mapper/generated"
 )
@@ -63,5 +66,75 @@ func (c *matchingController) SubmitAsk(ctx context.Context, req *pb.SubmitAskReq
 	return &pb.SubmitAskResponse{
 		AskId:  matchedAsk.ID[:],
 		Status: matchedAsk.StatusString(),
+	}, nil
+}
+
+func (c *matchingController) AcceptMatch(ctx context.Context, req *pb.AcceptMatchRequest) (*pb.AcceptMatchResponse, error) {
+	bidID, err := uuid.FromBytes(req.BidId)
+	if err != nil {
+		return nil, cerr.ErrInvalidID.WithMessage("bid_id không hợp lệ").WithCause(err)
+	}
+	askID, err := uuid.FromBytes(req.AskId)
+	if err != nil {
+		return nil, cerr.ErrInvalidID.WithMessage("ask_id không hợp lệ").WithCause(err)
+	}
+
+	contract, err := c.matchingEngine.AcceptOffer(ctx, bidID, askID, req.ConsensusPrice, req.ShipperSignature)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.AcceptMatchResponse{
+		ContractId:       contract.ID[:],
+		BidId:            contract.BidID[:],
+		AskId:            contract.AskID[:],
+		ConsensusPrice:   contract.ConsensusPrice,
+		ConsensusDeposit: contract.ConsensusDeposit,
+		ShipperSignature: contract.ShipperSignature,
+		AgreedAt:         timestamppb.New(contract.AgreedAt),
+		CreatedAt:        timestamppb.New(contract.AgreedAt),
+	}, nil
+}
+
+func (c *matchingController) SubmitOffer(ctx context.Context, req *pb.SubmitOfferRequest) (*pb.SubmitOfferResponse, error) {
+	bidID, err := uuid.FromBytes(req.BidId)
+	if err != nil {
+		return nil, cerr.ErrInvalidID.WithMessage("bid_id không hợp lệ").WithCause(err)
+	}
+	askID, err := uuid.FromBytes(req.AskId)
+	if err != nil {
+		return nil, cerr.ErrInvalidID.WithMessage("ask_id không hợp lệ").WithCause(err)
+	}
+	if req.DesiredPrice <= 0 {
+		return nil, cerr.ErrInvalidID.WithMessage("desired_price phải lớn hơn 0")
+	}
+
+	if err := c.matchingEngine.SubmitOffer(ctx, bidID, askID, req.DesiredPrice); err != nil {
+		return nil, err
+	}
+
+	return &pb.SubmitOfferResponse{
+		Status:  "SUBMITTED",
+		Message: "Đã gửi báo giá tới chủ hàng",
+	}, nil
+}
+
+func (c *matchingController) RejectOffer(ctx context.Context, req *pb.RejectOfferRequest) (*pb.RejectOfferResponse, error) {
+	bidID, err := uuid.FromBytes(req.BidId)
+	if err != nil {
+		return nil, cerr.ErrInvalidID.WithMessage("bid_id không hợp lệ").WithCause(err)
+	}
+	askID, err := uuid.FromBytes(req.AskId)
+	if err != nil {
+		return nil, cerr.ErrInvalidID.WithMessage("ask_id không hợp lệ").WithCause(err)
+	}
+
+	if err := c.matchingEngine.RejectOffer(ctx, bidID, askID); err != nil {
+		return nil, err
+	}
+
+	return &pb.RejectOfferResponse{
+		Status:  "REJECTED",
+		Message: "Đã từ chối báo giá, đơn hàng mở lại cho tài xế khác",
 	}, nil
 }

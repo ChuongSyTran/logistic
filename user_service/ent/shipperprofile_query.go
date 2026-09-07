@@ -25,7 +25,6 @@ type ShipperProfileQuery struct {
 	inters     []Interceptor
 	predicates []predicate.ShipperProfile
 	withUser   *UserQuery
-	withFKs    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -300,12 +299,12 @@ func (_q *ShipperProfileQuery) WithUser(opts ...func(*UserQuery)) *ShipperProfil
 // Example:
 //
 //	var v []struct {
-//		CompanyName string `json:"company_name,omitempty"`
+//		UserID uuid.UUID `json:"user_id,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.ShipperProfile.Query().
-//		GroupBy(shipperprofile.FieldCompanyName).
+//		GroupBy(shipperprofile.FieldUserID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (_q *ShipperProfileQuery) GroupBy(field string, fields ...string) *ShipperProfileGroupBy {
@@ -323,11 +322,11 @@ func (_q *ShipperProfileQuery) GroupBy(field string, fields ...string) *ShipperP
 // Example:
 //
 //	var v []struct {
-//		CompanyName string `json:"company_name,omitempty"`
+//		UserID uuid.UUID `json:"user_id,omitempty"`
 //	}
 //
 //	client.ShipperProfile.Query().
-//		Select(shipperprofile.FieldCompanyName).
+//		Select(shipperprofile.FieldUserID).
 //		Scan(ctx, &v)
 func (_q *ShipperProfileQuery) Select(fields ...string) *ShipperProfileSelect {
 	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
@@ -371,18 +370,11 @@ func (_q *ShipperProfileQuery) prepareQuery(ctx context.Context) error {
 func (_q *ShipperProfileQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ShipperProfile, error) {
 	var (
 		nodes       = []*ShipperProfile{}
-		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
 		loadedTypes = [1]bool{
 			_q.withUser != nil,
 		}
 	)
-	if _q.withUser != nil {
-		withFKs = true
-	}
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, shipperprofile.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*ShipperProfile).scanValues(nil, columns)
 	}
@@ -414,10 +406,7 @@ func (_q *ShipperProfileQuery) loadUser(ctx context.Context, query *UserQuery, n
 	ids := make([]uuid.UUID, 0, len(nodes))
 	nodeids := make(map[uuid.UUID][]*ShipperProfile)
 	for i := range nodes {
-		if nodes[i].user_shipper_profile == nil {
-			continue
-		}
-		fk := *nodes[i].user_shipper_profile
+		fk := nodes[i].UserID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -434,7 +423,7 @@ func (_q *ShipperProfileQuery) loadUser(ctx context.Context, query *UserQuery, n
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "user_shipper_profile" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "user_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -467,6 +456,9 @@ func (_q *ShipperProfileQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != shipperprofile.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if _q.withUser != nil {
+			_spec.Node.AddColumnOnce(shipperprofile.FieldUserID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {

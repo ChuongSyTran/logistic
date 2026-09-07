@@ -9,7 +9,6 @@ import (
 )
 
 type geoHashEngineImpl struct {
-	// TODO: Add redis cache here
 }
 
 func NewGeoHashEngine() SpatialEngine {

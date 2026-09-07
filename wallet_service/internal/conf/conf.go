@@ -11,7 +11,7 @@ type Config struct {
 }
 
 type ServerConfig struct {
-	GrpcPort string `env:"WALLET_SERVICE_GRPC_PORT" env-default:"9005"`
+	GrpcPort string `env:"WALLET_SERVICE_GRPC_PORT" env-default:"9007"`
 }
 
 type DatabaseConfig struct {

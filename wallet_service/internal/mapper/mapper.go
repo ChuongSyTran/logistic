@@ -4,14 +4,20 @@ import (
 	"time"
 
 	"wallet_service/ent"
+	"wallet_service/internal/adapter/search"
 	"wallet_service/internal/entity"
-	"wallet_service/internal/search"
 
 	"github.com/google/uuid"
 
 	pb "github.com/logistic/api/logistic/wallet_service/v1"
 )
 
+// LƯU Ý VỀ RANH GIỚI: đây là package duy nhất còn đứng giữa nhiều tầng — nó
+// biết cả ent (persistence), search (adapter tìm kiếm) lẫn pb (API). Lý do là
+// goverter sinh ra một implementation duy nhất cho một interface duy nhất.
+// Bước dọn tiếp theo là tách thành ba interface, mỗi cái nằm trong adapter sở
+// hữu nó, rồi chạy lại goverter.
+//
 // goverter:converter
 // goverter:ignoreUnexported
 // goverter:extend TimeToString
@@ -25,9 +31,6 @@ import (
 type WalletMapper interface {
 	EntToWalletEntity(source *ent.Wallet) *entity.Wallet
 	EntToTransactionEntity(source *ent.Transaction) *entity.Transaction
-
-	EntityToESWallet(source *entity.Wallet) *search.WalletDocument
-	EntityToESTransaction(source *entity.Transaction) *search.TransactionDocument
 
 	// goverter:map ID Id
 	// goverter:map UserID UserId

@@ -6,7 +6,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// Wallet represents a core business entity, independent of any ORM or database framework.
 type Wallet struct {
 	ID        uuid.UUID
 	UserID    uuid.UUID

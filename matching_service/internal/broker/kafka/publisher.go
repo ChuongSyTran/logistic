@@ -96,7 +96,6 @@ func (p *kafkaPublisher) Publish(ctx context.Context, msg *biz.EventMessage) err
 
 	partition, offset, err := p.producer.SendMessage(&kafkaMgs)
 	if err != nil {
-		// Leverage Sarama's KError type
 		if kerr, ok := errors.AsType[sarama.KError](err); ok {
 			switch kerr {
 			case sarama.ErrRequestTimedOut,
@@ -114,7 +113,6 @@ func (p *kafkaPublisher) Publish(ctx context.Context, msg *biz.EventMessage) err
 			}
 		}
 
-		// Fallback for any unhandled Sarama errors or non-KError issues -> Return 503
 		log.Printf("Unknown Kafka error, returning 503: %v", err)
 		return fmt.Errorf("%w: %v", biz.ErrServiceUnavailable503, err)
 	}

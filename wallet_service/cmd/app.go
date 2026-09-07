@@ -5,9 +5,9 @@ import (
 	"log"
 	"net"
 	"time"
+	"wallet_service/internal/adapter/grpcserver"
 	"wallet_service/internal/conf"
 	"wallet_service/internal/di"
-	"wallet_service/internal/middleware"
 
 	"github.com/logistic/pkg/tracer"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
@@ -35,7 +35,7 @@ func NewApp(ctx context.Context, cfg *conf.Config) (*App, error) {
 	grpcServer := grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.ChainUnaryInterceptor(
-			middleware.ErrorHandlerInterceptor(),
+			grpcserver.ErrorHandlerInterceptor(),
 		),
 	)
 

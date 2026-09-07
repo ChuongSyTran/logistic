@@ -11,11 +11,15 @@ import (
 
 	"vehicle_service/ent/migrate"
 
+	"vehicle_service/ent/driveravailability"
 	"vehicle_service/ent/vehicle"
+	"vehicle_service/ent/vehicledocument"
+	"vehicle_service/ent/vehiclelocation"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
 )
 
@@ -24,8 +28,14 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// DriverAvailability is the client for interacting with the DriverAvailability builders.
+	DriverAvailability *DriverAvailabilityClient
 	// Vehicle is the client for interacting with the Vehicle builders.
 	Vehicle *VehicleClient
+	// VehicleDocument is the client for interacting with the VehicleDocument builders.
+	VehicleDocument *VehicleDocumentClient
+	// VehicleLocation is the client for interacting with the VehicleLocation builders.
+	VehicleLocation *VehicleLocationClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -37,7 +47,10 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.DriverAvailability = NewDriverAvailabilityClient(c.config)
 	c.Vehicle = NewVehicleClient(c.config)
+	c.VehicleDocument = NewVehicleDocumentClient(c.config)
+	c.VehicleLocation = NewVehicleLocationClient(c.config)
 }
 
 type (
@@ -128,9 +141,12 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:     ctx,
-		config:  cfg,
-		Vehicle: NewVehicleClient(cfg),
+		ctx:                ctx,
+		config:             cfg,
+		DriverAvailability: NewDriverAvailabilityClient(cfg),
+		Vehicle:            NewVehicleClient(cfg),
+		VehicleDocument:    NewVehicleDocumentClient(cfg),
+		VehicleLocation:    NewVehicleLocationClient(cfg),
 	}, nil
 }
 
@@ -148,16 +164,19 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:     ctx,
-		config:  cfg,
-		Vehicle: NewVehicleClient(cfg),
+		ctx:                ctx,
+		config:             cfg,
+		DriverAvailability: NewDriverAvailabilityClient(cfg),
+		Vehicle:            NewVehicleClient(cfg),
+		VehicleDocument:    NewVehicleDocumentClient(cfg),
+		VehicleLocation:    NewVehicleLocationClient(cfg),
 	}, nil
 }
 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		Vehicle.
+//		DriverAvailability.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -179,22 +198,183 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
+	c.DriverAvailability.Use(hooks...)
 	c.Vehicle.Use(hooks...)
+	c.VehicleDocument.Use(hooks...)
+	c.VehicleLocation.Use(hooks...)
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
+	c.DriverAvailability.Intercept(interceptors...)
 	c.Vehicle.Intercept(interceptors...)
+	c.VehicleDocument.Intercept(interceptors...)
+	c.VehicleLocation.Intercept(interceptors...)
 }
 
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *DriverAvailabilityMutation:
+		return c.DriverAvailability.mutate(ctx, m)
 	case *VehicleMutation:
 		return c.Vehicle.mutate(ctx, m)
+	case *VehicleDocumentMutation:
+		return c.VehicleDocument.mutate(ctx, m)
+	case *VehicleLocationMutation:
+		return c.VehicleLocation.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// DriverAvailabilityClient is a client for the DriverAvailability schema.
+type DriverAvailabilityClient struct {
+	config
+}
+
+// NewDriverAvailabilityClient returns a client for the DriverAvailability from the given config.
+func NewDriverAvailabilityClient(c config) *DriverAvailabilityClient {
+	return &DriverAvailabilityClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `driveravailability.Hooks(f(g(h())))`.
+func (c *DriverAvailabilityClient) Use(hooks ...Hook) {
+	c.hooks.DriverAvailability = append(c.hooks.DriverAvailability, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `driveravailability.Intercept(f(g(h())))`.
+func (c *DriverAvailabilityClient) Intercept(interceptors ...Interceptor) {
+	c.inters.DriverAvailability = append(c.inters.DriverAvailability, interceptors...)
+}
+
+// Create returns a builder for creating a DriverAvailability entity.
+func (c *DriverAvailabilityClient) Create() *DriverAvailabilityCreate {
+	mutation := newDriverAvailabilityMutation(c.config, OpCreate)
+	return &DriverAvailabilityCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of DriverAvailability entities.
+func (c *DriverAvailabilityClient) CreateBulk(builders ...*DriverAvailabilityCreate) *DriverAvailabilityCreateBulk {
+	return &DriverAvailabilityCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *DriverAvailabilityClient) MapCreateBulk(slice any, setFunc func(*DriverAvailabilityCreate, int)) *DriverAvailabilityCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &DriverAvailabilityCreateBulk{err: fmt.Errorf("calling to DriverAvailabilityClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*DriverAvailabilityCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &DriverAvailabilityCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for DriverAvailability.
+func (c *DriverAvailabilityClient) Update() *DriverAvailabilityUpdate {
+	mutation := newDriverAvailabilityMutation(c.config, OpUpdate)
+	return &DriverAvailabilityUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *DriverAvailabilityClient) UpdateOne(_m *DriverAvailability) *DriverAvailabilityUpdateOne {
+	mutation := newDriverAvailabilityMutation(c.config, OpUpdateOne, withDriverAvailability(_m))
+	return &DriverAvailabilityUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *DriverAvailabilityClient) UpdateOneID(id uuid.UUID) *DriverAvailabilityUpdateOne {
+	mutation := newDriverAvailabilityMutation(c.config, OpUpdateOne, withDriverAvailabilityID(id))
+	return &DriverAvailabilityUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for DriverAvailability.
+func (c *DriverAvailabilityClient) Delete() *DriverAvailabilityDelete {
+	mutation := newDriverAvailabilityMutation(c.config, OpDelete)
+	return &DriverAvailabilityDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *DriverAvailabilityClient) DeleteOne(_m *DriverAvailability) *DriverAvailabilityDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *DriverAvailabilityClient) DeleteOneID(id uuid.UUID) *DriverAvailabilityDeleteOne {
+	builder := c.Delete().Where(driveravailability.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &DriverAvailabilityDeleteOne{builder}
+}
+
+// Query returns a query builder for DriverAvailability.
+func (c *DriverAvailabilityClient) Query() *DriverAvailabilityQuery {
+	return &DriverAvailabilityQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeDriverAvailability},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a DriverAvailability entity by its id.
+func (c *DriverAvailabilityClient) Get(ctx context.Context, id uuid.UUID) (*DriverAvailability, error) {
+	return c.Query().Where(driveravailability.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *DriverAvailabilityClient) GetX(ctx context.Context, id uuid.UUID) *DriverAvailability {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryVehicle queries the vehicle edge of a DriverAvailability.
+func (c *DriverAvailabilityClient) QueryVehicle(_m *DriverAvailability) *VehicleQuery {
+	query := (&VehicleClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(driveravailability.Table, driveravailability.FieldID, id),
+			sqlgraph.To(vehicle.Table, vehicle.FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, true, driveravailability.VehicleTable, driveravailability.VehicleColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *DriverAvailabilityClient) Hooks() []Hook {
+	return c.hooks.DriverAvailability
+}
+
+// Interceptors returns the client interceptors.
+func (c *DriverAvailabilityClient) Interceptors() []Interceptor {
+	return c.inters.DriverAvailability
+}
+
+func (c *DriverAvailabilityClient) mutate(ctx context.Context, m *DriverAvailabilityMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&DriverAvailabilityCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&DriverAvailabilityUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&DriverAvailabilityUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&DriverAvailabilityDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown DriverAvailability mutation op: %q", m.Op())
 	}
 }
 
@@ -306,6 +486,54 @@ func (c *VehicleClient) GetX(ctx context.Context, id uuid.UUID) *Vehicle {
 	return obj
 }
 
+// QueryDocuments queries the documents edge of a Vehicle.
+func (c *VehicleClient) QueryDocuments(_m *Vehicle) *VehicleDocumentQuery {
+	query := (&VehicleDocumentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(vehicle.Table, vehicle.FieldID, id),
+			sqlgraph.To(vehicledocument.Table, vehicledocument.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, vehicle.DocumentsTable, vehicle.DocumentsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryLocation queries the location edge of a Vehicle.
+func (c *VehicleClient) QueryLocation(_m *Vehicle) *VehicleLocationQuery {
+	query := (&VehicleLocationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(vehicle.Table, vehicle.FieldID, id),
+			sqlgraph.To(vehiclelocation.Table, vehiclelocation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, false, vehicle.LocationTable, vehicle.LocationColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAvailability queries the availability edge of a Vehicle.
+func (c *VehicleClient) QueryAvailability(_m *Vehicle) *DriverAvailabilityQuery {
+	query := (&DriverAvailabilityClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(vehicle.Table, vehicle.FieldID, id),
+			sqlgraph.To(driveravailability.Table, driveravailability.FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, false, vehicle.AvailabilityTable, vehicle.AvailabilityColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *VehicleClient) Hooks() []Hook {
 	return c.hooks.Vehicle
@@ -331,12 +559,310 @@ func (c *VehicleClient) mutate(ctx context.Context, m *VehicleMutation) (Value, 
 	}
 }
 
+// VehicleDocumentClient is a client for the VehicleDocument schema.
+type VehicleDocumentClient struct {
+	config
+}
+
+// NewVehicleDocumentClient returns a client for the VehicleDocument from the given config.
+func NewVehicleDocumentClient(c config) *VehicleDocumentClient {
+	return &VehicleDocumentClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `vehicledocument.Hooks(f(g(h())))`.
+func (c *VehicleDocumentClient) Use(hooks ...Hook) {
+	c.hooks.VehicleDocument = append(c.hooks.VehicleDocument, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `vehicledocument.Intercept(f(g(h())))`.
+func (c *VehicleDocumentClient) Intercept(interceptors ...Interceptor) {
+	c.inters.VehicleDocument = append(c.inters.VehicleDocument, interceptors...)
+}
+
+// Create returns a builder for creating a VehicleDocument entity.
+func (c *VehicleDocumentClient) Create() *VehicleDocumentCreate {
+	mutation := newVehicleDocumentMutation(c.config, OpCreate)
+	return &VehicleDocumentCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of VehicleDocument entities.
+func (c *VehicleDocumentClient) CreateBulk(builders ...*VehicleDocumentCreate) *VehicleDocumentCreateBulk {
+	return &VehicleDocumentCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *VehicleDocumentClient) MapCreateBulk(slice any, setFunc func(*VehicleDocumentCreate, int)) *VehicleDocumentCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &VehicleDocumentCreateBulk{err: fmt.Errorf("calling to VehicleDocumentClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*VehicleDocumentCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &VehicleDocumentCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for VehicleDocument.
+func (c *VehicleDocumentClient) Update() *VehicleDocumentUpdate {
+	mutation := newVehicleDocumentMutation(c.config, OpUpdate)
+	return &VehicleDocumentUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *VehicleDocumentClient) UpdateOne(_m *VehicleDocument) *VehicleDocumentUpdateOne {
+	mutation := newVehicleDocumentMutation(c.config, OpUpdateOne, withVehicleDocument(_m))
+	return &VehicleDocumentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *VehicleDocumentClient) UpdateOneID(id uuid.UUID) *VehicleDocumentUpdateOne {
+	mutation := newVehicleDocumentMutation(c.config, OpUpdateOne, withVehicleDocumentID(id))
+	return &VehicleDocumentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for VehicleDocument.
+func (c *VehicleDocumentClient) Delete() *VehicleDocumentDelete {
+	mutation := newVehicleDocumentMutation(c.config, OpDelete)
+	return &VehicleDocumentDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *VehicleDocumentClient) DeleteOne(_m *VehicleDocument) *VehicleDocumentDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *VehicleDocumentClient) DeleteOneID(id uuid.UUID) *VehicleDocumentDeleteOne {
+	builder := c.Delete().Where(vehicledocument.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &VehicleDocumentDeleteOne{builder}
+}
+
+// Query returns a query builder for VehicleDocument.
+func (c *VehicleDocumentClient) Query() *VehicleDocumentQuery {
+	return &VehicleDocumentQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeVehicleDocument},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a VehicleDocument entity by its id.
+func (c *VehicleDocumentClient) Get(ctx context.Context, id uuid.UUID) (*VehicleDocument, error) {
+	return c.Query().Where(vehicledocument.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *VehicleDocumentClient) GetX(ctx context.Context, id uuid.UUID) *VehicleDocument {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryVehicle queries the vehicle edge of a VehicleDocument.
+func (c *VehicleDocumentClient) QueryVehicle(_m *VehicleDocument) *VehicleQuery {
+	query := (&VehicleClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(vehicledocument.Table, vehicledocument.FieldID, id),
+			sqlgraph.To(vehicle.Table, vehicle.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, vehicledocument.VehicleTable, vehicledocument.VehicleColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *VehicleDocumentClient) Hooks() []Hook {
+	return c.hooks.VehicleDocument
+}
+
+// Interceptors returns the client interceptors.
+func (c *VehicleDocumentClient) Interceptors() []Interceptor {
+	return c.inters.VehicleDocument
+}
+
+func (c *VehicleDocumentClient) mutate(ctx context.Context, m *VehicleDocumentMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&VehicleDocumentCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&VehicleDocumentUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&VehicleDocumentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&VehicleDocumentDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown VehicleDocument mutation op: %q", m.Op())
+	}
+}
+
+// VehicleLocationClient is a client for the VehicleLocation schema.
+type VehicleLocationClient struct {
+	config
+}
+
+// NewVehicleLocationClient returns a client for the VehicleLocation from the given config.
+func NewVehicleLocationClient(c config) *VehicleLocationClient {
+	return &VehicleLocationClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `vehiclelocation.Hooks(f(g(h())))`.
+func (c *VehicleLocationClient) Use(hooks ...Hook) {
+	c.hooks.VehicleLocation = append(c.hooks.VehicleLocation, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `vehiclelocation.Intercept(f(g(h())))`.
+func (c *VehicleLocationClient) Intercept(interceptors ...Interceptor) {
+	c.inters.VehicleLocation = append(c.inters.VehicleLocation, interceptors...)
+}
+
+// Create returns a builder for creating a VehicleLocation entity.
+func (c *VehicleLocationClient) Create() *VehicleLocationCreate {
+	mutation := newVehicleLocationMutation(c.config, OpCreate)
+	return &VehicleLocationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of VehicleLocation entities.
+func (c *VehicleLocationClient) CreateBulk(builders ...*VehicleLocationCreate) *VehicleLocationCreateBulk {
+	return &VehicleLocationCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *VehicleLocationClient) MapCreateBulk(slice any, setFunc func(*VehicleLocationCreate, int)) *VehicleLocationCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &VehicleLocationCreateBulk{err: fmt.Errorf("calling to VehicleLocationClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*VehicleLocationCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &VehicleLocationCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for VehicleLocation.
+func (c *VehicleLocationClient) Update() *VehicleLocationUpdate {
+	mutation := newVehicleLocationMutation(c.config, OpUpdate)
+	return &VehicleLocationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *VehicleLocationClient) UpdateOne(_m *VehicleLocation) *VehicleLocationUpdateOne {
+	mutation := newVehicleLocationMutation(c.config, OpUpdateOne, withVehicleLocation(_m))
+	return &VehicleLocationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *VehicleLocationClient) UpdateOneID(id uuid.UUID) *VehicleLocationUpdateOne {
+	mutation := newVehicleLocationMutation(c.config, OpUpdateOne, withVehicleLocationID(id))
+	return &VehicleLocationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for VehicleLocation.
+func (c *VehicleLocationClient) Delete() *VehicleLocationDelete {
+	mutation := newVehicleLocationMutation(c.config, OpDelete)
+	return &VehicleLocationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *VehicleLocationClient) DeleteOne(_m *VehicleLocation) *VehicleLocationDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *VehicleLocationClient) DeleteOneID(id uuid.UUID) *VehicleLocationDeleteOne {
+	builder := c.Delete().Where(vehiclelocation.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &VehicleLocationDeleteOne{builder}
+}
+
+// Query returns a query builder for VehicleLocation.
+func (c *VehicleLocationClient) Query() *VehicleLocationQuery {
+	return &VehicleLocationQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeVehicleLocation},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a VehicleLocation entity by its id.
+func (c *VehicleLocationClient) Get(ctx context.Context, id uuid.UUID) (*VehicleLocation, error) {
+	return c.Query().Where(vehiclelocation.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *VehicleLocationClient) GetX(ctx context.Context, id uuid.UUID) *VehicleLocation {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryVehicle queries the vehicle edge of a VehicleLocation.
+func (c *VehicleLocationClient) QueryVehicle(_m *VehicleLocation) *VehicleQuery {
+	query := (&VehicleClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(vehiclelocation.Table, vehiclelocation.FieldID, id),
+			sqlgraph.To(vehicle.Table, vehicle.FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, true, vehiclelocation.VehicleTable, vehiclelocation.VehicleColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *VehicleLocationClient) Hooks() []Hook {
+	return c.hooks.VehicleLocation
+}
+
+// Interceptors returns the client interceptors.
+func (c *VehicleLocationClient) Interceptors() []Interceptor {
+	return c.inters.VehicleLocation
+}
+
+func (c *VehicleLocationClient) mutate(ctx context.Context, m *VehicleLocationMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&VehicleLocationCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&VehicleLocationUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&VehicleLocationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&VehicleLocationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown VehicleLocation mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Vehicle []ent.Hook
+		DriverAvailability, Vehicle, VehicleDocument, VehicleLocation []ent.Hook
 	}
 	inters struct {
-		Vehicle []ent.Interceptor
+		DriverAvailability, Vehicle, VehicleDocument, VehicleLocation []ent.Interceptor
 	}
 )

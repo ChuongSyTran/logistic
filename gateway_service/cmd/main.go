@@ -13,9 +13,11 @@ import (
 // @description
 // @description 		**Các service được proxy:**
 // @description 		- **Auth** (`/api/v1/auth/*`) — Đăng ký, đăng nhập, OAuth2 Google, xác thực token
-// @description 		- **User** (`/v1/users/*`) — Quản lý người dùng, profile driver/shipper, KYC (gRPC-Gateway)
-// @description 		- **Vehicle** (`/v1/vehicles/*`) — Đăng ký & quản lý phương tiện (gRPC-Gateway)
-// @description 		- **Matching** (gRPC only) — Matching engine cho Bid/Ask, chưa expose HTTP
+// @description 		- **User** (`/api/v1/users/*`) — Quản lý người dùng, hồ sơ tài xế/chủ hàng, KYC
+// @description 		- **Vehicle** (`/api/v1/vehicles/*`) — Đăng ký & quản lý phương tiện, báo GPS, tìm xe gần
+// @description 		- **Matching** (`/api/v1/matching/*`) — Ghép đơn theo mô hình Bid/Ask
+// @description 		- **Notification** (`/api/v1/notifications/*`) — Hộp thư thông báo
+// @description 		- **Media** (`/api/v1/media/*`) — Tải file lên Cloudinary
 // @host 				localhost:8080
 // @BasePath 			/
 func main() {
@@ -28,7 +30,6 @@ func main() {
 		log.Fatalf("Failed to start Gateway Service: %v", err)
 	}
 
-	// Đợi signal để shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit

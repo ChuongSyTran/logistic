@@ -4,7 +4,7 @@
 // 	protoc        (unknown)
 // source: logistic/matching_service/v1/matching_service.proto
 
-package v1
+package matchingv1
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -24,29 +24,39 @@ var File_logistic_matching_service_v1_matching_service_proto protoreflect.FileDe
 
 const file_logistic_matching_service_v1_matching_service_proto_rawDesc = "" +
 	"\n" +
-	"3logistic/matching_service/v1/matching_service.proto\x12\x1clogistic.matching_service.v1\x1a4logistic/matching_service/v1/matching_messages.proto2\xe7\x02\n" +
+	"3logistic/matching_service/v1/matching_service.proto\x12\x1clogistic.matching_service.v1\x1a4logistic/matching_service/v1/matching_messages.proto2\xcf\x04\n" +
 	"\x15MatchingEngineService\x12l\n" +
 	"\tSubmitBid\x12..logistic.matching_service.v1.SubmitBidRequest\x1a/.logistic.matching_service.v1.SubmitBidResponse\x12l\n" +
 	"\tSubmitAsk\x12..logistic.matching_service.v1.SubmitAskRequest\x1a/.logistic.matching_service.v1.SubmitAskResponse\x12r\n" +
-	"\vAcceptMatch\x120.logistic.matching_service.v1.AcceptMatchRequest\x1a1.logistic.matching_service.v1.AcceptMatchResponseB+Z)logistic_project/api/logistic/matching/v1b\x06proto3"
+	"\vAcceptMatch\x120.logistic.matching_service.v1.AcceptMatchRequest\x1a1.logistic.matching_service.v1.AcceptMatchResponse\x12r\n" +
+	"\vSubmitOffer\x120.logistic.matching_service.v1.SubmitOfferRequest\x1a1.logistic.matching_service.v1.SubmitOfferResponse\x12r\n" +
+	"\vRejectOffer\x120.logistic.matching_service.v1.RejectOfferRequest\x1a1.logistic.matching_service.v1.RejectOfferResponseBAZ?github.com/logistic/api/logistic/matching_service/v1;matchingv1b\x06proto3"
 
 var file_logistic_matching_service_v1_matching_service_proto_goTypes = []any{
 	(*SubmitBidRequest)(nil),    // 0: logistic.matching_service.v1.SubmitBidRequest
 	(*SubmitAskRequest)(nil),    // 1: logistic.matching_service.v1.SubmitAskRequest
 	(*AcceptMatchRequest)(nil),  // 2: logistic.matching_service.v1.AcceptMatchRequest
-	(*SubmitBidResponse)(nil),   // 3: logistic.matching_service.v1.SubmitBidResponse
-	(*SubmitAskResponse)(nil),   // 4: logistic.matching_service.v1.SubmitAskResponse
-	(*AcceptMatchResponse)(nil), // 5: logistic.matching_service.v1.AcceptMatchResponse
+	(*SubmitOfferRequest)(nil),  // 3: logistic.matching_service.v1.SubmitOfferRequest
+	(*RejectOfferRequest)(nil),  // 4: logistic.matching_service.v1.RejectOfferRequest
+	(*SubmitBidResponse)(nil),   // 5: logistic.matching_service.v1.SubmitBidResponse
+	(*SubmitAskResponse)(nil),   // 6: logistic.matching_service.v1.SubmitAskResponse
+	(*AcceptMatchResponse)(nil), // 7: logistic.matching_service.v1.AcceptMatchResponse
+	(*SubmitOfferResponse)(nil), // 8: logistic.matching_service.v1.SubmitOfferResponse
+	(*RejectOfferResponse)(nil), // 9: logistic.matching_service.v1.RejectOfferResponse
 }
 var file_logistic_matching_service_v1_matching_service_proto_depIdxs = []int32{
 	0, // 0: logistic.matching_service.v1.MatchingEngineService.SubmitBid:input_type -> logistic.matching_service.v1.SubmitBidRequest
 	1, // 1: logistic.matching_service.v1.MatchingEngineService.SubmitAsk:input_type -> logistic.matching_service.v1.SubmitAskRequest
 	2, // 2: logistic.matching_service.v1.MatchingEngineService.AcceptMatch:input_type -> logistic.matching_service.v1.AcceptMatchRequest
-	3, // 3: logistic.matching_service.v1.MatchingEngineService.SubmitBid:output_type -> logistic.matching_service.v1.SubmitBidResponse
-	4, // 4: logistic.matching_service.v1.MatchingEngineService.SubmitAsk:output_type -> logistic.matching_service.v1.SubmitAskResponse
-	5, // 5: logistic.matching_service.v1.MatchingEngineService.AcceptMatch:output_type -> logistic.matching_service.v1.AcceptMatchResponse
-	3, // [3:6] is the sub-list for method output_type
-	0, // [0:3] is the sub-list for method input_type
+	3, // 3: logistic.matching_service.v1.MatchingEngineService.SubmitOffer:input_type -> logistic.matching_service.v1.SubmitOfferRequest
+	4, // 4: logistic.matching_service.v1.MatchingEngineService.RejectOffer:input_type -> logistic.matching_service.v1.RejectOfferRequest
+	5, // 5: logistic.matching_service.v1.MatchingEngineService.SubmitBid:output_type -> logistic.matching_service.v1.SubmitBidResponse
+	6, // 6: logistic.matching_service.v1.MatchingEngineService.SubmitAsk:output_type -> logistic.matching_service.v1.SubmitAskResponse
+	7, // 7: logistic.matching_service.v1.MatchingEngineService.AcceptMatch:output_type -> logistic.matching_service.v1.AcceptMatchResponse
+	8, // 8: logistic.matching_service.v1.MatchingEngineService.SubmitOffer:output_type -> logistic.matching_service.v1.SubmitOfferResponse
+	9, // 9: logistic.matching_service.v1.MatchingEngineService.RejectOffer:output_type -> logistic.matching_service.v1.RejectOfferResponse
+	5, // [5:10] is the sub-list for method output_type
+	0, // [0:5] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name

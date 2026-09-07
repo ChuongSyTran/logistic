@@ -2,12 +2,11 @@ package controller
 
 import (
 	"io"
-	"net/http"
+
+	"gateway_service/internal/response"
 
 	"github.com/gin-gonic/gin"
 	pb "github.com/logistic/api/logistic/media_service/v1"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type MediaController struct {
@@ -32,11 +31,11 @@ func NewMediaController(mediaClient pb.MediaServiceClient) *MediaController {
 // @Success      200 {object} map[string]interface{} "Tải lên thành công, trả về URL"
 // @Failure      400 {object} map[string]interface{} "Lỗi thiếu file hoặc file không hợp lệ"
 // @Failure      500 {object} map[string]interface{} "Lỗi server nội bộ"
-// @Router       /api/media/v1/upload [post]
+// @Router       /api/v1/media/upload [post]
 func (c *MediaController) UploadFile(ctx *gin.Context) {
 	fileHeader, err := ctx.FormFile("file")
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "validation_failed", "message": "file is required"})
+		response.BadRequest(ctx, "FILE_REQUIRED", "cần đính kèm file trong trường \"file\"")
 		return
 	}
 
@@ -45,14 +44,14 @@ func (c *MediaController) UploadFile(ctx *gin.Context) {
 
 	file, err := fileHeader.Open()
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "internal_server_error", "message": "failed to open file"})
+		response.BadRequest(ctx, "FILE_UNREADABLE", "không mở được file đã tải lên")
 		return
 	}
 	defer file.Close()
 
 	fileBytes, err := io.ReadAll(file)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "internal_server_error", "message": "failed to read file"})
+		response.BadRequest(ctx, "FILE_UNREADABLE", "không đọc được nội dung file")
 		return
 	}
 
@@ -63,17 +62,15 @@ func (c *MediaController) UploadFile(ctx *gin.Context) {
 		Prefix:      prefix,
 	})
 	if err != nil {
-		st, _ := status.FromError(err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "upload_failed", "message": st.Message()})
+		response.Error(ctx, err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	response.OKMessage(ctx, gin.H{
 		"file_name": resp.FileName,
 		"public_id": resp.PublicId,
 		"url":       resp.Url,
-		"message":   resp.Message,
-	})
+	}, resp.Message)
 }
 
 // DeleteFile godoc
@@ -86,11 +83,11 @@ func (c *MediaController) UploadFile(ctx *gin.Context) {
 // @Failure      400 {object} map[string]interface{} "Thiếu public_id"
 // @Failure      404 {object} map[string]interface{} "Không tìm thấy file"
 // @Failure      500 {object} map[string]interface{} "Lỗi server nội bộ"
-// @Router       /api/media/v1/delete/{publicID} [delete]
+// @Router       /api/v1/media/files/{publicID} [delete]
 func (c *MediaController) DeleteFile(ctx *gin.Context) {
 	publicID := ctx.Param("publicID")
 	if publicID == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "validation_failed", "message": "publicID is required"})
+		response.BadRequest(ctx, "PUBLIC_ID_REQUIRED", "publicID là bắt buộc")
 		return
 	}
 
@@ -98,16 +95,9 @@ func (c *MediaController) DeleteFile(ctx *gin.Context) {
 		PublicId: publicID,
 	})
 	if err != nil {
-		st, _ := status.FromError(err)
-		if st.Code() == codes.NotFound {
-			ctx.JSON(http.StatusNotFound, gin.H{"error": "not_found", "message": st.Message()})
-			return
-		}
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "delete_failed", "message": st.Message()})
+		response.Error(ctx, err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": resp.Message,
-	})
+	response.OKMessage(ctx, nil, resp.Message)
 }

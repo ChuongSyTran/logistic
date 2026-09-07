@@ -1,0 +1,1066 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "logistic/notification_service/v1/notification_service.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "NotificationService",
+      "description": "NotificationService là ĐẦU RA của luồng sự kiện.\n\nNó không có API \"tạo thông báo\" cho client: thông báo được sinh ra bởi\nconsumer RabbitMQ khi matching_service phát event. gRPC ở đây chỉ phục vụ\nviệc ĐỌC (inbox của người dùng) và quản trị (template, gửi thủ công).\n\n======================= CLIENT ======================="
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/admin/notification-templates": {
+      "get": {
+        "operationId": "NotificationService_AdminListTemplates",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1AdminListTemplatesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "channel",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "locale",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "NotificationService"
+        ]
+      },
+      "post": {
+        "operationId": "NotificationService_AdminCreateTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1AdminCreateTemplateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1AdminCreateTemplateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "NotificationService"
+        ]
+      }
+    },
+    "/v1/admin/notification-templates/{id}": {
+      "delete": {
+        "operationId": "NotificationService_AdminDeleteTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1AdminDeleteTemplateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          }
+        ],
+        "tags": [
+          "NotificationService"
+        ]
+      },
+      "put": {
+        "operationId": "NotificationService_AdminUpdateTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1AdminUpdateTemplateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/NotificationServiceAdminUpdateTemplateBody"
+            }
+          }
+        ],
+        "tags": [
+          "NotificationService"
+        ]
+      }
+    },
+    "/v1/admin/notifications": {
+      "get": {
+        "operationId": "NotificationService_AdminListNotifications",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1AdminListNotificationsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "NotificationService"
+        ]
+      }
+    },
+    "/v1/admin/notifications/send": {
+      "post": {
+        "operationId": "NotificationService_AdminSendNotification",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1AdminSendNotificationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "AdminSendNotification: gửi thủ công. Để trống user_ids + đặt broadcast_role\nthì gửi cho toàn bộ người dùng thuộc vai trò đó.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1AdminSendNotificationRequest"
+            }
+          }
+        ],
+        "tags": [
+          "NotificationService"
+        ]
+      }
+    },
+    "/v1/admin/notifications/stats": {
+      "get": {
+        "operationId": "NotificationService_AdminGetNotificationStats",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1AdminGetNotificationStatsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "NotificationService"
+        ]
+      }
+    },
+    "/v1/notifications/{id}": {
+      "get": {
+        "operationId": "NotificationService_GetNotification",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetNotificationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          }
+        ],
+        "tags": [
+          "NotificationService"
+        ]
+      },
+      "delete": {
+        "operationId": "NotificationService_DeleteNotification",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteNotificationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          }
+        ],
+        "tags": [
+          "NotificationService"
+        ]
+      }
+    },
+    "/v1/notifications/{id}/read": {
+      "put": {
+        "operationId": "NotificationService_MarkAsRead",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1MarkAsReadResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/NotificationServiceMarkAsReadBody"
+            }
+          }
+        ],
+        "tags": [
+          "NotificationService"
+        ]
+      }
+    },
+    "/v1/users/{userId}/notification-preferences": {
+      "get": {
+        "operationId": "NotificationService_GetPreferences",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetPreferencesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          }
+        ],
+        "tags": [
+          "NotificationService"
+        ]
+      },
+      "put": {
+        "operationId": "NotificationService_UpdatePreferences",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdatePreferencesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/NotificationServiceUpdatePreferencesBody"
+            }
+          }
+        ],
+        "tags": [
+          "NotificationService"
+        ]
+      }
+    },
+    "/v1/users/{userId}/notifications": {
+      "get": {
+        "operationId": "NotificationService_ListNotifications",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListNotificationsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "unreadOnly",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "NotificationService"
+        ]
+      }
+    },
+    "/v1/users/{userId}/notifications/read-all": {
+      "put": {
+        "operationId": "NotificationService_MarkAllAsRead",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1MarkAllAsReadResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/NotificationServiceMarkAllAsReadBody"
+            }
+          }
+        ],
+        "tags": [
+          "NotificationService"
+        ]
+      }
+    },
+    "/v1/users/{userId}/notifications/unread-count": {
+      "get": {
+        "operationId": "NotificationService_GetUnreadCount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetUnreadCountResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          }
+        ],
+        "tags": [
+          "NotificationService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "NotificationServiceAdminUpdateTemplateBody": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "titleTemplate": {
+          "type": "string"
+        },
+        "bodyTemplate": {
+          "type": "string"
+        },
+        "isActive": {
+          "type": "boolean"
+        }
+      }
+    },
+    "NotificationServiceMarkAllAsReadBody": {
+      "type": "object"
+    },
+    "NotificationServiceMarkAsReadBody": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "NotificationServiceUpdatePreferencesBody": {
+      "type": "object",
+      "properties": {
+        "inAppEnabled": {
+          "type": "boolean"
+        },
+        "pushEnabled": {
+          "type": "boolean"
+        },
+        "emailEnabled": {
+          "type": "boolean"
+        },
+        "smsEnabled": {
+          "type": "boolean"
+        },
+        "matchEventsEnabled": {
+          "type": "boolean"
+        },
+        "promotionEnabled": {
+          "type": "boolean"
+        },
+        "quietHoursStart": {
+          "type": "string"
+        },
+        "quietHoursEnd": {
+          "type": "string"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1AdminCreateTemplateRequest": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "channel": {
+          "type": "string"
+        },
+        "locale": {
+          "type": "string"
+        },
+        "titleTemplate": {
+          "type": "string"
+        },
+        "bodyTemplate": {
+          "type": "string"
+        },
+        "isActive": {
+          "type": "boolean"
+        }
+      }
+    },
+    "v1AdminCreateTemplateResponse": {
+      "type": "object",
+      "properties": {
+        "template": {
+          "$ref": "#/definitions/v1NotificationTemplate"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "v1AdminDeleteTemplateResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "v1AdminGetNotificationStatsResponse": {
+      "type": "object",
+      "properties": {
+        "totalNotifications": {
+          "type": "string",
+          "format": "int64"
+        },
+        "unreadNotifications": {
+          "type": "string",
+          "format": "int64"
+        },
+        "sentToday": {
+          "type": "string",
+          "format": "int64"
+        },
+        "failedNotifications": {
+          "type": "string",
+          "format": "int64"
+        },
+        "totalTemplates": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "v1AdminListNotificationsResponse": {
+      "type": "object",
+      "properties": {
+        "notifications": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Notification"
+          }
+        },
+        "pagination": {
+          "$ref": "#/definitions/v1Pagination"
+        }
+      }
+    },
+    "v1AdminListTemplatesResponse": {
+      "type": "object",
+      "properties": {
+        "templates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1NotificationTemplate"
+          }
+        }
+      }
+    },
+    "v1AdminSendNotificationRequest": {
+      "type": "object",
+      "properties": {
+        "userIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "byte"
+          }
+        },
+        "broadcastRole": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "channel": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "body": {
+          "type": "string"
+        },
+        "data": {
+          "type": "string"
+        }
+      },
+      "description": "AdminSendNotification: gửi thủ công. Để trống user_ids + đặt broadcast_role\nthì gửi cho toàn bộ người dùng thuộc vai trò đó."
+    },
+    "v1AdminSendNotificationResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "sentCount": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "v1AdminUpdateTemplateResponse": {
+      "type": "object",
+      "properties": {
+        "template": {
+          "$ref": "#/definitions/v1NotificationTemplate"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "v1DeleteNotificationResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "v1GetNotificationResponse": {
+      "type": "object",
+      "properties": {
+        "notification": {
+          "$ref": "#/definitions/v1Notification"
+        }
+      }
+    },
+    "v1GetPreferencesResponse": {
+      "type": "object",
+      "properties": {
+        "preference": {
+          "$ref": "#/definitions/v1NotificationPreference"
+        }
+      }
+    },
+    "v1GetUnreadCountResponse": {
+      "type": "object",
+      "properties": {
+        "unreadCount": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "v1ListNotificationsResponse": {
+      "type": "object",
+      "properties": {
+        "notifications": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Notification"
+          }
+        },
+        "pagination": {
+          "$ref": "#/definitions/v1Pagination"
+        },
+        "unreadCount": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "v1MarkAllAsReadResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "markedCount": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "v1MarkAsReadResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "unreadCount": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "v1Notification": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "byte"
+        },
+        "userId": {
+          "type": "string",
+          "format": "byte"
+        },
+        "recipientRole": {
+          "type": "string",
+          "title": "driver | shipper | admin"
+        },
+        "type": {
+          "type": "string",
+          "description": "match_found | driver_candidate | offer_received ..."
+        },
+        "channel": {
+          "type": "string",
+          "title": "in_app | push | email | sms"
+        },
+        "title": {
+          "type": "string"
+        },
+        "body": {
+          "type": "string"
+        },
+        "data": {
+          "type": "string",
+          "title": "JSON payload để app deep-link"
+        },
+        "refType": {
+          "type": "string",
+          "title": "bid | ask | match"
+        },
+        "refId": {
+          "type": "string",
+          "format": "byte"
+        },
+        "isRead": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "string",
+          "title": "pending | sent | failed | read"
+        },
+        "readAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "description": "Notification là một thông báo đã được sinh ra cho MỘT người nhận cụ thể.\nSự kiện \"tìm được xe\" sẽ đẻ ra 2 dòng: một cho shipper, một cho tài xế."
+    },
+    "v1NotificationPreference": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "byte"
+        },
+        "userId": {
+          "type": "string",
+          "format": "byte"
+        },
+        "inAppEnabled": {
+          "type": "boolean"
+        },
+        "pushEnabled": {
+          "type": "boolean"
+        },
+        "emailEnabled": {
+          "type": "boolean"
+        },
+        "smsEnabled": {
+          "type": "boolean"
+        },
+        "matchEventsEnabled": {
+          "type": "boolean"
+        },
+        "promotionEnabled": {
+          "type": "boolean"
+        },
+        "quietHoursStart": {
+          "type": "string",
+          "title": "\"22:00\""
+        },
+        "quietHoursEnd": {
+          "type": "string",
+          "title": "\"07:00\""
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "description": "NotificationPreference: người dùng tự chọn muốn nhận gì, qua kênh nào."
+    },
+    "v1NotificationTemplate": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "byte"
+        },
+        "code": {
+          "type": "string",
+          "description": "MATCH_FOUND_SHIPPER, DRIVER_CANDIDATE..."
+        },
+        "name": {
+          "type": "string"
+        },
+        "channel": {
+          "type": "string"
+        },
+        "locale": {
+          "type": "string",
+          "title": "vi | en"
+        },
+        "titleTemplate": {
+          "type": "string"
+        },
+        "bodyTemplate": {
+          "type": "string"
+        },
+        "isActive": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "description": "NotificationTemplate cho phép admin sửa câu chữ thông báo mà không cần deploy.\nPlaceholder dạng {{driver_name}} được điền lúc render."
+    },
+    "v1Pagination": {
+      "type": "object",
+      "properties": {
+        "page": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "pageSize": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "totalItems": {
+          "type": "string",
+          "format": "int64"
+        },
+        "totalPages": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "v1UpdatePreferencesResponse": {
+      "type": "object",
+      "properties": {
+        "preference": {
+          "$ref": "#/definitions/v1NotificationPreference"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

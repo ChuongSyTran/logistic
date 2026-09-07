@@ -6,27 +6,56 @@ import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/logistic/api/logistic/auth_service/v1;auth_servicev1";
 
+// AuthService PHÁT HÀNH danh tính. Nó không kiểm tra danh tính cho từng request
+// — việc đó do gateway làm tại chỗ bằng public key, không đi qua mạng.
+//
+// Xem docs/flows/authentication-flow.md để biết vì sao ranh giới nằm ở đó.
 service AuthService {
   rpc Register(RegisterRequest) returns (RegisterResponse);
   rpc Login(LoginRequest) returns (LoginResponse);
   rpc GetGoogleLoginURL(GetGoogleLoginURLRequest) returns (GetGoogleLoginURLResponse);
   rpc GoogleCallback(GoogleCallbackRequest) returns (GoogleCallbackResponse);
+
+  // VerifyToken giữ lại cho công cụ nội bộ và cho việc lấy profile theo token.
+  // Đường xác thực thường KHÔNG đi qua đây nữa: gateway verify bằng public key.
   rpc VerifyToken(VerifyTokenRequest) returns (VerifyTokenResponse);
+
+  // RefreshToken đổi refresh token lấy cặp token mới. Vai trò được đọc LẠI từ DB
+  // ở bước này, nên người vừa bị hạ quyền không gia hạn được quyền cũ.
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+
+  // Logout thu hồi refresh token của một phiên.
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+
+  // GetPublicKeys trả bộ khoá công khai đang hiệu lực, dạng JWKS.
+  // Gateway đọc public key từ biến môi trường là chính; RPC này phục vụ việc
+  // xoay khoá và cho các công cụ vận hành kiểm tra khoá nào đang chạy.
+  rpc GetPublicKeys(GetPublicKeysRequest) returns (GetPublicKeysResponse);
 }
 
+// UserProfile là danh tính công khai của một người dùng.
+//
+// `id` là 16 byte thô của UUID v7 — CÙNG một không gian định danh với
+// user_service. Bản cũ dùng int64 tự tăng riêng của auth_service, nên id trong
+// token không tra được ở bất kỳ service nào khác.
 message UserProfile {
-  int64 id = 1;
+  bytes id = 1;
   string email = 2;
   optional string full_name = 3;
   optional string avatar = 4;
-  google.protobuf.Timestamp created_at = 5;
-  google.protobuf.Timestamp updated_at = 6;
+  // role quyết định quyền truy cập: driver | shipper | admin.
+  string role = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
 }
 
 message AuthTokenPair {
   string access_token = 1;
   string refresh_token = 2;
-  int64 expires_in = 3;
+  // expires_at là mốc Unix (giây) mà access token hết hiệu lực.
+  // Tên cũ là expires_in nhưng chứa mốc tuyệt đối chứ không phải khoảng thời
+  // gian — client tính sai hạn dùng vì cái tên đó.
+  int64 expires_at = 3;
 }
 
 message RegisterRequest {
@@ -34,6 +63,8 @@ message RegisterRequest {
   string full_name = 2;
   string password = 3;
   string google_id = 4;
+  // role mặc định là "shipper" nếu để trống.
+  string role = 5;
 }
 
 message RegisterResponse {
@@ -47,6 +78,7 @@ message LoginRequest {
 
 message LoginResponse {
   AuthTokenPair token_pair = 1;
+  UserProfile profile = 2;
 }
 
 message GetGoogleLoginURLRequest {
@@ -63,6 +95,7 @@ message GoogleCallbackRequest {
 
 message GoogleCallbackResponse {
   AuthTokenPair token_pair = 1;
+  UserProfile profile = 2;
 }
 
 message VerifyTokenRequest {
@@ -71,4 +104,36 @@ message VerifyTokenRequest {
 
 message VerifyTokenResponse {
   UserProfile profile = 1;
+}
+
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
+
+message RefreshTokenResponse {
+  AuthTokenPair token_pair = 1;
+}
+
+message LogoutRequest {
+  string refresh_token = 1;
+}
+
+message LogoutResponse {
+  bool success = 1;
+}
+
+message GetPublicKeysRequest {}
+
+// JSONWebKey theo RFC 7517, phần dành cho RSA.
+message JSONWebKey {
+  string kid = 1;
+  string kty = 2; // luôn là "RSA"
+  string alg = 3; // luôn là "RS256"
+  string use = 4; // luôn là "sig"
+  string n = 5;   // modulus, base64url không padding
+  string e = 6;   // exponent, base64url không padding
+}
+
+message GetPublicKeysResponse {
+  repeated JSONWebKey keys = 1;
 }

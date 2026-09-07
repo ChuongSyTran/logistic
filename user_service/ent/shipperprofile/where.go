@@ -56,6 +56,11 @@ func IDLTE(id uuid.UUID) predicate.ShipperProfile {
 	return predicate.ShipperProfile(sql.FieldLTE(FieldID, id))
 }
 
+// UserID applies equality check predicate on the "user_id" field. It's identical to UserIDEQ.
+func UserID(v uuid.UUID) predicate.ShipperProfile {
+	return predicate.ShipperProfile(sql.FieldEQ(FieldUserID, v))
+}
+
 // CompanyName applies equality check predicate on the "company_name" field. It's identical to CompanyNameEQ.
 func CompanyName(v string) predicate.ShipperProfile {
 	return predicate.ShipperProfile(sql.FieldEQ(FieldCompanyName, v))
@@ -66,6 +71,16 @@ func TaxCode(v string) predicate.ShipperProfile {
 	return predicate.ShipperProfile(sql.FieldEQ(FieldTaxCode, v))
 }
 
+// BusinessAddress applies equality check predicate on the "business_address" field. It's identical to BusinessAddressEQ.
+func BusinessAddress(v string) predicate.ShipperProfile {
+	return predicate.ShipperProfile(sql.FieldEQ(FieldBusinessAddress, v))
+}
+
+// TotalOrders applies equality check predicate on the "total_orders" field. It's identical to TotalOrdersEQ.
+func TotalOrders(v int) predicate.ShipperProfile {
+	return predicate.ShipperProfile(sql.FieldEQ(FieldTotalOrders, v))
+}
+
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.ShipperProfile {
 	return predicate.ShipperProfile(sql.FieldEQ(FieldCreatedAt, v))
@@ -74,6 +89,26 @@ func CreatedAt(v time.Time) predicate.ShipperProfile {
 // UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
 func UpdatedAt(v time.Time) predicate.ShipperProfile {
 	return predicate.ShipperProfile(sql.FieldEQ(FieldUpdatedAt, v))
+}
+
+// UserIDEQ applies the EQ predicate on the "user_id" field.
+func UserIDEQ(v uuid.UUID) predicate.ShipperProfile {
+	return predicate.ShipperProfile(sql.FieldEQ(FieldUserID, v))
+}
+
+// UserIDNEQ applies the NEQ predicate on the "user_id" field.
+func UserIDNEQ(v uuid.UUID) predicate.ShipperProfile {
+	return predicate.ShipperProfile(sql.FieldNEQ(FieldUserID, v))
+}
+
+// UserIDIn applies the In predicate on the "user_id" field.
+func UserIDIn(vs ...uuid.UUID) predicate.ShipperProfile {
+	return predicate.ShipperProfile(sql.FieldIn(FieldUserID, vs...))
+}
+
+// UserIDNotIn applies the NotIn predicate on the "user_id" field.
+func UserIDNotIn(vs ...uuid.UUID) predicate.ShipperProfile {
+	return predicate.ShipperProfile(sql.FieldNotIn(FieldUserID, vs...))
 }
 
 // CompanyNameEQ applies the EQ predicate on the "company_name" field.
@@ -224,6 +259,121 @@ func TaxCodeEqualFold(v string) predicate.ShipperProfile {
 // TaxCodeContainsFold applies the ContainsFold predicate on the "tax_code" field.
 func TaxCodeContainsFold(v string) predicate.ShipperProfile {
 	return predicate.ShipperProfile(sql.FieldContainsFold(FieldTaxCode, v))
+}
+
+// BusinessAddressEQ applies the EQ predicate on the "business_address" field.
+func BusinessAddressEQ(v string) predicate.ShipperProfile {
+	return predicate.ShipperProfile(sql.FieldEQ(FieldBusinessAddress, v))
+}
+
+// BusinessAddressNEQ applies the NEQ predicate on the "business_address" field.
+func BusinessAddressNEQ(v string) predicate.ShipperProfile {
+	return predicate.ShipperProfile(sql.FieldNEQ(FieldBusinessAddress, v))
+}
+
+// BusinessAddressIn applies the In predicate on the "business_address" field.
+func BusinessAddressIn(vs ...string) predicate.ShipperProfile {
+	return predicate.ShipperProfile(sql.FieldIn(FieldBusinessAddress, vs...))
+}
+
+// BusinessAddressNotIn applies the NotIn predicate on the "business_address" field.
+func BusinessAddressNotIn(vs ...string) predicate.ShipperProfile {
+	return predicate.ShipperProfile(sql.FieldNotIn(FieldBusinessAddress, vs...))
+}
+
+// BusinessAddressGT applies the GT predicate on the "business_address" field.
+func BusinessAddressGT(v string) predicate.ShipperProfile {
+	return predicate.ShipperProfile(sql.FieldGT(FieldBusinessAddress, v))
+}
+
+// BusinessAddressGTE applies the GTE predicate on the "business_address" field.
+func BusinessAddressGTE(v string) predicate.ShipperProfile {
+	return predicate.ShipperProfile(sql.FieldGTE(FieldBusinessAddress, v))
+}
+
+// BusinessAddressLT applies the LT predicate on the "business_address" field.
+func BusinessAddressLT(v string) predicate.ShipperProfile {
+	return predicate.ShipperProfile(sql.FieldLT(FieldBusinessAddress, v))
+}
+
+// BusinessAddressLTE applies the LTE predicate on the "business_address" field.
+func BusinessAddressLTE(v string) predicate.ShipperProfile {
+	return predicate.ShipperProfile(sql.FieldLTE(FieldBusinessAddress, v))
+}
+
+// BusinessAddressContains applies the Contains predicate on the "business_address" field.
+func BusinessAddressContains(v string) predicate.ShipperProfile {
+	return predicate.ShipperProfile(sql.FieldContains(FieldBusinessAddress, v))
+}
+
+// BusinessAddressHasPrefix applies the HasPrefix predicate on the "business_address" field.
+func BusinessAddressHasPrefix(v string) predicate.ShipperProfile {
+	return predicate.ShipperProfile(sql.FieldHasPrefix(FieldBusinessAddress, v))
+}
+
+// BusinessAddressHasSuffix applies the HasSuffix predicate on the "business_address" field.
+func BusinessAddressHasSuffix(v string) predicate.ShipperProfile {
+	return predicate.ShipperProfile(sql.FieldHasSuffix(FieldBusinessAddress, v))
+}
+
+// BusinessAddressIsNil applies the IsNil predicate on the "business_address" field.
+func BusinessAddressIsNil() predicate.ShipperProfile {
+	return predicate.ShipperProfile(sql.FieldIsNull(FieldBusinessAddress))
+}
+
+// BusinessAddressNotNil applies the NotNil predicate on the "business_address" field.
+func BusinessAddressNotNil() predicate.ShipperProfile {
+	return predicate.ShipperProfile(sql.FieldNotNull(FieldBusinessAddress))
+}
+
+// BusinessAddressEqualFold applies the EqualFold predicate on the "business_address" field.
+func BusinessAddressEqualFold(v string) predicate.ShipperProfile {
+	return predicate.ShipperProfile(sql.FieldEqualFold(FieldBusinessAddress, v))
+}
+
+// BusinessAddressContainsFold applies the ContainsFold predicate on the "business_address" field.
+func BusinessAddressContainsFold(v string) predicate.ShipperProfile {
+	return predicate.ShipperProfile(sql.FieldContainsFold(FieldBusinessAddress, v))
+}
+
+// TotalOrdersEQ applies the EQ predicate on the "total_orders" field.
+func TotalOrdersEQ(v int) predicate.ShipperProfile {
+	return predicate.ShipperProfile(sql.FieldEQ(FieldTotalOrders, v))
+}
+
+// TotalOrdersNEQ applies the NEQ predicate on the "total_orders" field.
+func TotalOrdersNEQ(v int) predicate.ShipperProfile {
+	return predicate.ShipperProfile(sql.FieldNEQ(FieldTotalOrders, v))
+}
+
+// TotalOrdersIn applies the In predicate on the "total_orders" field.
+func TotalOrdersIn(vs ...int) predicate.ShipperProfile {
+	return predicate.ShipperProfile(sql.FieldIn(FieldTotalOrders, vs...))
+}
+
+// TotalOrdersNotIn applies the NotIn predicate on the "total_orders" field.
+func TotalOrdersNotIn(vs ...int) predicate.ShipperProfile {
+	return predicate.ShipperProfile(sql.FieldNotIn(FieldTotalOrders, vs...))
+}
+
+// TotalOrdersGT applies the GT predicate on the "total_orders" field.
+func TotalOrdersGT(v int) predicate.ShipperProfile {
+	return predicate.ShipperProfile(sql.FieldGT(FieldTotalOrders, v))
+}
+
+// TotalOrdersGTE applies the GTE predicate on the "total_orders" field.
+func TotalOrdersGTE(v int) predicate.ShipperProfile {
+	return predicate.ShipperProfile(sql.FieldGTE(FieldTotalOrders, v))
+}
+
+// TotalOrdersLT applies the LT predicate on the "total_orders" field.
+func TotalOrdersLT(v int) predicate.ShipperProfile {
+	return predicate.ShipperProfile(sql.FieldLT(FieldTotalOrders, v))
+}
+
+// TotalOrdersLTE applies the LTE predicate on the "total_orders" field.
+func TotalOrdersLTE(v int) predicate.ShipperProfile {
+	return predicate.ShipperProfile(sql.FieldLTE(FieldTotalOrders, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

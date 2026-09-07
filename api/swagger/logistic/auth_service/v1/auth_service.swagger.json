@@ -6,7 +6,8 @@
   },
   "tags": [
     {
-      "name": "AuthService"
+      "name": "AuthService",
+      "description": "AuthService PHÁT HÀNH danh tính. Nó không kiểm tra danh tính cho từng request\n— việc đó do gateway làm tại chỗ bằng public key, không đi qua mạng.\n\nXem docs/flows/authentication-flow.md để biết vì sao ranh giới nằm ở đó."
     }
   ],
   "consumes": [

@@ -23,14 +23,13 @@ func main() {
 		log.Fatalf("[Wallet] Failed to initialize app: %v", err)
 	}
 
-	// Graceful shutdown khi nhận tín hiệu từ OS
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
 		<-quit
 		log.Println("[Wallet] Shutdown signal received")
-		cancel() // Kích hoạt ctx.Done() → Worker + Kafka Consumer dừng lại
+		cancel()
 		app.Stop()
 	}()
 

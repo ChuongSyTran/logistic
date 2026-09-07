@@ -8,9 +8,11 @@ import (
 	"fmt"
 	"reflect"
 	"sync"
+	"user_service/ent/address"
 	"user_service/ent/driverprofile"
 	"user_service/ent/shipperprofile"
 	"user_service/ent/user"
+	"user_service/ent/userdevice"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
@@ -75,9 +77,11 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
+			address.Table:        address.ValidColumn,
 			driverprofile.Table:  driverprofile.ValidColumn,
 			shipperprofile.Table: shipperprofile.ValidColumn,
 			user.Table:           user.ValidColumn,
+			userdevice.Table:     userdevice.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

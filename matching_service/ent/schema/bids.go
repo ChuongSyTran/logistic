@@ -7,6 +7,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/logistic/pkg/uuidx"
 )
 
 type Bids struct {
@@ -15,7 +16,7 @@ type Bids struct {
 
 func (Bids) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.UUID{}).Default(func() uuid.UUID { return uuid.Must(uuid.NewV7()) }),
+		field.UUID("id", uuid.UUID{}).Default(uuidx.New),
 		field.UUID("shipper_id", uuid.UUID{}),
 		field.String("shipper_phone"),
 		field.String("shipper_mail"),
@@ -33,8 +34,13 @@ func (Bids) Fields() []ent.Field {
 		field.Float("origin_lng"),
 		field.Float("destination_lat"),
 		field.Float("destination_lng"),
+		// Giá tài xế đã báo và chuyến tương ứng, ghi lại lúc đơn vào NEGOTIATING.
+		// Không có hai cột này thì lúc chốt không còn nguồn nào biết đã thoả thuận
+		// bao nhiêu, và ai là người báo.
+		field.Float("offered_price").Optional(),
+		field.UUID("offered_ask_id", uuid.UUID{}).Optional(),
 		field.Int8("status"),
-		field.Time("expires_at"),
+		field.Time("expires_at").Optional(),
 	}
 }
 

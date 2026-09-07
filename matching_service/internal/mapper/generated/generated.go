@@ -76,6 +76,8 @@ func (c *MatchingMapperImpl) EntBidToEntityBid(source *ent.Bids) entity.Bid {
 		entityBid.VolumeM3 = (*source).VolumeM3
 		entityBid.WeightKg = (*source).WeightKg
 		entityBid.MaxPrice = mapper.Float64PtrToFloat64((*source).MaxPrice)
+		entityBid.OfferedPrice = (*source).OfferedPrice
+		entityBid.OfferedAskID = c.uuidUUIDToUuidUUID((*source).OfferedAskID)
 		entityBid.Status = (*source).Status
 		entityBid.CargoValue = (*source).CargoValue
 		entityBid.RequiredDeposit = (*source).RequiredDeposit
@@ -85,71 +87,71 @@ func (c *MatchingMapperImpl) EntBidToEntityBid(source *ent.Bids) entity.Bid {
 	return entityBid
 }
 func (c *MatchingMapperImpl) EntityAskListToPbAskList(source []entity.Ask) []*v1.Ask {
-	var pV1AskList []*v1.Ask
+	var pMatchingv1AskList []*v1.Ask
 	if source != nil {
-		pV1AskList = make([]*v1.Ask, len(source))
+		pMatchingv1AskList = make([]*v1.Ask, len(source))
 		for i := 0; i < len(source); i++ {
-			pV1AskList[i] = c.EntityAskToPbAsk(source[i])
+			pMatchingv1AskList[i] = c.EntityAskToPbAsk(source[i])
 		}
 	}
-	return pV1AskList
+	return pMatchingv1AskList
 }
 func (c *MatchingMapperImpl) EntityAskToPbAsk(source entity.Ask) *v1.Ask {
-	var v1Ask v1.Ask
-	v1Ask.Id = mapper.UUIDToBytes(source.ID)
-	v1Ask.DriverId = mapper.UUIDToBytes(source.DriverID)
-	v1Ask.DriverPhone = source.DriverPhone
-	v1Ask.DriverMail = source.DriverMail
-	v1Ask.VehicleId = mapper.UUIDToBytes(source.VehicleID)
-	v1Ask.CurrentLocation = c.MapEntityLocationToPb(source.CurrentLocation)
-	v1Ask.Destination = c.MapEntityLocationToPb(source.Destination)
-	v1Ask.AvailableVolumeM3 = source.AvailableVolumeM3
-	v1Ask.AvailableWeightKg = source.AvailableWeightKg
-	v1Ask.MinPrice = source.MinPrice
-	v1Ask.Status = mapper.Int8ToInt32(source.Status)
-	v1Ask.DesiredDeposit = source.DesiredDeposit
-	v1Ask.ExpiresAt = mapper.TimeToTimestamp(source.ExpiresAt)
-	v1Ask.CreatedAt = mapper.TimeToTimestamp(source.CreatedAt)
-	return &v1Ask
+	var matchingv1Ask v1.Ask
+	matchingv1Ask.Id = mapper.UUIDToBytes(source.ID)
+	matchingv1Ask.DriverId = mapper.UUIDToBytes(source.DriverID)
+	matchingv1Ask.DriverPhone = source.DriverPhone
+	matchingv1Ask.DriverMail = source.DriverMail
+	matchingv1Ask.VehicleId = mapper.UUIDToBytes(source.VehicleID)
+	matchingv1Ask.CurrentLocation = c.MapEntityLocationToPb(source.CurrentLocation)
+	matchingv1Ask.Destination = c.MapEntityLocationToPb(source.Destination)
+	matchingv1Ask.AvailableVolumeM3 = source.AvailableVolumeM3
+	matchingv1Ask.AvailableWeightKg = source.AvailableWeightKg
+	matchingv1Ask.MinPrice = source.MinPrice
+	matchingv1Ask.Status = mapper.Int8ToInt32(source.Status)
+	matchingv1Ask.DesiredDeposit = source.DesiredDeposit
+	matchingv1Ask.ExpiresAt = mapper.TimeToTimestamp(source.ExpiresAt)
+	matchingv1Ask.CreatedAt = mapper.TimeToTimestamp(source.CreatedAt)
+	return &matchingv1Ask
 }
 func (c *MatchingMapperImpl) EntityBidListToPbBidList(source []entity.Bid) []*v1.Bid {
-	var pV1BidList []*v1.Bid
+	var pMatchingv1BidList []*v1.Bid
 	if source != nil {
-		pV1BidList = make([]*v1.Bid, len(source))
+		pMatchingv1BidList = make([]*v1.Bid, len(source))
 		for i := 0; i < len(source); i++ {
-			pV1BidList[i] = c.EntityBidToPbBid(source[i])
+			pMatchingv1BidList[i] = c.EntityBidToPbBid(source[i])
 		}
 	}
-	return pV1BidList
+	return pMatchingv1BidList
 }
 func (c *MatchingMapperImpl) EntityBidToPbBid(source entity.Bid) *v1.Bid {
-	var v1Bid v1.Bid
-	v1Bid.Id = mapper.UUIDToBytes(source.ID)
-	v1Bid.ShipperId = mapper.UUIDToBytes(source.ShipperID)
-	v1Bid.ShipperPhone = source.ShipperPhone
-	v1Bid.ShipperMail = source.ShipperMail
-	v1Bid.ConsigneeId = mapper.UUIDToBytes(source.ConsigneeID)
-	v1Bid.ConsigneePhone = source.ConsigneePhone
-	v1Bid.ConsigneeMail = source.ConsigneeMail
-	v1Bid.Origin = c.MapEntityLocationToPb(source.Origin)
-	v1Bid.Destination = c.MapEntityLocationToPb(source.Destination)
-	v1Bid.VolumeM3 = source.VolumeM3
-	v1Bid.WeightKg = source.WeightKg
-	v1Bid.MaxPrice = source.MaxPrice
-	v1Bid.Status = mapper.Int8ToInt32(source.Status)
-	v1Bid.CargoValue = source.CargoValue
-	v1Bid.RequiredDeposit = source.RequiredDeposit
-	v1Bid.DesiredDeposit = source.DesiredDeposit
-	v1Bid.ExpiresAt = mapper.TimeToTimestamp(source.ExpiresAt)
-	v1Bid.CreatedAt = mapper.TimeToTimestamp(source.CreatedAt)
-	return &v1Bid
+	var matchingv1Bid v1.Bid
+	matchingv1Bid.Id = mapper.UUIDToBytes(source.ID)
+	matchingv1Bid.ShipperId = mapper.UUIDToBytes(source.ShipperID)
+	matchingv1Bid.ShipperPhone = source.ShipperPhone
+	matchingv1Bid.ShipperMail = source.ShipperMail
+	matchingv1Bid.ConsigneeId = mapper.UUIDToBytes(source.ConsigneeID)
+	matchingv1Bid.ConsigneePhone = source.ConsigneePhone
+	matchingv1Bid.ConsigneeMail = source.ConsigneeMail
+	matchingv1Bid.Origin = c.MapEntityLocationToPb(source.Origin)
+	matchingv1Bid.Destination = c.MapEntityLocationToPb(source.Destination)
+	matchingv1Bid.VolumeM3 = source.VolumeM3
+	matchingv1Bid.WeightKg = source.WeightKg
+	matchingv1Bid.MaxPrice = source.MaxPrice
+	matchingv1Bid.Status = mapper.Int8ToInt32(source.Status)
+	matchingv1Bid.CargoValue = source.CargoValue
+	matchingv1Bid.RequiredDeposit = source.RequiredDeposit
+	matchingv1Bid.DesiredDeposit = source.DesiredDeposit
+	matchingv1Bid.ExpiresAt = mapper.TimeToTimestamp(source.ExpiresAt)
+	matchingv1Bid.CreatedAt = mapper.TimeToTimestamp(source.CreatedAt)
+	return &matchingv1Bid
 }
 func (c *MatchingMapperImpl) MapEntityLocationToPb(source entity.Location) *v1.Location {
-	var v1Location v1.Location
-	v1Location.Latitude = source.Latitude
-	v1Location.Longitude = source.Longitude
-	v1Location.ZoneId = source.ZoneID
-	return &v1Location
+	var matchingv1Location v1.Location
+	matchingv1Location.Latitude = source.Latitude
+	matchingv1Location.Longitude = source.Longitude
+	matchingv1Location.ZoneId = source.ZoneID
+	return &matchingv1Location
 }
 func (c *MatchingMapperImpl) MapLocation(source *v1.Location) entity.Location {
 	var entityLocation entity.Location

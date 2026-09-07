@@ -13,14 +13,58 @@ import (
 
 type AppMapperImpl struct{}
 
+func (c *AppMapperImpl) EntAddressListToEntityAddressList(source []*ent.Address) []entity.Address {
+	var entityAddressList []entity.Address
+	if source != nil {
+		entityAddressList = make([]entity.Address, len(source))
+		for i := 0; i < len(source); i++ {
+			entityAddressList[i] = c.EntAddressToEntityAddress(source[i])
+		}
+	}
+	return entityAddressList
+}
+func (c *AppMapperImpl) EntAddressToEntityAddress(source *ent.Address) entity.Address {
+	var entityAddress entity.Address
+	if source != nil {
+		entityAddress.ID = c.uuidUUIDToUuidUUID((*source).ID)
+		entityAddress.UserID = c.uuidUUIDToUuidUUID((*source).UserID)
+		entityAddress.Label = (*source).Label
+		entityAddress.ContactName = (*source).ContactName
+		entityAddress.ContactPhone = (*source).ContactPhone
+		entityAddress.Line1 = (*source).Line1
+		entityAddress.Ward = (*source).Ward
+		entityAddress.District = (*source).District
+		entityAddress.City = (*source).City
+		entityAddress.Latitude = (*source).Latitude
+		entityAddress.Longitude = (*source).Longitude
+		entityAddress.AddressType = mapper.EntAddressTypeToString((*source).AddressType)
+		entityAddress.IsDefault = (*source).IsDefault
+		entityAddress.CreatedAt = mapper.IdentityTime((*source).CreatedAt)
+		entityAddress.UpdatedAt = mapper.IdentityTime((*source).UpdatedAt)
+	}
+	return entityAddress
+}
+func (c *AppMapperImpl) EntDriverProfileListToEntityList(source []*ent.DriverProfile) []entity.DriverProfile {
+	var entityDriverProfileList []entity.DriverProfile
+	if source != nil {
+		entityDriverProfileList = make([]entity.DriverProfile, len(source))
+		for i := 0; i < len(source); i++ {
+			entityDriverProfileList[i] = c.EntDriverProfileToEntityDriverProfile(source[i])
+		}
+	}
+	return entityDriverProfileList
+}
 func (c *AppMapperImpl) EntDriverProfileToEntityDriverProfile(source *ent.DriverProfile) entity.DriverProfile {
 	var entityDriverProfile entity.DriverProfile
 	if source != nil {
 		entityDriverProfile.ID = c.uuidUUIDToUuidUUID((*source).ID)
-		entityDriverProfile.LicenseNumber = (*source).LicenseNumber
-		entityDriverProfile.IDCard = (*source).IDCard
+		entityDriverProfile.UserID = c.uuidUUIDToUuidUUID((*source).UserID)
+		entityDriverProfile.LicenseNumber = mapper.StringPtrToString((*source).LicenseNumber)
+		entityDriverProfile.IDCard = mapper.StringPtrToString((*source).IDCard)
 		entityDriverProfile.Rating = (*source).Rating
-		entityDriverProfile.KycStatus = string((*source).KycStatus)
+		entityDriverProfile.TotalTrips = (*source).TotalTrips
+		entityDriverProfile.KycStatus = mapper.EntKycStatusToString((*source).KycStatus)
+		entityDriverProfile.KycNote = (*source).KycNote
 		entityDriverProfile.CreatedAt = mapper.IdentityTime((*source).CreatedAt)
 		entityDriverProfile.UpdatedAt = mapper.IdentityTime((*source).UpdatedAt)
 	}
@@ -30,12 +74,49 @@ func (c *AppMapperImpl) EntShipperProfileToEntityShipperProfile(source *ent.Ship
 	var entityShipperProfile entity.ShipperProfile
 	if source != nil {
 		entityShipperProfile.ID = c.uuidUUIDToUuidUUID((*source).ID)
+		entityShipperProfile.UserID = c.uuidUUIDToUuidUUID((*source).UserID)
 		entityShipperProfile.CompanyName = (*source).CompanyName
 		entityShipperProfile.TaxCode = (*source).TaxCode
+		entityShipperProfile.BusinessAddress = (*source).BusinessAddress
+		entityShipperProfile.TotalOrders = (*source).TotalOrders
 		entityShipperProfile.CreatedAt = mapper.IdentityTime((*source).CreatedAt)
 		entityShipperProfile.UpdatedAt = mapper.IdentityTime((*source).UpdatedAt)
 	}
 	return entityShipperProfile
+}
+func (c *AppMapperImpl) EntUserDeviceListToEntityList(source []*ent.UserDevice) []entity.UserDevice {
+	var entityUserDeviceList []entity.UserDevice
+	if source != nil {
+		entityUserDeviceList = make([]entity.UserDevice, len(source))
+		for i := 0; i < len(source); i++ {
+			entityUserDeviceList[i] = c.EntUserDeviceToEntityUserDevice(source[i])
+		}
+	}
+	return entityUserDeviceList
+}
+func (c *AppMapperImpl) EntUserDeviceToEntityUserDevice(source *ent.UserDevice) entity.UserDevice {
+	var entityUserDevice entity.UserDevice
+	if source != nil {
+		entityUserDevice.ID = c.uuidUUIDToUuidUUID((*source).ID)
+		entityUserDevice.UserID = c.uuidUUIDToUuidUUID((*source).UserID)
+		entityUserDevice.DeviceToken = (*source).DeviceToken
+		entityUserDevice.Platform = mapper.EntPlatformToString((*source).Platform)
+		entityUserDevice.DeviceName = (*source).DeviceName
+		entityUserDevice.IsActive = (*source).IsActive
+		entityUserDevice.LastSeenAt = mapper.IdentityTime((*source).LastSeenAt)
+		entityUserDevice.CreatedAt = mapper.IdentityTime((*source).CreatedAt)
+	}
+	return entityUserDevice
+}
+func (c *AppMapperImpl) EntUserListToEntityUserList(source []*ent.User) []entity.User {
+	var entityUserList []entity.User
+	if source != nil {
+		entityUserList = make([]entity.User, len(source))
+		for i := 0; i < len(source); i++ {
+			entityUserList[i] = c.EntUserToEntityUser(source[i])
+		}
+	}
+	return entityUserList
 }
 func (c *AppMapperImpl) EntUserToEntityUser(source *ent.User) entity.User {
 	var entityUser entity.User
@@ -43,55 +124,287 @@ func (c *AppMapperImpl) EntUserToEntityUser(source *ent.User) entity.User {
 		entityUser.ID = c.uuidUUIDToUuidUUID((*source).ID)
 		entityUser.Phone = (*source).Phone
 		entityUser.Email = (*source).Email
+		entityUser.FullName = (*source).FullName
+		entityUser.AvatarURL = (*source).AvatarURL
 		entityUser.PasswordHash = (*source).PasswordHash
 		entityUser.Role = mapper.EntUserRoleToString((*source).Role)
 		entityUser.Status = mapper.EntUserStatusToString((*source).Status)
+		entityUser.StatusReason = (*source).StatusReason
 		entityUser.CreatedAt = mapper.IdentityTime((*source).CreatedAt)
 		entityUser.UpdatedAt = mapper.IdentityTime((*source).UpdatedAt)
 	}
 	return entityUser
 }
-func (c *AppMapperImpl) EntityDriverProfileToPbDriverProfile(source entity.DriverProfile) *v1.DriverProfile {
+func (c *AppMapperImpl) EntityAddressListToPbList(source []entity.Address) []*v1.Address {
+	var pUserv1AddressList []*v1.Address
+	if source != nil {
+		pUserv1AddressList = make([]*v1.Address, len(source))
+		for i := 0; i < len(source); i++ {
+			pUserv1AddressList[i] = c.EntityAddressToPb(source[i])
+		}
+	}
+	return pUserv1AddressList
+}
+func (c *AppMapperImpl) EntityAddressToPb(source entity.Address) *v1.Address {
+	var userv1Address v1.Address
+	userv1Address.Id = mapper.UUIDToBytes(source.ID)
+	userv1Address.UserId = mapper.UUIDToBytes(source.UserID)
+	userv1Address.Label = source.Label
+	userv1Address.ContactName = source.ContactName
+	userv1Address.ContactPhone = source.ContactPhone
+	userv1Address.Line1 = source.Line1
+	userv1Address.Ward = source.Ward
+	userv1Address.District = source.District
+	userv1Address.City = source.City
+	userv1Address.Latitude = source.Latitude
+	userv1Address.Longitude = source.Longitude
+	userv1Address.AddressType = source.AddressType
+	userv1Address.IsDefault = source.IsDefault
+	userv1Address.CreatedAt = mapper.TimeToTimestamp(source.CreatedAt)
+	userv1Address.UpdatedAt = mapper.TimeToTimestamp(source.UpdatedAt)
+	return &userv1Address
+}
+func (c *AppMapperImpl) EntityDriverProfileListToPbList(source []entity.DriverProfile) []*v1.DriverProfile {
+	var pUserv1DriverProfileList []*v1.DriverProfile
+	if source != nil {
+		pUserv1DriverProfileList = make([]*v1.DriverProfile, len(source))
+		for i := 0; i < len(source); i++ {
+			pUserv1DriverProfileList[i] = c.EntityDriverProfileToPb(source[i])
+		}
+	}
+	return pUserv1DriverProfileList
+}
+func (c *AppMapperImpl) EntityDriverProfileToPb(source entity.DriverProfile) *v1.DriverProfile {
 	var userv1DriverProfile v1.DriverProfile
+	userv1DriverProfile.Id = mapper.UUIDToBytes(source.ID)
 	userv1DriverProfile.UserId = mapper.UUIDToBytes(source.UserID)
 	userv1DriverProfile.LicenseNumber = source.LicenseNumber
 	userv1DriverProfile.IdCard = source.IDCard
-	userv1DriverProfile.Rating = mapper.Float64ToFloat32(source.Rating)
+	userv1DriverProfile.Rating = source.Rating
+	userv1DriverProfile.TotalTrips = mapper.IntToInt32(source.TotalTrips)
 	userv1DriverProfile.KycStatus = source.KycStatus
+	userv1DriverProfile.KycNote = source.KycNote
+	userv1DriverProfile.CreatedAt = mapper.TimeToTimestamp(source.CreatedAt)
+	userv1DriverProfile.UpdatedAt = mapper.TimeToTimestamp(source.UpdatedAt)
 	return &userv1DriverProfile
 }
-func (c *AppMapperImpl) EntityShipperProfileToPbShipperProfile(source entity.ShipperProfile) *v1.ShipperProfile {
+func (c *AppMapperImpl) EntityPaginationToPb(source entity.Pagination) *v1.Pagination {
+	var userv1Pagination v1.Pagination
+	userv1Pagination.Page = mapper.IntToInt32(source.Page)
+	userv1Pagination.PageSize = mapper.IntToInt32(source.PageSize)
+	userv1Pagination.TotalItems = source.TotalItems
+	userv1Pagination.TotalPages = mapper.IntToInt32(source.TotalPages)
+	return &userv1Pagination
+}
+func (c *AppMapperImpl) EntityShipperProfileToPb(source entity.ShipperProfile) *v1.ShipperProfile {
 	var userv1ShipperProfile v1.ShipperProfile
+	userv1ShipperProfile.Id = mapper.UUIDToBytes(source.ID)
 	userv1ShipperProfile.UserId = mapper.UUIDToBytes(source.UserID)
 	userv1ShipperProfile.CompanyName = source.CompanyName
 	userv1ShipperProfile.TaxCode = source.TaxCode
+	userv1ShipperProfile.BusinessAddress = source.BusinessAddress
+	userv1ShipperProfile.TotalOrders = mapper.IntToInt32(source.TotalOrders)
+	userv1ShipperProfile.CreatedAt = mapper.TimeToTimestamp(source.CreatedAt)
+	userv1ShipperProfile.UpdatedAt = mapper.TimeToTimestamp(source.UpdatedAt)
 	return &userv1ShipperProfile
+}
+func (c *AppMapperImpl) EntityUserDeviceListToPbList(source []entity.UserDevice) []*v1.UserDevice {
+	var pUserv1UserDeviceList []*v1.UserDevice
+	if source != nil {
+		pUserv1UserDeviceList = make([]*v1.UserDevice, len(source))
+		for i := 0; i < len(source); i++ {
+			pUserv1UserDeviceList[i] = c.EntityUserDeviceToPb(source[i])
+		}
+	}
+	return pUserv1UserDeviceList
+}
+func (c *AppMapperImpl) EntityUserDeviceToPb(source entity.UserDevice) *v1.UserDevice {
+	var userv1UserDevice v1.UserDevice
+	userv1UserDevice.Id = mapper.UUIDToBytes(source.ID)
+	userv1UserDevice.UserId = mapper.UUIDToBytes(source.UserID)
+	userv1UserDevice.DeviceToken = source.DeviceToken
+	userv1UserDevice.Platform = source.Platform
+	userv1UserDevice.DeviceName = source.DeviceName
+	userv1UserDevice.IsActive = source.IsActive
+	userv1UserDevice.LastSeenAt = mapper.TimeToTimestamp(source.LastSeenAt)
+	userv1UserDevice.CreatedAt = mapper.TimeToTimestamp(source.CreatedAt)
+	return &userv1UserDevice
+}
+func (c *AppMapperImpl) EntityUserListToPbUserList(source []entity.User) []*v1.User {
+	var pUserv1UserList []*v1.User
+	if source != nil {
+		pUserv1UserList = make([]*v1.User, len(source))
+		for i := 0; i < len(source); i++ {
+			pUserv1UserList[i] = c.EntityUserToPbUser(source[i])
+		}
+	}
+	return pUserv1UserList
 }
 func (c *AppMapperImpl) EntityUserToPbUser(source entity.User) *v1.User {
 	var userv1User v1.User
 	userv1User.Id = mapper.UUIDToBytes(source.ID)
 	userv1User.Phone = source.Phone
 	userv1User.Email = source.Email
+	userv1User.FullName = source.FullName
 	userv1User.Role = source.Role
 	userv1User.Status = source.Status
-	userv1User.CreatedAt = mapper.TimeToString(source.CreatedAt)
-	userv1User.UpdatedAt = mapper.TimeToString(source.UpdatedAt)
+	userv1User.AvatarUrl = source.AvatarURL
+	userv1User.CreatedAt = mapper.TimeToTimestamp(source.CreatedAt)
+	userv1User.UpdatedAt = mapper.TimeToTimestamp(source.UpdatedAt)
 	return &userv1User
 }
-func (c *AppMapperImpl) PbUserToEntityUser(source *v1.User) (entity.User, error) {
-	var entityUser entity.User
+func (c *AppMapperImpl) PbAdminListUsersToFilter(source *v1.AdminListUsersRequest) entity.ListUsersFilter {
+	var entityListUsersFilter entity.ListUsersFilter
+	if source != nil {
+		entityListUsersFilter.Role = (*source).Role
+		entityListUsersFilter.Status = (*source).Status
+		entityListUsersFilter.Keyword = (*source).Keyword
+		entityListUsersFilter.Page = mapper.Int32ToInt((*source).Page)
+		entityListUsersFilter.PageSize = mapper.Int32ToInt((*source).PageSize)
+	}
+	return entityListUsersFilter
+}
+func (c *AppMapperImpl) PbAdminUpdateStatusToParam(source *v1.AdminUpdateUserStatusRequest) (entity.UpdateUserStatusParam, error) {
+	var entityUpdateUserStatusParam entity.UpdateUserStatusParam
 	if source != nil {
 		uuidUUID, err := mapper.BytesToUUID((*source).Id)
 		if err != nil {
-			return entityUser, err
+			return entityUpdateUserStatusParam, err
 		}
-		entityUser.ID = uuidUUID
-		entityUser.Phone = (*source).Phone
-		entityUser.Email = (*source).Email
-		entityUser.Role = (*source).Role
-		entityUser.Status = (*source).Status
+		entityUpdateUserStatusParam.ID = uuidUUID
+		entityUpdateUserStatusParam.Status = (*source).Status
+		entityUpdateUserStatusParam.Reason = (*source).Reason
 	}
-	return entityUser, nil
+	return entityUpdateUserStatusParam, nil
+}
+func (c *AppMapperImpl) PbCreateAddressToParam(source *v1.CreateAddressRequest) (entity.CreateAddressParam, error) {
+	var entityCreateAddressParam entity.CreateAddressParam
+	if source != nil {
+		uuidUUID, err := mapper.BytesToUUID((*source).UserId)
+		if err != nil {
+			return entityCreateAddressParam, err
+		}
+		entityCreateAddressParam.UserID = uuidUUID
+		entityCreateAddressParam.Label = (*source).Label
+		entityCreateAddressParam.ContactName = (*source).ContactName
+		entityCreateAddressParam.ContactPhone = (*source).ContactPhone
+		entityCreateAddressParam.Line1 = (*source).Line1
+		entityCreateAddressParam.Ward = (*source).Ward
+		entityCreateAddressParam.District = (*source).District
+		entityCreateAddressParam.City = (*source).City
+		entityCreateAddressParam.Latitude = (*source).Latitude
+		entityCreateAddressParam.Longitude = (*source).Longitude
+		entityCreateAddressParam.AddressType = (*source).AddressType
+		entityCreateAddressParam.IsDefault = (*source).IsDefault
+	}
+	return entityCreateAddressParam, nil
+}
+func (c *AppMapperImpl) PbListAddressesToParam(source *v1.ListAddressesRequest) (entity.ListAddressesParam, error) {
+	var entityListAddressesParam entity.ListAddressesParam
+	if source != nil {
+		uuidUUID, err := mapper.BytesToUUID((*source).UserId)
+		if err != nil {
+			return entityListAddressesParam, err
+		}
+		entityListAddressesParam.UserID = uuidUUID
+		entityListAddressesParam.AddressType = (*source).AddressType
+		entityListAddressesParam.Page = mapper.Int32ToInt((*source).Page)
+		entityListAddressesParam.PageSize = mapper.Int32ToInt((*source).PageSize)
+	}
+	return entityListAddressesParam, nil
+}
+func (c *AppMapperImpl) PbRegisterDeviceToParam(source *v1.RegisterDeviceRequest) (entity.RegisterDeviceParam, error) {
+	var entityRegisterDeviceParam entity.RegisterDeviceParam
+	if source != nil {
+		uuidUUID, err := mapper.BytesToUUID((*source).UserId)
+		if err != nil {
+			return entityRegisterDeviceParam, err
+		}
+		entityRegisterDeviceParam.UserID = uuidUUID
+		entityRegisterDeviceParam.DeviceToken = (*source).DeviceToken
+		entityRegisterDeviceParam.Platform = (*source).Platform
+		entityRegisterDeviceParam.DeviceName = (*source).DeviceName
+	}
+	return entityRegisterDeviceParam, nil
+}
+func (c *AppMapperImpl) PbRegisterUserToParam(source *v1.RegisterUserRequest) entity.RegisterUserParam {
+	var entityRegisterUserParam entity.RegisterUserParam
+	if source != nil {
+		entityRegisterUserParam.Phone = (*source).Phone
+		entityRegisterUserParam.Email = (*source).Email
+		entityRegisterUserParam.Password = (*source).Password
+		entityRegisterUserParam.Role = (*source).Role
+		entityRegisterUserParam.FullName = (*source).FullName
+	}
+	return entityRegisterUserParam
+}
+func (c *AppMapperImpl) PbUpdateAddressToParam(source *v1.UpdateAddressRequest) (entity.UpdateAddressParam, error) {
+	var entityUpdateAddressParam entity.UpdateAddressParam
+	if source != nil {
+		uuidUUID, err := mapper.BytesToUUID((*source).Id)
+		if err != nil {
+			return entityUpdateAddressParam, err
+		}
+		entityUpdateAddressParam.ID = uuidUUID
+		uuidUUID2, err := mapper.BytesToUUID((*source).UserId)
+		if err != nil {
+			return entityUpdateAddressParam, err
+		}
+		entityUpdateAddressParam.UserID = uuidUUID2
+		entityUpdateAddressParam.Label = (*source).Label
+		entityUpdateAddressParam.ContactName = (*source).ContactName
+		entityUpdateAddressParam.ContactPhone = (*source).ContactPhone
+		entityUpdateAddressParam.Line1 = (*source).Line1
+		entityUpdateAddressParam.Ward = (*source).Ward
+		entityUpdateAddressParam.District = (*source).District
+		entityUpdateAddressParam.City = (*source).City
+		entityUpdateAddressParam.Latitude = (*source).Latitude
+		entityUpdateAddressParam.Longitude = (*source).Longitude
+		entityUpdateAddressParam.AddressType = (*source).AddressType
+		entityUpdateAddressParam.IsDefault = (*source).IsDefault
+	}
+	return entityUpdateAddressParam, nil
+}
+func (c *AppMapperImpl) PbUpdateDriverProfileToParam(source *v1.UpdateDriverProfileRequest) (entity.UpdateDriverProfileParam, error) {
+	var entityUpdateDriverProfileParam entity.UpdateDriverProfileParam
+	if source != nil {
+		uuidUUID, err := mapper.BytesToUUID((*source).UserId)
+		if err != nil {
+			return entityUpdateDriverProfileParam, err
+		}
+		entityUpdateDriverProfileParam.UserID = uuidUUID
+		entityUpdateDriverProfileParam.LicenseNumber = (*source).LicenseNumber
+		entityUpdateDriverProfileParam.IDCard = (*source).IdCard
+	}
+	return entityUpdateDriverProfileParam, nil
+}
+func (c *AppMapperImpl) PbUpdateShipperProfileToParam(source *v1.UpdateShipperProfileRequest) (entity.UpdateShipperProfileParam, error) {
+	var entityUpdateShipperProfileParam entity.UpdateShipperProfileParam
+	if source != nil {
+		uuidUUID, err := mapper.BytesToUUID((*source).UserId)
+		if err != nil {
+			return entityUpdateShipperProfileParam, err
+		}
+		entityUpdateShipperProfileParam.UserID = uuidUUID
+		entityUpdateShipperProfileParam.CompanyName = (*source).CompanyName
+		entityUpdateShipperProfileParam.TaxCode = (*source).TaxCode
+		entityUpdateShipperProfileParam.BusinessAddress = (*source).BusinessAddress
+	}
+	return entityUpdateShipperProfileParam, nil
+}
+func (c *AppMapperImpl) PbUpdateUserToParam(source *v1.UpdateUserRequest) (entity.UpdateUserParam, error) {
+	var entityUpdateUserParam entity.UpdateUserParam
+	if source != nil {
+		uuidUUID, err := mapper.BytesToUUID((*source).Id)
+		if err != nil {
+			return entityUpdateUserParam, err
+		}
+		entityUpdateUserParam.ID = uuidUUID
+		entityUpdateUserParam.FullName = (*source).FullName
+		entityUpdateUserParam.Email = (*source).Email
+		entityUpdateUserParam.AvatarURL = (*source).AvatarUrl
+	}
+	return entityUpdateUserParam, nil
 }
 func (c *AppMapperImpl) uuidUUIDToUuidUUID(source uuid.UUID) uuid.UUID {
 	var uuidUUID uuid.UUID

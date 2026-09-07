@@ -22,15 +22,37 @@ type DriverProfileCreate struct {
 	hooks    []Hook
 }
 
+// SetUserID sets the "user_id" field.
+func (_c *DriverProfileCreate) SetUserID(v uuid.UUID) *DriverProfileCreate {
+	_c.mutation.SetUserID(v)
+	return _c
+}
+
 // SetLicenseNumber sets the "license_number" field.
 func (_c *DriverProfileCreate) SetLicenseNumber(v string) *DriverProfileCreate {
 	_c.mutation.SetLicenseNumber(v)
 	return _c
 }
 
+// SetNillableLicenseNumber sets the "license_number" field if the given value is not nil.
+func (_c *DriverProfileCreate) SetNillableLicenseNumber(v *string) *DriverProfileCreate {
+	if v != nil {
+		_c.SetLicenseNumber(*v)
+	}
+	return _c
+}
+
 // SetIDCard sets the "id_card" field.
 func (_c *DriverProfileCreate) SetIDCard(v string) *DriverProfileCreate {
 	_c.mutation.SetIDCard(v)
+	return _c
+}
+
+// SetNillableIDCard sets the "id_card" field if the given value is not nil.
+func (_c *DriverProfileCreate) SetNillableIDCard(v *string) *DriverProfileCreate {
+	if v != nil {
+		_c.SetIDCard(*v)
+	}
 	return _c
 }
 
@@ -48,6 +70,20 @@ func (_c *DriverProfileCreate) SetNillableRating(v *float64) *DriverProfileCreat
 	return _c
 }
 
+// SetTotalTrips sets the "total_trips" field.
+func (_c *DriverProfileCreate) SetTotalTrips(v int) *DriverProfileCreate {
+	_c.mutation.SetTotalTrips(v)
+	return _c
+}
+
+// SetNillableTotalTrips sets the "total_trips" field if the given value is not nil.
+func (_c *DriverProfileCreate) SetNillableTotalTrips(v *int) *DriverProfileCreate {
+	if v != nil {
+		_c.SetTotalTrips(*v)
+	}
+	return _c
+}
+
 // SetKycStatus sets the "kyc_status" field.
 func (_c *DriverProfileCreate) SetKycStatus(v driverprofile.KycStatus) *DriverProfileCreate {
 	_c.mutation.SetKycStatus(v)
@@ -58,6 +94,48 @@ func (_c *DriverProfileCreate) SetKycStatus(v driverprofile.KycStatus) *DriverPr
 func (_c *DriverProfileCreate) SetNillableKycStatus(v *driverprofile.KycStatus) *DriverProfileCreate {
 	if v != nil {
 		_c.SetKycStatus(*v)
+	}
+	return _c
+}
+
+// SetKycNote sets the "kyc_note" field.
+func (_c *DriverProfileCreate) SetKycNote(v string) *DriverProfileCreate {
+	_c.mutation.SetKycNote(v)
+	return _c
+}
+
+// SetNillableKycNote sets the "kyc_note" field if the given value is not nil.
+func (_c *DriverProfileCreate) SetNillableKycNote(v *string) *DriverProfileCreate {
+	if v != nil {
+		_c.SetKycNote(*v)
+	}
+	return _c
+}
+
+// SetKycReviewedBy sets the "kyc_reviewed_by" field.
+func (_c *DriverProfileCreate) SetKycReviewedBy(v uuid.UUID) *DriverProfileCreate {
+	_c.mutation.SetKycReviewedBy(v)
+	return _c
+}
+
+// SetNillableKycReviewedBy sets the "kyc_reviewed_by" field if the given value is not nil.
+func (_c *DriverProfileCreate) SetNillableKycReviewedBy(v *uuid.UUID) *DriverProfileCreate {
+	if v != nil {
+		_c.SetKycReviewedBy(*v)
+	}
+	return _c
+}
+
+// SetKycReviewedAt sets the "kyc_reviewed_at" field.
+func (_c *DriverProfileCreate) SetKycReviewedAt(v time.Time) *DriverProfileCreate {
+	_c.mutation.SetKycReviewedAt(v)
+	return _c
+}
+
+// SetNillableKycReviewedAt sets the "kyc_reviewed_at" field if the given value is not nil.
+func (_c *DriverProfileCreate) SetNillableKycReviewedAt(v *time.Time) *DriverProfileCreate {
+	if v != nil {
+		_c.SetKycReviewedAt(*v)
 	}
 	return _c
 }
@@ -101,12 +179,6 @@ func (_c *DriverProfileCreate) SetNillableID(v *uuid.UUID) *DriverProfileCreate 
 	if v != nil {
 		_c.SetID(*v)
 	}
-	return _c
-}
-
-// SetUserID sets the "user" edge to the User entity by ID.
-func (_c *DriverProfileCreate) SetUserID(id uuid.UUID) *DriverProfileCreate {
-	_c.mutation.SetUserID(id)
 	return _c
 }
 
@@ -154,6 +226,10 @@ func (_c *DriverProfileCreate) defaults() {
 		v := driverprofile.DefaultRating
 		_c.mutation.SetRating(v)
 	}
+	if _, ok := _c.mutation.TotalTrips(); !ok {
+		v := driverprofile.DefaultTotalTrips
+		_c.mutation.SetTotalTrips(v)
+	}
 	if _, ok := _c.mutation.KycStatus(); !ok {
 		v := driverprofile.DefaultKycStatus
 		_c.mutation.SetKycStatus(v)
@@ -174,14 +250,14 @@ func (_c *DriverProfileCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_c *DriverProfileCreate) check() error {
-	if _, ok := _c.mutation.LicenseNumber(); !ok {
-		return &ValidationError{Name: "license_number", err: errors.New(`ent: missing required field "DriverProfile.license_number"`)}
-	}
-	if _, ok := _c.mutation.IDCard(); !ok {
-		return &ValidationError{Name: "id_card", err: errors.New(`ent: missing required field "DriverProfile.id_card"`)}
+	if _, ok := _c.mutation.UserID(); !ok {
+		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "DriverProfile.user_id"`)}
 	}
 	if _, ok := _c.mutation.Rating(); !ok {
 		return &ValidationError{Name: "rating", err: errors.New(`ent: missing required field "DriverProfile.rating"`)}
+	}
+	if _, ok := _c.mutation.TotalTrips(); !ok {
+		return &ValidationError{Name: "total_trips", err: errors.New(`ent: missing required field "DriverProfile.total_trips"`)}
 	}
 	if _, ok := _c.mutation.KycStatus(); !ok {
 		return &ValidationError{Name: "kyc_status", err: errors.New(`ent: missing required field "DriverProfile.kyc_status"`)}
@@ -237,19 +313,35 @@ func (_c *DriverProfileCreate) createSpec() (*DriverProfile, *sqlgraph.CreateSpe
 	}
 	if value, ok := _c.mutation.LicenseNumber(); ok {
 		_spec.SetField(driverprofile.FieldLicenseNumber, field.TypeString, value)
-		_node.LicenseNumber = value
+		_node.LicenseNumber = &value
 	}
 	if value, ok := _c.mutation.IDCard(); ok {
 		_spec.SetField(driverprofile.FieldIDCard, field.TypeString, value)
-		_node.IDCard = value
+		_node.IDCard = &value
 	}
 	if value, ok := _c.mutation.Rating(); ok {
 		_spec.SetField(driverprofile.FieldRating, field.TypeFloat64, value)
 		_node.Rating = value
 	}
+	if value, ok := _c.mutation.TotalTrips(); ok {
+		_spec.SetField(driverprofile.FieldTotalTrips, field.TypeInt, value)
+		_node.TotalTrips = value
+	}
 	if value, ok := _c.mutation.KycStatus(); ok {
 		_spec.SetField(driverprofile.FieldKycStatus, field.TypeEnum, value)
 		_node.KycStatus = value
+	}
+	if value, ok := _c.mutation.KycNote(); ok {
+		_spec.SetField(driverprofile.FieldKycNote, field.TypeString, value)
+		_node.KycNote = value
+	}
+	if value, ok := _c.mutation.KycReviewedBy(); ok {
+		_spec.SetField(driverprofile.FieldKycReviewedBy, field.TypeUUID, value)
+		_node.KycReviewedBy = &value
+	}
+	if value, ok := _c.mutation.KycReviewedAt(); ok {
+		_spec.SetField(driverprofile.FieldKycReviewedAt, field.TypeTime, value)
+		_node.KycReviewedAt = &value
 	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(driverprofile.FieldCreatedAt, field.TypeTime, value)
@@ -273,7 +365,7 @@ func (_c *DriverProfileCreate) createSpec() (*DriverProfile, *sqlgraph.CreateSpe
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.user_driver_profile = &nodes[0]
+		_node.UserID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

@@ -19,19 +19,24 @@ type ShipperProfile struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
+	// UserID holds the value of the "user_id" field.
+	UserID uuid.UUID `json:"user_id,omitempty"`
 	// CompanyName holds the value of the "company_name" field.
 	CompanyName string `json:"company_name,omitempty"`
 	// TaxCode holds the value of the "tax_code" field.
 	TaxCode string `json:"tax_code,omitempty"`
+	// BusinessAddress holds the value of the "business_address" field.
+	BusinessAddress string `json:"business_address,omitempty"`
+	// TotalOrders holds the value of the "total_orders" field.
+	TotalOrders int `json:"total_orders,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ShipperProfileQuery when eager-loading is set.
-	Edges                ShipperProfileEdges `json:"edges"`
-	user_shipper_profile *uuid.UUID
-	selectValues         sql.SelectValues
+	Edges        ShipperProfileEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // ShipperProfileEdges holds the relations/edges for other nodes in the graph.
@@ -59,14 +64,14 @@ func (*ShipperProfile) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case shipperprofile.FieldCompanyName, shipperprofile.FieldTaxCode:
+		case shipperprofile.FieldTotalOrders:
+			values[i] = new(sql.NullInt64)
+		case shipperprofile.FieldCompanyName, shipperprofile.FieldTaxCode, shipperprofile.FieldBusinessAddress:
 			values[i] = new(sql.NullString)
 		case shipperprofile.FieldCreatedAt, shipperprofile.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case shipperprofile.FieldID:
+		case shipperprofile.FieldID, shipperprofile.FieldUserID:
 			values[i] = new(uuid.UUID)
-		case shipperprofile.ForeignKeys[0]: // user_shipper_profile
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -88,6 +93,12 @@ func (_m *ShipperProfile) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				_m.ID = *value
 			}
+		case shipperprofile.FieldUserID:
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field user_id", values[i])
+			} else if value != nil {
+				_m.UserID = *value
+			}
 		case shipperprofile.FieldCompanyName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field company_name", values[i])
@@ -100,6 +111,18 @@ func (_m *ShipperProfile) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.TaxCode = value.String
 			}
+		case shipperprofile.FieldBusinessAddress:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field business_address", values[i])
+			} else if value.Valid {
+				_m.BusinessAddress = value.String
+			}
+		case shipperprofile.FieldTotalOrders:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field total_orders", values[i])
+			} else if value.Valid {
+				_m.TotalOrders = int(value.Int64)
+			}
 		case shipperprofile.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
@@ -111,13 +134,6 @@ func (_m *ShipperProfile) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				_m.UpdatedAt = value.Time
-			}
-		case shipperprofile.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field user_shipper_profile", values[i])
-			} else if value.Valid {
-				_m.user_shipper_profile = new(uuid.UUID)
-				*_m.user_shipper_profile = *value.S.(*uuid.UUID)
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
@@ -160,11 +176,20 @@ func (_m *ShipperProfile) String() string {
 	var builder strings.Builder
 	builder.WriteString("ShipperProfile(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
+	builder.WriteString("user_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.UserID))
+	builder.WriteString(", ")
 	builder.WriteString("company_name=")
 	builder.WriteString(_m.CompanyName)
 	builder.WriteString(", ")
 	builder.WriteString("tax_code=")
 	builder.WriteString(_m.TaxCode)
+	builder.WriteString(", ")
+	builder.WriteString("business_address=")
+	builder.WriteString(_m.BusinessAddress)
+	builder.WriteString(", ")
+	builder.WriteString("total_orders=")
+	builder.WriteString(fmt.Sprintf("%v", _m.TotalOrders))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))

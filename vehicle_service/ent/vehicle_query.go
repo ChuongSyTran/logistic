@@ -4,10 +4,14 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
+	"vehicle_service/ent/driveravailability"
 	"vehicle_service/ent/predicate"
 	"vehicle_service/ent/vehicle"
+	"vehicle_service/ent/vehicledocument"
+	"vehicle_service/ent/vehiclelocation"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
@@ -19,10 +23,13 @@ import (
 // VehicleQuery is the builder for querying Vehicle entities.
 type VehicleQuery struct {
 	config
-	ctx        *QueryContext
-	order      []vehicle.OrderOption
-	inters     []Interceptor
-	predicates []predicate.Vehicle
+	ctx              *QueryContext
+	order            []vehicle.OrderOption
+	inters           []Interceptor
+	predicates       []predicate.Vehicle
+	withDocuments    *VehicleDocumentQuery
+	withLocation     *VehicleLocationQuery
+	withAvailability *DriverAvailabilityQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -57,6 +64,72 @@ func (_q *VehicleQuery) Unique(unique bool) *VehicleQuery {
 func (_q *VehicleQuery) Order(o ...vehicle.OrderOption) *VehicleQuery {
 	_q.order = append(_q.order, o...)
 	return _q
+}
+
+// QueryDocuments chains the current query on the "documents" edge.
+func (_q *VehicleQuery) QueryDocuments() *VehicleDocumentQuery {
+	query := (&VehicleDocumentClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(vehicle.Table, vehicle.FieldID, selector),
+			sqlgraph.To(vehicledocument.Table, vehicledocument.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, vehicle.DocumentsTable, vehicle.DocumentsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryLocation chains the current query on the "location" edge.
+func (_q *VehicleQuery) QueryLocation() *VehicleLocationQuery {
+	query := (&VehicleLocationClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(vehicle.Table, vehicle.FieldID, selector),
+			sqlgraph.To(vehiclelocation.Table, vehiclelocation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, false, vehicle.LocationTable, vehicle.LocationColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAvailability chains the current query on the "availability" edge.
+func (_q *VehicleQuery) QueryAvailability() *DriverAvailabilityQuery {
+	query := (&DriverAvailabilityClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(vehicle.Table, vehicle.FieldID, selector),
+			sqlgraph.To(driveravailability.Table, driveravailability.FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, false, vehicle.AvailabilityTable, vehicle.AvailabilityColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first Vehicle entity from the query.
@@ -246,15 +319,51 @@ func (_q *VehicleQuery) Clone() *VehicleQuery {
 		return nil
 	}
 	return &VehicleQuery{
-		config:     _q.config,
-		ctx:        _q.ctx.Clone(),
-		order:      append([]vehicle.OrderOption{}, _q.order...),
-		inters:     append([]Interceptor{}, _q.inters...),
-		predicates: append([]predicate.Vehicle{}, _q.predicates...),
+		config:           _q.config,
+		ctx:              _q.ctx.Clone(),
+		order:            append([]vehicle.OrderOption{}, _q.order...),
+		inters:           append([]Interceptor{}, _q.inters...),
+		predicates:       append([]predicate.Vehicle{}, _q.predicates...),
+		withDocuments:    _q.withDocuments.Clone(),
+		withLocation:     _q.withLocation.Clone(),
+		withAvailability: _q.withAvailability.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
 	}
+}
+
+// WithDocuments tells the query-builder to eager-load the nodes that are connected to
+// the "documents" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *VehicleQuery) WithDocuments(opts ...func(*VehicleDocumentQuery)) *VehicleQuery {
+	query := (&VehicleDocumentClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withDocuments = query
+	return _q
+}
+
+// WithLocation tells the query-builder to eager-load the nodes that are connected to
+// the "location" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *VehicleQuery) WithLocation(opts ...func(*VehicleLocationQuery)) *VehicleQuery {
+	query := (&VehicleLocationClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withLocation = query
+	return _q
+}
+
+// WithAvailability tells the query-builder to eager-load the nodes that are connected to
+// the "availability" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *VehicleQuery) WithAvailability(opts ...func(*DriverAvailabilityQuery)) *VehicleQuery {
+	query := (&DriverAvailabilityClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withAvailability = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -333,8 +442,13 @@ func (_q *VehicleQuery) prepareQuery(ctx context.Context) error {
 
 func (_q *VehicleQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Vehicle, error) {
 	var (
-		nodes = []*Vehicle{}
-		_spec = _q.querySpec()
+		nodes       = []*Vehicle{}
+		_spec       = _q.querySpec()
+		loadedTypes = [3]bool{
+			_q.withDocuments != nil,
+			_q.withLocation != nil,
+			_q.withAvailability != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Vehicle).scanValues(nil, columns)
@@ -342,6 +456,7 @@ func (_q *VehicleQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Vehi
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &Vehicle{config: _q.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -353,7 +468,111 @@ func (_q *VehicleQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Vehi
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := _q.withDocuments; query != nil {
+		if err := _q.loadDocuments(ctx, query, nodes,
+			func(n *Vehicle) { n.Edges.Documents = []*VehicleDocument{} },
+			func(n *Vehicle, e *VehicleDocument) { n.Edges.Documents = append(n.Edges.Documents, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withLocation; query != nil {
+		if err := _q.loadLocation(ctx, query, nodes, nil,
+			func(n *Vehicle, e *VehicleLocation) { n.Edges.Location = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withAvailability; query != nil {
+		if err := _q.loadAvailability(ctx, query, nodes, nil,
+			func(n *Vehicle, e *DriverAvailability) { n.Edges.Availability = e }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (_q *VehicleQuery) loadDocuments(ctx context.Context, query *VehicleDocumentQuery, nodes []*Vehicle, init func(*Vehicle), assign func(*Vehicle, *VehicleDocument)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Vehicle)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(vehicledocument.FieldVehicleID)
+	}
+	query.Where(predicate.VehicleDocument(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(vehicle.DocumentsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.VehicleID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "vehicle_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *VehicleQuery) loadLocation(ctx context.Context, query *VehicleLocationQuery, nodes []*Vehicle, init func(*Vehicle), assign func(*Vehicle, *VehicleLocation)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Vehicle)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(vehiclelocation.FieldVehicleID)
+	}
+	query.Where(predicate.VehicleLocation(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(vehicle.LocationColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.VehicleID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "vehicle_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *VehicleQuery) loadAvailability(ctx context.Context, query *DriverAvailabilityQuery, nodes []*Vehicle, init func(*Vehicle), assign func(*Vehicle, *DriverAvailability)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Vehicle)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(driveravailability.FieldVehicleID)
+	}
+	query.Where(predicate.DriverAvailability(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(vehicle.AvailabilityColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.VehicleID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "vehicle_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
 }
 
 func (_q *VehicleQuery) sqlCount(ctx context.Context) (int, error) {

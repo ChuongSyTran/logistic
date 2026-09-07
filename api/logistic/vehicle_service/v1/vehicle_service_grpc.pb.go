@@ -19,20 +19,53 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	VehicleService_RegisterVehicle_FullMethodName     = "/logistic.vehicle_service.v1.VehicleService/RegisterVehicle"
-	VehicleService_GetVehicle_FullMethodName          = "/logistic.vehicle_service.v1.VehicleService/GetVehicle"
-	VehicleService_ListVehicles_FullMethodName        = "/logistic.vehicle_service.v1.VehicleService/ListVehicles"
-	VehicleService_UpdateVehicleStatus_FullMethodName = "/logistic.vehicle_service.v1.VehicleService/UpdateVehicleStatus"
+	VehicleService_RegisterVehicle_FullMethodName           = "/logistic.vehicle_service.v1.VehicleService/RegisterVehicle"
+	VehicleService_GetVehicle_FullMethodName                = "/logistic.vehicle_service.v1.VehicleService/GetVehicle"
+	VehicleService_ListVehicles_FullMethodName              = "/logistic.vehicle_service.v1.VehicleService/ListVehicles"
+	VehicleService_UpdateVehicle_FullMethodName             = "/logistic.vehicle_service.v1.VehicleService/UpdateVehicle"
+	VehicleService_DeleteVehicle_FullMethodName             = "/logistic.vehicle_service.v1.VehicleService/DeleteVehicle"
+	VehicleService_UpdateVehicleStatus_FullMethodName       = "/logistic.vehicle_service.v1.VehicleService/UpdateVehicleStatus"
+	VehicleService_UploadVehicleDocument_FullMethodName     = "/logistic.vehicle_service.v1.VehicleService/UploadVehicleDocument"
+	VehicleService_ListVehicleDocuments_FullMethodName      = "/logistic.vehicle_service.v1.VehicleService/ListVehicleDocuments"
+	VehicleService_DeleteVehicleDocument_FullMethodName     = "/logistic.vehicle_service.v1.VehicleService/DeleteVehicleDocument"
+	VehicleService_ReportLocation_FullMethodName            = "/logistic.vehicle_service.v1.VehicleService/ReportLocation"
+	VehicleService_GetVehicleLocation_FullMethodName        = "/logistic.vehicle_service.v1.VehicleService/GetVehicleLocation"
+	VehicleService_SetDriverAvailability_FullMethodName     = "/logistic.vehicle_service.v1.VehicleService/SetDriverAvailability"
+	VehicleService_GetDriverAvailability_FullMethodName     = "/logistic.vehicle_service.v1.VehicleService/GetDriverAvailability"
+	VehicleService_SearchNearbyVehicles_FullMethodName      = "/logistic.vehicle_service.v1.VehicleService/SearchNearbyVehicles"
+	VehicleService_AdminListVehicles_FullMethodName         = "/logistic.vehicle_service.v1.VehicleService/AdminListVehicles"
+	VehicleService_AdminVerifyVehicle_FullMethodName        = "/logistic.vehicle_service.v1.VehicleService/AdminVerifyVehicle"
+	VehicleService_AdminListPendingDocuments_FullMethodName = "/logistic.vehicle_service.v1.VehicleService/AdminListPendingDocuments"
+	VehicleService_AdminReviewDocument_FullMethodName       = "/logistic.vehicle_service.v1.VehicleService/AdminReviewDocument"
+	VehicleService_AdminGetVehicleStats_FullMethodName      = "/logistic.vehicle_service.v1.VehicleService/AdminGetVehicleStats"
 )
 
 // VehicleServiceClient is the client API for VehicleService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// VehicleService quản lý phương tiện, giấy tờ, vị trí GPS và trạng thái sẵn sàng
+// nhận đơn của tài xế. Đây là nguồn dữ liệu "xe đang chạy" cho matching_service.
 type VehicleServiceClient interface {
 	RegisterVehicle(ctx context.Context, in *RegisterVehicleRequest, opts ...grpc.CallOption) (*RegisterVehicleResponse, error)
 	GetVehicle(ctx context.Context, in *GetVehicleRequest, opts ...grpc.CallOption) (*GetVehicleResponse, error)
 	ListVehicles(ctx context.Context, in *ListVehiclesRequest, opts ...grpc.CallOption) (*ListVehiclesResponse, error)
+	UpdateVehicle(ctx context.Context, in *UpdateVehicleRequest, opts ...grpc.CallOption) (*UpdateVehicleResponse, error)
+	DeleteVehicle(ctx context.Context, in *DeleteVehicleRequest, opts ...grpc.CallOption) (*DeleteVehicleResponse, error)
 	UpdateVehicleStatus(ctx context.Context, in *UpdateVehicleStatusRequest, opts ...grpc.CallOption) (*UpdateVehicleStatusResponse, error)
+	UploadVehicleDocument(ctx context.Context, in *UploadVehicleDocumentRequest, opts ...grpc.CallOption) (*UploadVehicleDocumentResponse, error)
+	ListVehicleDocuments(ctx context.Context, in *ListVehicleDocumentsRequest, opts ...grpc.CallOption) (*ListVehicleDocumentsResponse, error)
+	DeleteVehicleDocument(ctx context.Context, in *DeleteVehicleDocumentRequest, opts ...grpc.CallOption) (*DeleteVehicleDocumentResponse, error)
+	ReportLocation(ctx context.Context, in *ReportLocationRequest, opts ...grpc.CallOption) (*ReportLocationResponse, error)
+	GetVehicleLocation(ctx context.Context, in *GetVehicleLocationRequest, opts ...grpc.CallOption) (*GetVehicleLocationResponse, error)
+	SetDriverAvailability(ctx context.Context, in *SetDriverAvailabilityRequest, opts ...grpc.CallOption) (*SetDriverAvailabilityResponse, error)
+	GetDriverAvailability(ctx context.Context, in *GetDriverAvailabilityRequest, opts ...grpc.CallOption) (*GetDriverAvailabilityResponse, error)
+	SearchNearbyVehicles(ctx context.Context, in *SearchNearbyVehiclesRequest, opts ...grpc.CallOption) (*SearchNearbyVehiclesResponse, error)
+	AdminListVehicles(ctx context.Context, in *AdminListVehiclesRequest, opts ...grpc.CallOption) (*AdminListVehiclesResponse, error)
+	AdminVerifyVehicle(ctx context.Context, in *AdminVerifyVehicleRequest, opts ...grpc.CallOption) (*AdminVerifyVehicleResponse, error)
+	AdminListPendingDocuments(ctx context.Context, in *AdminListPendingDocumentsRequest, opts ...grpc.CallOption) (*AdminListPendingDocumentsResponse, error)
+	AdminReviewDocument(ctx context.Context, in *AdminReviewDocumentRequest, opts ...grpc.CallOption) (*AdminReviewDocumentResponse, error)
+	AdminGetVehicleStats(ctx context.Context, in *AdminGetVehicleStatsRequest, opts ...grpc.CallOption) (*AdminGetVehicleStatsResponse, error)
 }
 
 type vehicleServiceClient struct {
@@ -73,6 +106,26 @@ func (c *vehicleServiceClient) ListVehicles(ctx context.Context, in *ListVehicle
 	return out, nil
 }
 
+func (c *vehicleServiceClient) UpdateVehicle(ctx context.Context, in *UpdateVehicleRequest, opts ...grpc.CallOption) (*UpdateVehicleResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateVehicleResponse)
+	err := c.cc.Invoke(ctx, VehicleService_UpdateVehicle_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *vehicleServiceClient) DeleteVehicle(ctx context.Context, in *DeleteVehicleRequest, opts ...grpc.CallOption) (*DeleteVehicleResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteVehicleResponse)
+	err := c.cc.Invoke(ctx, VehicleService_DeleteVehicle_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *vehicleServiceClient) UpdateVehicleStatus(ctx context.Context, in *UpdateVehicleStatusRequest, opts ...grpc.CallOption) (*UpdateVehicleStatusResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(UpdateVehicleStatusResponse)
@@ -83,14 +136,162 @@ func (c *vehicleServiceClient) UpdateVehicleStatus(ctx context.Context, in *Upda
 	return out, nil
 }
 
+func (c *vehicleServiceClient) UploadVehicleDocument(ctx context.Context, in *UploadVehicleDocumentRequest, opts ...grpc.CallOption) (*UploadVehicleDocumentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UploadVehicleDocumentResponse)
+	err := c.cc.Invoke(ctx, VehicleService_UploadVehicleDocument_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *vehicleServiceClient) ListVehicleDocuments(ctx context.Context, in *ListVehicleDocumentsRequest, opts ...grpc.CallOption) (*ListVehicleDocumentsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListVehicleDocumentsResponse)
+	err := c.cc.Invoke(ctx, VehicleService_ListVehicleDocuments_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *vehicleServiceClient) DeleteVehicleDocument(ctx context.Context, in *DeleteVehicleDocumentRequest, opts ...grpc.CallOption) (*DeleteVehicleDocumentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteVehicleDocumentResponse)
+	err := c.cc.Invoke(ctx, VehicleService_DeleteVehicleDocument_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *vehicleServiceClient) ReportLocation(ctx context.Context, in *ReportLocationRequest, opts ...grpc.CallOption) (*ReportLocationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ReportLocationResponse)
+	err := c.cc.Invoke(ctx, VehicleService_ReportLocation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *vehicleServiceClient) GetVehicleLocation(ctx context.Context, in *GetVehicleLocationRequest, opts ...grpc.CallOption) (*GetVehicleLocationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetVehicleLocationResponse)
+	err := c.cc.Invoke(ctx, VehicleService_GetVehicleLocation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *vehicleServiceClient) SetDriverAvailability(ctx context.Context, in *SetDriverAvailabilityRequest, opts ...grpc.CallOption) (*SetDriverAvailabilityResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetDriverAvailabilityResponse)
+	err := c.cc.Invoke(ctx, VehicleService_SetDriverAvailability_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *vehicleServiceClient) GetDriverAvailability(ctx context.Context, in *GetDriverAvailabilityRequest, opts ...grpc.CallOption) (*GetDriverAvailabilityResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetDriverAvailabilityResponse)
+	err := c.cc.Invoke(ctx, VehicleService_GetDriverAvailability_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *vehicleServiceClient) SearchNearbyVehicles(ctx context.Context, in *SearchNearbyVehiclesRequest, opts ...grpc.CallOption) (*SearchNearbyVehiclesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SearchNearbyVehiclesResponse)
+	err := c.cc.Invoke(ctx, VehicleService_SearchNearbyVehicles_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *vehicleServiceClient) AdminListVehicles(ctx context.Context, in *AdminListVehiclesRequest, opts ...grpc.CallOption) (*AdminListVehiclesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminListVehiclesResponse)
+	err := c.cc.Invoke(ctx, VehicleService_AdminListVehicles_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *vehicleServiceClient) AdminVerifyVehicle(ctx context.Context, in *AdminVerifyVehicleRequest, opts ...grpc.CallOption) (*AdminVerifyVehicleResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminVerifyVehicleResponse)
+	err := c.cc.Invoke(ctx, VehicleService_AdminVerifyVehicle_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *vehicleServiceClient) AdminListPendingDocuments(ctx context.Context, in *AdminListPendingDocumentsRequest, opts ...grpc.CallOption) (*AdminListPendingDocumentsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminListPendingDocumentsResponse)
+	err := c.cc.Invoke(ctx, VehicleService_AdminListPendingDocuments_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *vehicleServiceClient) AdminReviewDocument(ctx context.Context, in *AdminReviewDocumentRequest, opts ...grpc.CallOption) (*AdminReviewDocumentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminReviewDocumentResponse)
+	err := c.cc.Invoke(ctx, VehicleService_AdminReviewDocument_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *vehicleServiceClient) AdminGetVehicleStats(ctx context.Context, in *AdminGetVehicleStatsRequest, opts ...grpc.CallOption) (*AdminGetVehicleStatsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminGetVehicleStatsResponse)
+	err := c.cc.Invoke(ctx, VehicleService_AdminGetVehicleStats_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // VehicleServiceServer is the server API for VehicleService service.
 // All implementations must embed UnimplementedVehicleServiceServer
 // for forward compatibility.
+//
+// VehicleService quản lý phương tiện, giấy tờ, vị trí GPS và trạng thái sẵn sàng
+// nhận đơn của tài xế. Đây là nguồn dữ liệu "xe đang chạy" cho matching_service.
 type VehicleServiceServer interface {
 	RegisterVehicle(context.Context, *RegisterVehicleRequest) (*RegisterVehicleResponse, error)
 	GetVehicle(context.Context, *GetVehicleRequest) (*GetVehicleResponse, error)
 	ListVehicles(context.Context, *ListVehiclesRequest) (*ListVehiclesResponse, error)
+	UpdateVehicle(context.Context, *UpdateVehicleRequest) (*UpdateVehicleResponse, error)
+	DeleteVehicle(context.Context, *DeleteVehicleRequest) (*DeleteVehicleResponse, error)
 	UpdateVehicleStatus(context.Context, *UpdateVehicleStatusRequest) (*UpdateVehicleStatusResponse, error)
+	UploadVehicleDocument(context.Context, *UploadVehicleDocumentRequest) (*UploadVehicleDocumentResponse, error)
+	ListVehicleDocuments(context.Context, *ListVehicleDocumentsRequest) (*ListVehicleDocumentsResponse, error)
+	DeleteVehicleDocument(context.Context, *DeleteVehicleDocumentRequest) (*DeleteVehicleDocumentResponse, error)
+	ReportLocation(context.Context, *ReportLocationRequest) (*ReportLocationResponse, error)
+	GetVehicleLocation(context.Context, *GetVehicleLocationRequest) (*GetVehicleLocationResponse, error)
+	SetDriverAvailability(context.Context, *SetDriverAvailabilityRequest) (*SetDriverAvailabilityResponse, error)
+	GetDriverAvailability(context.Context, *GetDriverAvailabilityRequest) (*GetDriverAvailabilityResponse, error)
+	SearchNearbyVehicles(context.Context, *SearchNearbyVehiclesRequest) (*SearchNearbyVehiclesResponse, error)
+	AdminListVehicles(context.Context, *AdminListVehiclesRequest) (*AdminListVehiclesResponse, error)
+	AdminVerifyVehicle(context.Context, *AdminVerifyVehicleRequest) (*AdminVerifyVehicleResponse, error)
+	AdminListPendingDocuments(context.Context, *AdminListPendingDocumentsRequest) (*AdminListPendingDocumentsResponse, error)
+	AdminReviewDocument(context.Context, *AdminReviewDocumentRequest) (*AdminReviewDocumentResponse, error)
+	AdminGetVehicleStats(context.Context, *AdminGetVehicleStatsRequest) (*AdminGetVehicleStatsResponse, error)
 	mustEmbedUnimplementedVehicleServiceServer()
 }
 
@@ -110,8 +311,53 @@ func (UnimplementedVehicleServiceServer) GetVehicle(context.Context, *GetVehicle
 func (UnimplementedVehicleServiceServer) ListVehicles(context.Context, *ListVehiclesRequest) (*ListVehiclesResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListVehicles not implemented")
 }
+func (UnimplementedVehicleServiceServer) UpdateVehicle(context.Context, *UpdateVehicleRequest) (*UpdateVehicleResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateVehicle not implemented")
+}
+func (UnimplementedVehicleServiceServer) DeleteVehicle(context.Context, *DeleteVehicleRequest) (*DeleteVehicleResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteVehicle not implemented")
+}
 func (UnimplementedVehicleServiceServer) UpdateVehicleStatus(context.Context, *UpdateVehicleStatusRequest) (*UpdateVehicleStatusResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdateVehicleStatus not implemented")
+}
+func (UnimplementedVehicleServiceServer) UploadVehicleDocument(context.Context, *UploadVehicleDocumentRequest) (*UploadVehicleDocumentResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UploadVehicleDocument not implemented")
+}
+func (UnimplementedVehicleServiceServer) ListVehicleDocuments(context.Context, *ListVehicleDocumentsRequest) (*ListVehicleDocumentsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListVehicleDocuments not implemented")
+}
+func (UnimplementedVehicleServiceServer) DeleteVehicleDocument(context.Context, *DeleteVehicleDocumentRequest) (*DeleteVehicleDocumentResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteVehicleDocument not implemented")
+}
+func (UnimplementedVehicleServiceServer) ReportLocation(context.Context, *ReportLocationRequest) (*ReportLocationResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ReportLocation not implemented")
+}
+func (UnimplementedVehicleServiceServer) GetVehicleLocation(context.Context, *GetVehicleLocationRequest) (*GetVehicleLocationResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetVehicleLocation not implemented")
+}
+func (UnimplementedVehicleServiceServer) SetDriverAvailability(context.Context, *SetDriverAvailabilityRequest) (*SetDriverAvailabilityResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SetDriverAvailability not implemented")
+}
+func (UnimplementedVehicleServiceServer) GetDriverAvailability(context.Context, *GetDriverAvailabilityRequest) (*GetDriverAvailabilityResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetDriverAvailability not implemented")
+}
+func (UnimplementedVehicleServiceServer) SearchNearbyVehicles(context.Context, *SearchNearbyVehiclesRequest) (*SearchNearbyVehiclesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SearchNearbyVehicles not implemented")
+}
+func (UnimplementedVehicleServiceServer) AdminListVehicles(context.Context, *AdminListVehiclesRequest) (*AdminListVehiclesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AdminListVehicles not implemented")
+}
+func (UnimplementedVehicleServiceServer) AdminVerifyVehicle(context.Context, *AdminVerifyVehicleRequest) (*AdminVerifyVehicleResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AdminVerifyVehicle not implemented")
+}
+func (UnimplementedVehicleServiceServer) AdminListPendingDocuments(context.Context, *AdminListPendingDocumentsRequest) (*AdminListPendingDocumentsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AdminListPendingDocuments not implemented")
+}
+func (UnimplementedVehicleServiceServer) AdminReviewDocument(context.Context, *AdminReviewDocumentRequest) (*AdminReviewDocumentResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AdminReviewDocument not implemented")
+}
+func (UnimplementedVehicleServiceServer) AdminGetVehicleStats(context.Context, *AdminGetVehicleStatsRequest) (*AdminGetVehicleStatsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AdminGetVehicleStats not implemented")
 }
 func (UnimplementedVehicleServiceServer) mustEmbedUnimplementedVehicleServiceServer() {}
 func (UnimplementedVehicleServiceServer) testEmbeddedByValue()                        {}
@@ -188,6 +434,42 @@ func _VehicleService_ListVehicles_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _VehicleService_UpdateVehicle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateVehicleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VehicleServiceServer).UpdateVehicle(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VehicleService_UpdateVehicle_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VehicleServiceServer).UpdateVehicle(ctx, req.(*UpdateVehicleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _VehicleService_DeleteVehicle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteVehicleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VehicleServiceServer).DeleteVehicle(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VehicleService_DeleteVehicle_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VehicleServiceServer).DeleteVehicle(ctx, req.(*DeleteVehicleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _VehicleService_UpdateVehicleStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateVehicleStatusRequest)
 	if err := dec(in); err != nil {
@@ -202,6 +484,240 @@ func _VehicleService_UpdateVehicleStatus_Handler(srv interface{}, ctx context.Co
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(VehicleServiceServer).UpdateVehicleStatus(ctx, req.(*UpdateVehicleStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _VehicleService_UploadVehicleDocument_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UploadVehicleDocumentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VehicleServiceServer).UploadVehicleDocument(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VehicleService_UploadVehicleDocument_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VehicleServiceServer).UploadVehicleDocument(ctx, req.(*UploadVehicleDocumentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _VehicleService_ListVehicleDocuments_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListVehicleDocumentsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VehicleServiceServer).ListVehicleDocuments(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VehicleService_ListVehicleDocuments_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VehicleServiceServer).ListVehicleDocuments(ctx, req.(*ListVehicleDocumentsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _VehicleService_DeleteVehicleDocument_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteVehicleDocumentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VehicleServiceServer).DeleteVehicleDocument(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VehicleService_DeleteVehicleDocument_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VehicleServiceServer).DeleteVehicleDocument(ctx, req.(*DeleteVehicleDocumentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _VehicleService_ReportLocation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReportLocationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VehicleServiceServer).ReportLocation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VehicleService_ReportLocation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VehicleServiceServer).ReportLocation(ctx, req.(*ReportLocationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _VehicleService_GetVehicleLocation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetVehicleLocationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VehicleServiceServer).GetVehicleLocation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VehicleService_GetVehicleLocation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VehicleServiceServer).GetVehicleLocation(ctx, req.(*GetVehicleLocationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _VehicleService_SetDriverAvailability_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetDriverAvailabilityRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VehicleServiceServer).SetDriverAvailability(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VehicleService_SetDriverAvailability_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VehicleServiceServer).SetDriverAvailability(ctx, req.(*SetDriverAvailabilityRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _VehicleService_GetDriverAvailability_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDriverAvailabilityRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VehicleServiceServer).GetDriverAvailability(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VehicleService_GetDriverAvailability_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VehicleServiceServer).GetDriverAvailability(ctx, req.(*GetDriverAvailabilityRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _VehicleService_SearchNearbyVehicles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SearchNearbyVehiclesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VehicleServiceServer).SearchNearbyVehicles(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VehicleService_SearchNearbyVehicles_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VehicleServiceServer).SearchNearbyVehicles(ctx, req.(*SearchNearbyVehiclesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _VehicleService_AdminListVehicles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminListVehiclesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VehicleServiceServer).AdminListVehicles(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VehicleService_AdminListVehicles_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VehicleServiceServer).AdminListVehicles(ctx, req.(*AdminListVehiclesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _VehicleService_AdminVerifyVehicle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminVerifyVehicleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VehicleServiceServer).AdminVerifyVehicle(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VehicleService_AdminVerifyVehicle_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VehicleServiceServer).AdminVerifyVehicle(ctx, req.(*AdminVerifyVehicleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _VehicleService_AdminListPendingDocuments_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminListPendingDocumentsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VehicleServiceServer).AdminListPendingDocuments(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VehicleService_AdminListPendingDocuments_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VehicleServiceServer).AdminListPendingDocuments(ctx, req.(*AdminListPendingDocumentsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _VehicleService_AdminReviewDocument_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminReviewDocumentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VehicleServiceServer).AdminReviewDocument(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VehicleService_AdminReviewDocument_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VehicleServiceServer).AdminReviewDocument(ctx, req.(*AdminReviewDocumentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _VehicleService_AdminGetVehicleStats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminGetVehicleStatsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VehicleServiceServer).AdminGetVehicleStats(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VehicleService_AdminGetVehicleStats_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VehicleServiceServer).AdminGetVehicleStats(ctx, req.(*AdminGetVehicleStatsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -226,8 +742,68 @@ var VehicleService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _VehicleService_ListVehicles_Handler,
 		},
 		{
+			MethodName: "UpdateVehicle",
+			Handler:    _VehicleService_UpdateVehicle_Handler,
+		},
+		{
+			MethodName: "DeleteVehicle",
+			Handler:    _VehicleService_DeleteVehicle_Handler,
+		},
+		{
 			MethodName: "UpdateVehicleStatus",
 			Handler:    _VehicleService_UpdateVehicleStatus_Handler,
+		},
+		{
+			MethodName: "UploadVehicleDocument",
+			Handler:    _VehicleService_UploadVehicleDocument_Handler,
+		},
+		{
+			MethodName: "ListVehicleDocuments",
+			Handler:    _VehicleService_ListVehicleDocuments_Handler,
+		},
+		{
+			MethodName: "DeleteVehicleDocument",
+			Handler:    _VehicleService_DeleteVehicleDocument_Handler,
+		},
+		{
+			MethodName: "ReportLocation",
+			Handler:    _VehicleService_ReportLocation_Handler,
+		},
+		{
+			MethodName: "GetVehicleLocation",
+			Handler:    _VehicleService_GetVehicleLocation_Handler,
+		},
+		{
+			MethodName: "SetDriverAvailability",
+			Handler:    _VehicleService_SetDriverAvailability_Handler,
+		},
+		{
+			MethodName: "GetDriverAvailability",
+			Handler:    _VehicleService_GetDriverAvailability_Handler,
+		},
+		{
+			MethodName: "SearchNearbyVehicles",
+			Handler:    _VehicleService_SearchNearbyVehicles_Handler,
+		},
+		{
+			MethodName: "AdminListVehicles",
+			Handler:    _VehicleService_AdminListVehicles_Handler,
+		},
+		{
+			MethodName: "AdminVerifyVehicle",
+			Handler:    _VehicleService_AdminVerifyVehicle_Handler,
+		},
+		{
+			MethodName: "AdminListPendingDocuments",
+			Handler:    _VehicleService_AdminListPendingDocuments_Handler,
+		},
+		{
+			MethodName: "AdminReviewDocument",
+			Handler:    _VehicleService_AdminReviewDocument_Handler,
+		},
+		{
+			MethodName: "AdminGetVehicleStats",
+			Handler:    _VehicleService_AdminGetVehicleStats_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
