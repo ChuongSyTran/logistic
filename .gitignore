@@ -119,4 +119,6 @@ adr
 # lớn. Không vào git — đây là ghi chú cá nhân, không phải tài liệu của repo.
 docs/notes/
 
+docs/goPractice/
+
 .codegraph
