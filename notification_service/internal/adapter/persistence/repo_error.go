@@ -1,4 +1,4 @@
-package repo
+package persistence
 
 import (
 	"context"
@@ -6,10 +6,12 @@ import (
 	"strings"
 
 	"notification_service/ent"
-	cerr "notification_service/internal/common/errors"
+	"notification_service/internal/entity"
 
 	"github.com/logistic/pkg/apperr"
 )
+
+var ErrDuplicateEvent = entity.ErrDuplicateEvent
 
 func wrapError(err error, notFound *apperr.Error) error {
 	if err == nil {
@@ -25,7 +27,7 @@ func wrapError(err error, notFound *apperr.Error) error {
 
 	if ent.IsNotFound(err) {
 		if notFound == nil {
-			notFound = cerr.ErrNotificationNotFound
+			notFound = entity.ErrNotificationNotFound
 		}
 		return notFound.WithCause(err)
 	}
@@ -34,10 +36,9 @@ func wrapError(err error, notFound *apperr.Error) error {
 		msg := strings.ToLower(err.Error())
 		switch {
 		case strings.Contains(msg, "event_id"):
-
-			return ErrDuplicateEvent.WithCause(err)
+			return entity.ErrDuplicateEvent.WithCause(err)
 		case strings.Contains(msg, "code"):
-			return cerr.ErrTemplateCodeExists.WithCause(err)
+			return entity.ErrTemplateCodeExists.WithCause(err)
 		case strings.Contains(msg, "user_id"):
 			return apperr.AlreadyExists("PREFERENCE_EXISTS", "người dùng đã có cài đặt thông báo").WithCause(err)
 		default:
@@ -52,7 +53,5 @@ func wrapError(err error, notFound *apperr.Error) error {
 		return apperr.Conflict("NOT_SINGULAR", "truy vấn trả về nhiều hơn một bản ghi").WithCause(err)
 	}
 
-	return cerr.ErrDatabase.WithCause(err)
+	return entity.ErrDatabase.WithCause(err)
 }
-
-var ErrDuplicateEvent = apperr.AlreadyExists("EVENT_ALREADY_PROCESSED", "sự kiện này đã được xử lý")

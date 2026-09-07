@@ -4,7 +4,7 @@ import (
 	"context"
 	"strconv"
 
-	"notification_service/internal/biz"
+	"notification_service/internal/app"
 	"notification_service/internal/entity"
 )
 
@@ -26,7 +26,7 @@ type notificationText struct {
 
 func renderText(
 	ctx context.Context,
-	engine biz.NotificationEngine,
+	engine app.NotificationEngine,
 	code templateCode,
 	channel string,
 	vars map[string]string,

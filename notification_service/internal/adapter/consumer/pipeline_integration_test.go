@@ -12,9 +12,9 @@ import (
 
 	"notification_service/ent"
 	entnotification "notification_service/ent/notification"
-	"notification_service/internal/biz"
+	"notification_service/internal/adapter/persistence"
+	"notification_service/internal/app"
 	"notification_service/internal/mapper/generated"
-	"notification_service/internal/repo"
 
 	"github.com/google/uuid"
 	_ "github.com/lib/pq"
@@ -30,7 +30,7 @@ func env(key, fallback string) string {
 	return fallback
 }
 
-func setupPipeline(t *testing.T) (*ent.Client, *mq.Publisher, *mq.Consumer, biz.NotificationEngine, *cache.Client) {
+func setupPipeline(t *testing.T) (*ent.Client, *mq.Publisher, *mq.Consumer, app.NotificationEngine, *cache.Client) {
 	t.Helper()
 
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
@@ -87,7 +87,7 @@ func setupPipeline(t *testing.T) (*ent.Client, *mq.Publisher, *mq.Consumer, biz.
 	}
 
 	appMapper := &generated.AppMapperImpl{}
-	engine := biz.NewNotificationEngine(repo.NewNotificationRepo(entClient, redisClient, appMapper))
+	engine := app.NewNotificationEngine(persistence.NewNotificationRepo(entClient, redisClient, appMapper))
 
 	t.Cleanup(func() {
 		_ = consumer.Close()

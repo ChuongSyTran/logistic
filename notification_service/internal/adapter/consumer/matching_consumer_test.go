@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"notification_service/internal/app"
 	"notification_service/internal/entity"
-	"notification_service/internal/repo"
 
 	"github.com/google/uuid"
 	"github.com/logistic/pkg/events"
@@ -21,6 +21,8 @@ type fakeEngine struct {
 	err        error
 	callCount  int
 }
+
+var _ app.NotificationEngine = (*fakeEngine)(nil)
 
 func (f *fakeEngine) DispatchEvent(_ context.Context, eventID, _, _ string, params []entity.CreateNotificationParam) (int64, error) {
 	f.callCount++
@@ -265,7 +267,7 @@ func TestHandleIgnoresUnknownRoutingKey(t *testing.T) {
 }
 
 func TestHandleAcksDuplicateEvent(t *testing.T) {
-	engine := &fakeEngine{err: repo.ErrDuplicateEvent}
+	engine := &fakeEngine{err: entity.ErrDuplicateEvent}
 	c := NewMatchingConsumer(engine)
 
 	payload := events.MatchFound{

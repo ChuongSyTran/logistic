@@ -1,4 +1,4 @@
-package repo
+package persistence
 
 import (
 	"context"
@@ -9,8 +9,7 @@ import (
 	"notification_service/ent/notification"
 	"notification_service/ent/notificationpreference"
 	"notification_service/ent/notificationtemplate"
-	"notification_service/internal/biz"
-	cerr "notification_service/internal/common/errors"
+	"notification_service/internal/app"
 	"notification_service/internal/entity"
 	"notification_service/internal/mapper"
 
@@ -26,9 +25,14 @@ type notificationRepoImpl struct {
 	mapper mapper.AppMapper
 }
 
-var _ biz.NotificationRepo = (*notificationRepoImpl)(nil)
+var (
+	_ app.NotificationRepo       = (*notificationRepoImpl)(nil)
+	_ app.NotificationRepository = (*notificationRepoImpl)(nil)
+	_ app.TemplateRepository     = (*notificationRepoImpl)(nil)
+	_ app.PreferenceRepository   = (*notificationRepoImpl)(nil)
+)
 
-func NewNotificationRepo(client *ent.Client, redis *cache.Client, appMapper mapper.AppMapper) biz.NotificationRepo {
+func NewNotificationRepo(client *ent.Client, redis *cache.Client, appMapper mapper.AppMapper) app.NotificationRepo {
 	return &notificationRepoImpl{client: client, cache: redis, mapper: appMapper}
 }
 
@@ -50,14 +54,14 @@ func (r *notificationRepoImpl) invalidateUnread(ctx context.Context, userIDs ...
 		keys = append(keys, r.keyUnread(id))
 	}
 	if err := r.cache.Delete(ctx, keys...); err != nil {
-		log.Printf("[repo] invalidate unread counters failed: %v", err)
+		log.Printf("[persistence] invalidate unread counters failed: %v", err)
 	}
 }
 
 func (r *notificationRepoImpl) Create(ctx context.Context, param *entity.CreateNotificationParam) (*entity.Notification, error) {
 	dao, err := r.buildCreate(r.client.Notification.Create(), param).Save(ctx)
 	if err != nil {
-		return nil, wrapError(err, cerr.ErrNotificationNotFound)
+		return nil, wrapError(err, entity.ErrNotificationNotFound)
 	}
 
 	r.invalidateUnread(ctx, param.UserID)
@@ -93,7 +97,7 @@ func (r *notificationRepoImpl) CreateBatch(ctx context.Context, params []entity.
 
 	created, err := r.client.Notification.CreateBulk(builders...).Save(ctx)
 	if err != nil {
-		return 0, wrapError(err, cerr.ErrNotificationNotFound)
+		return 0, wrapError(err, entity.ErrNotificationNotFound)
 	}
 
 	r.invalidateUnread(ctx, userIDs...)
@@ -131,7 +135,7 @@ func (r *notificationRepoImpl) CreateWithEventGuard(
 
 		created, err := tx.Notification.CreateBulk(builders...).Save(ctx)
 		if err != nil {
-			return 0, wrapError(err, cerr.ErrNotificationNotFound)
+			return 0, wrapError(err, entity.ErrNotificationNotFound)
 		}
 		createdCount = len(created)
 	}
@@ -147,7 +151,7 @@ func (r *notificationRepoImpl) CreateWithEventGuard(
 func (r *notificationRepoImpl) GetByID(ctx context.Context, id uuid.UUID) (*entity.Notification, error) {
 	dao, err := r.client.Notification.Get(ctx, id)
 	if err != nil {
-		return nil, wrapError(err, cerr.ErrNotificationNotFound)
+		return nil, wrapError(err, entity.ErrNotificationNotFound)
 	}
 	e := r.mapper.EntNotificationToEntity(dao)
 	return &e, nil
@@ -166,7 +170,7 @@ func (r *notificationRepoImpl) List(ctx context.Context, param *entity.ListNotif
 
 	total, err := q.Clone().Count(ctx)
 	if err != nil {
-		return nil, 0, wrapError(err, cerr.ErrNotificationNotFound)
+		return nil, 0, wrapError(err, entity.ErrNotificationNotFound)
 	}
 
 	daos, err := q.
@@ -175,7 +179,7 @@ func (r *notificationRepoImpl) List(ctx context.Context, param *entity.ListNotif
 		Limit(pageSize).
 		All(ctx)
 	if err != nil {
-		return nil, 0, wrapError(err, cerr.ErrNotificationNotFound)
+		return nil, 0, wrapError(err, entity.ErrNotificationNotFound)
 	}
 
 	return r.mapper.EntNotificationListToEntityList(daos), int64(total), nil
@@ -197,7 +201,7 @@ func (r *notificationRepoImpl) AdminList(ctx context.Context, param *entity.Admi
 
 	total, err := q.Clone().Count(ctx)
 	if err != nil {
-		return nil, 0, wrapError(err, cerr.ErrNotificationNotFound)
+		return nil, 0, wrapError(err, entity.ErrNotificationNotFound)
 	}
 
 	daos, err := q.
@@ -206,7 +210,7 @@ func (r *notificationRepoImpl) AdminList(ctx context.Context, param *entity.Admi
 		Limit(pageSize).
 		All(ctx)
 	if err != nil {
-		return nil, 0, wrapError(err, cerr.ErrNotificationNotFound)
+		return nil, 0, wrapError(err, entity.ErrNotificationNotFound)
 	}
 
 	return r.mapper.EntNotificationListToEntityList(daos), int64(total), nil
@@ -219,7 +223,7 @@ func (r *notificationRepoImpl) MarkAsRead(ctx context.Context, id uuid.UUID) (*e
 		SetReadAt(time.Now()).
 		Save(ctx)
 	if err != nil {
-		return nil, wrapError(err, cerr.ErrNotificationNotFound)
+		return nil, wrapError(err, entity.ErrNotificationNotFound)
 	}
 
 	r.invalidateUnread(ctx, dao.UserID)
@@ -235,7 +239,7 @@ func (r *notificationRepoImpl) MarkAllAsRead(ctx context.Context, userID uuid.UU
 		SetReadAt(time.Now()).
 		Save(ctx)
 	if err != nil {
-		return 0, wrapError(err, cerr.ErrNotificationNotFound)
+		return 0, wrapError(err, entity.ErrNotificationNotFound)
 	}
 
 	r.invalidateUnread(ctx, userID)
@@ -245,10 +249,10 @@ func (r *notificationRepoImpl) MarkAllAsRead(ctx context.Context, userID uuid.UU
 func (r *notificationRepoImpl) Delete(ctx context.Context, id uuid.UUID) error {
 	dao, err := r.client.Notification.Get(ctx, id)
 	if err != nil {
-		return wrapError(err, cerr.ErrNotificationNotFound)
+		return wrapError(err, entity.ErrNotificationNotFound)
 	}
 	if err := r.client.Notification.DeleteOneID(id).Exec(ctx); err != nil {
-		return wrapError(err, cerr.ErrNotificationNotFound)
+		return wrapError(err, entity.ErrNotificationNotFound)
 	}
 	r.invalidateUnread(ctx, dao.UserID)
 	return nil
@@ -268,7 +272,7 @@ func (r *notificationRepoImpl) CountUnread(ctx context.Context, userID uuid.UUID
 		Where(notification.UserIDEQ(userID), notification.IsReadEQ(false)).
 		Count(ctx)
 	if err != nil {
-		return 0, wrapError(err, cerr.ErrNotificationNotFound)
+		return 0, wrapError(err, entity.ErrNotificationNotFound)
 	}
 
 	if r.cache != nil {
@@ -280,7 +284,7 @@ func (r *notificationRepoImpl) CountUnread(ctx context.Context, userID uuid.UUID
 func (r *notificationRepoImpl) CountAll(ctx context.Context) (int64, error) {
 	n, err := r.client.Notification.Query().Count(ctx)
 	if err != nil {
-		return 0, wrapError(err, cerr.ErrNotificationNotFound)
+		return 0, wrapError(err, entity.ErrNotificationNotFound)
 	}
 	return int64(n), nil
 }
@@ -290,7 +294,7 @@ func (r *notificationRepoImpl) CountByStatus(ctx context.Context, status string)
 		Where(notification.StatusEQ(notification.Status(status))).
 		Count(ctx)
 	if err != nil {
-		return 0, wrapError(err, cerr.ErrNotificationNotFound)
+		return 0, wrapError(err, entity.ErrNotificationNotFound)
 	}
 	return int64(n), nil
 }
@@ -303,7 +307,7 @@ func (r *notificationRepoImpl) CountSentToday(ctx context.Context) (int64, error
 		Where(notification.CreatedAtGTE(startOfDay)).
 		Count(ctx)
 	if err != nil {
-		return 0, wrapError(err, cerr.ErrNotificationNotFound)
+		return 0, wrapError(err, entity.ErrNotificationNotFound)
 	}
 	return int64(n), nil
 }
@@ -328,7 +332,7 @@ func (r *notificationRepoImpl) CreateTemplate(ctx context.Context, param *entity
 		SetIsActive(param.IsActive).
 		Save(ctx)
 	if err != nil {
-		return nil, wrapError(err, cerr.ErrTemplateNotFound)
+		return nil, wrapError(err, entity.ErrTemplateNotFound)
 	}
 
 	e := r.mapper.EntTemplateToEntity(dao)
@@ -345,7 +349,7 @@ func (r *notificationRepoImpl) GetTemplateByCode(ctx context.Context, code, chan
 		).
 		Only(ctx)
 	if err != nil {
-		return nil, wrapError(err, cerr.ErrTemplateNotFound)
+		return nil, wrapError(err, entity.ErrTemplateNotFound)
 	}
 
 	e := r.mapper.EntTemplateToEntity(dao)
@@ -363,7 +367,7 @@ func (r *notificationRepoImpl) ListTemplates(ctx context.Context, param *entity.
 
 	daos, err := q.Order(ent.Asc(notificationtemplate.FieldCode)).All(ctx)
 	if err != nil {
-		return nil, wrapError(err, cerr.ErrTemplateNotFound)
+		return nil, wrapError(err, entity.ErrTemplateNotFound)
 	}
 	return r.mapper.EntTemplateListToEntityList(daos), nil
 }
@@ -383,7 +387,7 @@ func (r *notificationRepoImpl) UpdateTemplate(ctx context.Context, param *entity
 
 	dao, err := builder.Save(ctx)
 	if err != nil {
-		return nil, wrapError(err, cerr.ErrTemplateNotFound)
+		return nil, wrapError(err, entity.ErrTemplateNotFound)
 	}
 
 	e := r.mapper.EntTemplateToEntity(dao)
@@ -392,7 +396,7 @@ func (r *notificationRepoImpl) UpdateTemplate(ctx context.Context, param *entity
 
 func (r *notificationRepoImpl) DeleteTemplate(ctx context.Context, id uuid.UUID) error {
 	if err := r.client.NotificationTemplate.DeleteOneID(id).Exec(ctx); err != nil {
-		return wrapError(err, cerr.ErrTemplateNotFound)
+		return wrapError(err, entity.ErrTemplateNotFound)
 	}
 	return nil
 }
@@ -400,7 +404,7 @@ func (r *notificationRepoImpl) DeleteTemplate(ctx context.Context, id uuid.UUID)
 func (r *notificationRepoImpl) CountTemplates(ctx context.Context) (int64, error) {
 	n, err := r.client.NotificationTemplate.Query().Count(ctx)
 	if err != nil {
-		return 0, wrapError(err, cerr.ErrTemplateNotFound)
+		return 0, wrapError(err, entity.ErrTemplateNotFound)
 	}
 	return int64(n), nil
 }
@@ -414,7 +418,7 @@ func (r *notificationRepoImpl) GetOrCreatePreference(ctx context.Context, userID
 		return &e, nil
 	}
 	if !ent.IsNotFound(err) {
-		return nil, wrapError(err, cerr.ErrPreferenceNotFound)
+		return nil, wrapError(err, entity.ErrPreferenceNotFound)
 	}
 
 	def := entity.DefaultPreference(userID)
@@ -437,7 +441,7 @@ func (r *notificationRepoImpl) GetOrCreatePreference(ctx context.Context, userID
 				return &e, nil
 			}
 		}
-		return nil, wrapError(cErr, cerr.ErrPreferenceNotFound)
+		return nil, wrapError(cErr, entity.ErrPreferenceNotFound)
 	}
 
 	e := r.mapper.EntPreferenceToEntity(created)
@@ -461,7 +465,7 @@ func (r *notificationRepoImpl) UpdatePreference(ctx context.Context, param *enti
 		SetQuietHoursEnd(param.QuietHoursEnd).
 		Save(ctx)
 	if err != nil {
-		return nil, wrapError(err, cerr.ErrPreferenceNotFound)
+		return nil, wrapError(err, entity.ErrPreferenceNotFound)
 	}
 	_ = dao
 
@@ -473,7 +477,7 @@ func (r *notificationRepoImpl) CountUnreadAll(ctx context.Context) (int64, error
 		Where(notification.IsReadEQ(false)).
 		Count(ctx)
 	if err != nil {
-		return 0, wrapError(err, cerr.ErrNotificationNotFound)
+		return 0, wrapError(err, entity.ErrNotificationNotFound)
 	}
 	return int64(n), nil
 }
