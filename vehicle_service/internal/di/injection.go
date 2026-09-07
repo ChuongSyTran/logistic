@@ -6,11 +6,11 @@ import (
 	"log"
 
 	"vehicle_service/ent"
-	"vehicle_service/internal/biz"
+	"vehicle_service/internal/adapter/grpcserver"
+	"vehicle_service/internal/adapter/persistence"
+	"vehicle_service/internal/app"
 	"vehicle_service/internal/conf"
-	"vehicle_service/internal/controller"
 	"vehicle_service/internal/mapper/generated"
-	"vehicle_service/internal/repo"
 
 	pb "github.com/logistic/api/logistic/vehicle_service/v1"
 	"github.com/logistic/pkg/cache"
@@ -75,11 +75,11 @@ func Injection(grpcServer *grpc.Server, cfg *conf.Config) (*Container, error) {
 	}
 
 	appMapper := &generated.AppMapperImpl{}
-	vehicleRepo := repo.NewVehicleRepo(entClient, redisClient, appMapper)
-	vehicleEngine := biz.NewVehicleEngine(vehicleRepo)
-	vehicleController := controller.NewVehicleController(vehicleEngine, appMapper)
+	vehicleRepo := persistence.NewVehicleRepo(entClient, redisClient, appMapper)
+	vehicleEngine := app.NewVehicleEngine(vehicleRepo)
+	vehicleServer := grpcserver.NewVehicleServer(vehicleEngine, appMapper)
 
-	pb.RegisterVehicleServiceServer(grpcServer, vehicleController)
+	pb.RegisterVehicleServiceServer(grpcServer, vehicleServer)
 
 	return &Container{EntClient: entClient, Cache: redisClient}, nil
 }

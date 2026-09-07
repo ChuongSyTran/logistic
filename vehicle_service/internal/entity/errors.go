@@ -1,4 +1,4 @@
-package errors
+package entity
 
 import "github.com/logistic/pkg/apperr"
 

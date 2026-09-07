@@ -1,4 +1,4 @@
-package repo
+package persistence
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"vehicle_service/ent"
-	cerr "vehicle_service/internal/common/errors"
+	"vehicle_service/internal/entity"
 
 	"github.com/logistic/pkg/apperr"
 )
@@ -25,7 +25,7 @@ func wrapError(err error, notFound *apperr.Error) error {
 
 	if ent.IsNotFound(err) {
 		if notFound == nil {
-			notFound = cerr.ErrVehicleNotFound
+			notFound = entity.ErrVehicleNotFound
 		}
 		return notFound.WithCause(err)
 	}
@@ -34,7 +34,7 @@ func wrapError(err error, notFound *apperr.Error) error {
 		msg := strings.ToLower(err.Error())
 		switch {
 		case strings.Contains(msg, "license_plate"):
-			return cerr.ErrPlateAlreadyUsed.WithCause(err)
+			return entity.ErrPlateAlreadyUsed.WithCause(err)
 		case strings.Contains(msg, "driver_id"):
 			return apperr.AlreadyExists("AVAILABILITY_EXISTS", "tài xế đã có bản ghi trạng thái nhận đơn").WithCause(err)
 		case strings.Contains(msg, "vehicle_id"):
@@ -51,5 +51,5 @@ func wrapError(err error, notFound *apperr.Error) error {
 		return apperr.Conflict("NOT_SINGULAR", "truy vấn trả về nhiều hơn một bản ghi").WithCause(err)
 	}
 
-	return cerr.ErrDatabase.WithCause(err)
+	return entity.ErrDatabase.WithCause(err)
 }

@@ -1,6 +1,6 @@
 //go:build integration
 
-package repo
+package persistence
 
 import (
 	"context"

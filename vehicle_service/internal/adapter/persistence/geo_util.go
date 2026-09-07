@@ -1,4 +1,4 @@
-package repo
+package persistence
 
 import (
 	"math"

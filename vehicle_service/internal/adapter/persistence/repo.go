@@ -1,4 +1,4 @@
-package repo
+package persistence
 
 import (
 	"context"
@@ -11,8 +11,7 @@ import (
 	"vehicle_service/ent/vehicle"
 	"vehicle_service/ent/vehicledocument"
 	"vehicle_service/ent/vehiclelocation"
-	"vehicle_service/internal/biz"
-	cerr "vehicle_service/internal/common/errors"
+	"vehicle_service/internal/app"
 	"vehicle_service/internal/entity"
 	"vehicle_service/internal/mapper"
 
@@ -32,9 +31,9 @@ type vehicleRepoImpl struct {
 	mapper mapper.AppMapper
 }
 
-var _ biz.VehicleRepo = (*vehicleRepoImpl)(nil)
+var _ app.VehicleRepo = (*vehicleRepoImpl)(nil)
 
-func NewVehicleRepo(client *ent.Client, redis *cache.Client, appMapper mapper.AppMapper) biz.VehicleRepo {
+func NewVehicleRepo(client *ent.Client, redis *cache.Client, appMapper mapper.AppMapper) app.VehicleRepo {
 	return &vehicleRepoImpl{client: client, cache: redis, mapper: appMapper}
 }
 
@@ -70,7 +69,7 @@ func (r *vehicleRepoImpl) CreateVehicle(ctx context.Context, param *entity.Regis
 
 	dao, err := builder.Save(ctx)
 	if err != nil {
-		return nil, wrapError(err, cerr.ErrVehicleNotFound)
+		return nil, wrapError(err, entity.ErrVehicleNotFound)
 	}
 
 	e := r.mapper.EntVehicleToEntityVehicle(dao)
@@ -89,7 +88,7 @@ func (r *vehicleRepoImpl) GetVehicleByID(ctx context.Context, id uuid.UUID) (*en
 
 	dao, err := r.client.Vehicle.Query().Where(vehicle.IDEQ(id)).Only(ctx)
 	if err != nil {
-		return nil, wrapError(err, cerr.ErrVehicleNotFound)
+		return nil, wrapError(err, entity.ErrVehicleNotFound)
 	}
 
 	e := r.mapper.EntVehicleToEntityVehicle(dao)
@@ -107,7 +106,7 @@ func (r *vehicleRepoImpl) GetVehiclesByIDs(ctx context.Context, ids []uuid.UUID)
 
 	daos, err := r.client.Vehicle.Query().Where(vehicle.IDIn(ids...)).All(ctx)
 	if err != nil {
-		return nil, wrapError(err, cerr.ErrVehicleNotFound)
+		return nil, wrapError(err, entity.ErrVehicleNotFound)
 	}
 
 	for _, e := range r.mapper.EntVehicleListToEntityVehicleList(daos) {
@@ -132,12 +131,12 @@ func (r *vehicleRepoImpl) ListVehicles(ctx context.Context, param *entity.ListVe
 
 	total, err := q.Clone().Count(ctx)
 	if err != nil {
-		return nil, 0, wrapError(err, cerr.ErrVehicleNotFound)
+		return nil, 0, wrapError(err, entity.ErrVehicleNotFound)
 	}
 
 	daos, err := q.Order(ent.Desc(vehicle.FieldCreatedAt)).Offset(offset).Limit(pageSize).All(ctx)
 	if err != nil {
-		return nil, 0, wrapError(err, cerr.ErrVehicleNotFound)
+		return nil, 0, wrapError(err, entity.ErrVehicleNotFound)
 	}
 
 	return r.mapper.EntVehicleListToEntityVehicleList(daos), int64(total), nil
@@ -162,12 +161,12 @@ func (r *vehicleRepoImpl) AdminListVehicles(ctx context.Context, param *entity.A
 
 	total, err := q.Clone().Count(ctx)
 	if err != nil {
-		return nil, 0, wrapError(err, cerr.ErrVehicleNotFound)
+		return nil, 0, wrapError(err, entity.ErrVehicleNotFound)
 	}
 
 	daos, err := q.Order(ent.Desc(vehicle.FieldCreatedAt)).Offset(offset).Limit(pageSize).All(ctx)
 	if err != nil {
-		return nil, 0, wrapError(err, cerr.ErrVehicleNotFound)
+		return nil, 0, wrapError(err, entity.ErrVehicleNotFound)
 	}
 
 	return r.mapper.EntVehicleListToEntityVehicleList(daos), int64(total), nil
@@ -197,7 +196,7 @@ func (r *vehicleRepoImpl) UpdateVehicle(ctx context.Context, param *entity.Updat
 
 	dao, err := builder.Save(ctx)
 	if err != nil {
-		return nil, wrapError(err, cerr.ErrVehicleNotFound)
+		return nil, wrapError(err, entity.ErrVehicleNotFound)
 	}
 
 	r.invalidateVehicle(ctx, param.ID)
@@ -210,7 +209,7 @@ func (r *vehicleRepoImpl) UpdateVehicleStatus(ctx context.Context, id uuid.UUID,
 		SetStatus(vehicle.Status(status)).
 		Save(ctx)
 	if err != nil {
-		return nil, wrapError(err, cerr.ErrVehicleNotFound)
+		return nil, wrapError(err, entity.ErrVehicleNotFound)
 	}
 
 	r.invalidateVehicle(ctx, id)
@@ -237,7 +236,7 @@ func (r *vehicleRepoImpl) UpdateVerification(ctx context.Context, param *entity.
 
 	dao, err := builder.Save(ctx)
 	if err != nil {
-		return nil, wrapError(err, cerr.ErrVehicleNotFound)
+		return nil, wrapError(err, entity.ErrVehicleNotFound)
 	}
 
 	r.invalidateVehicle(ctx, param.ID)
@@ -258,16 +257,16 @@ func (r *vehicleRepoImpl) DeleteVehicle(ctx context.Context, id uuid.UUID) error
 	defer func() { _ = tx.Rollback() }()
 
 	if _, err := tx.VehicleDocument.Delete().Where(vehicledocument.VehicleIDEQ(id)).Exec(ctx); err != nil {
-		return wrapError(err, cerr.ErrDocumentNotFound)
+		return wrapError(err, entity.ErrDocumentNotFound)
 	}
 	if _, err := tx.VehicleLocation.Delete().Where(vehiclelocation.VehicleIDEQ(id)).Exec(ctx); err != nil {
-		return wrapError(err, cerr.ErrLocationNotFound)
+		return wrapError(err, entity.ErrLocationNotFound)
 	}
 	if _, err := tx.DriverAvailability.Delete().Where(driveravailability.VehicleIDEQ(id)).Exec(ctx); err != nil {
-		return wrapError(err, cerr.ErrAvailabilityNotFound)
+		return wrapError(err, entity.ErrAvailabilityNotFound)
 	}
 	if err := tx.Vehicle.DeleteOneID(id).Exec(ctx); err != nil {
-		return wrapError(err, cerr.ErrVehicleNotFound)
+		return wrapError(err, entity.ErrVehicleNotFound)
 	}
 
 	if err := tx.Commit(); err != nil {
@@ -291,7 +290,7 @@ func (r *vehicleRepoImpl) CountVehicles(ctx context.Context, status, verificatio
 	}
 	n, err := q.Count(ctx)
 	if err != nil {
-		return 0, wrapError(err, cerr.ErrVehicleNotFound)
+		return 0, wrapError(err, entity.ErrVehicleNotFound)
 	}
 	return int64(n), nil
 }
@@ -312,7 +311,7 @@ func (r *vehicleRepoImpl) CreateDocument(ctx context.Context, param *entity.Uplo
 
 	dao, err := builder.Save(ctx)
 	if err != nil {
-		return nil, wrapError(err, cerr.ErrDocumentNotFound)
+		return nil, wrapError(err, entity.ErrDocumentNotFound)
 	}
 
 	e := r.mapper.EntDocumentToEntityDocument(dao)
@@ -322,7 +321,7 @@ func (r *vehicleRepoImpl) CreateDocument(ctx context.Context, param *entity.Uplo
 func (r *vehicleRepoImpl) GetDocument(ctx context.Context, id uuid.UUID) (*entity.VehicleDocument, error) {
 	dao, err := r.client.VehicleDocument.Get(ctx, id)
 	if err != nil {
-		return nil, wrapError(err, cerr.ErrDocumentNotFound)
+		return nil, wrapError(err, entity.ErrDocumentNotFound)
 	}
 	e := r.mapper.EntDocumentToEntityDocument(dao)
 	return &e, nil
@@ -336,7 +335,7 @@ func (r *vehicleRepoImpl) ListDocuments(ctx context.Context, param *entity.ListD
 
 	daos, err := q.Order(ent.Desc(vehicledocument.FieldCreatedAt)).All(ctx)
 	if err != nil {
-		return nil, wrapError(err, cerr.ErrDocumentNotFound)
+		return nil, wrapError(err, entity.ErrDocumentNotFound)
 	}
 	return r.mapper.EntDocumentListToEntityList(daos), nil
 }
@@ -349,12 +348,12 @@ func (r *vehicleRepoImpl) ListPendingDocuments(ctx context.Context, page, pageSi
 
 	total, err := q.Clone().Count(ctx)
 	if err != nil {
-		return nil, 0, wrapError(err, cerr.ErrDocumentNotFound)
+		return nil, 0, wrapError(err, entity.ErrDocumentNotFound)
 	}
 
 	daos, err := q.Order(ent.Asc(vehicledocument.FieldCreatedAt)).Offset(offset).Limit(pageSize).All(ctx)
 	if err != nil {
-		return nil, 0, wrapError(err, cerr.ErrDocumentNotFound)
+		return nil, 0, wrapError(err, entity.ErrDocumentNotFound)
 	}
 
 	return r.mapper.EntDocumentListToEntityList(daos), int64(total), nil
@@ -372,7 +371,7 @@ func (r *vehicleRepoImpl) ReviewDocument(ctx context.Context, param *entity.Revi
 
 	dao, err := builder.Save(ctx)
 	if err != nil {
-		return nil, wrapError(err, cerr.ErrDocumentNotFound)
+		return nil, wrapError(err, entity.ErrDocumentNotFound)
 	}
 
 	e := r.mapper.EntDocumentToEntityDocument(dao)
@@ -381,7 +380,7 @@ func (r *vehicleRepoImpl) ReviewDocument(ctx context.Context, param *entity.Revi
 
 func (r *vehicleRepoImpl) DeleteDocument(ctx context.Context, id uuid.UUID) error {
 	if err := r.client.VehicleDocument.DeleteOneID(id).Exec(ctx); err != nil {
-		return wrapError(err, cerr.ErrDocumentNotFound)
+		return wrapError(err, entity.ErrDocumentNotFound)
 	}
 	return nil
 }
@@ -391,7 +390,7 @@ func (r *vehicleRepoImpl) CountPendingDocuments(ctx context.Context) (int64, err
 		Where(vehicledocument.ReviewStatusEQ(vehicledocument.ReviewStatusPending)).
 		Count(ctx)
 	if err != nil {
-		return 0, wrapError(err, cerr.ErrDocumentNotFound)
+		return 0, wrapError(err, entity.ErrDocumentNotFound)
 	}
 	return int64(n), nil
 }
@@ -413,7 +412,7 @@ func (r *vehicleRepoImpl) UpsertLocation(ctx context.Context, param *entity.Repo
 			SetZoneID(zoneID).
 			Save(ctx)
 		if err != nil {
-			return nil, wrapError(err, cerr.ErrLocationNotFound)
+			return nil, wrapError(err, entity.ErrLocationNotFound)
 		}
 
 	case ent.IsNotFound(err):
@@ -427,11 +426,11 @@ func (r *vehicleRepoImpl) UpsertLocation(ctx context.Context, param *entity.Repo
 			SetZoneID(zoneID).
 			Save(ctx)
 		if err != nil {
-			return nil, wrapError(err, cerr.ErrLocationNotFound)
+			return nil, wrapError(err, entity.ErrLocationNotFound)
 		}
 
 	default:
-		return nil, wrapError(err, cerr.ErrLocationNotFound)
+		return nil, wrapError(err, entity.ErrLocationNotFound)
 	}
 
 	if _, err := r.client.DriverAvailability.Update().
@@ -475,7 +474,7 @@ func (r *vehicleRepoImpl) GetLocation(ctx context.Context, vehicleID uuid.UUID) 
 		Where(vehiclelocation.VehicleIDEQ(vehicleID)).
 		Only(ctx)
 	if err != nil {
-		return nil, wrapError(err, cerr.ErrLocationNotFound)
+		return nil, wrapError(err, entity.ErrLocationNotFound)
 	}
 	e := r.mapper.EntLocationToEntityLocation(dao)
 	return &e, nil
@@ -499,7 +498,7 @@ func (r *vehicleRepoImpl) UpsertAvailability(ctx context.Context, param *entity.
 			SetZoneID(zoneID).
 			Save(ctx)
 		if err != nil {
-			return nil, wrapError(err, cerr.ErrAvailabilityNotFound)
+			return nil, wrapError(err, entity.ErrAvailabilityNotFound)
 		}
 
 	case ent.IsNotFound(err):
@@ -514,11 +513,11 @@ func (r *vehicleRepoImpl) UpsertAvailability(ctx context.Context, param *entity.
 			SetZoneID(zoneID).
 			Save(ctx)
 		if err != nil {
-			return nil, wrapError(err, cerr.ErrAvailabilityNotFound)
+			return nil, wrapError(err, entity.ErrAvailabilityNotFound)
 		}
 
 	default:
-		return nil, wrapError(err, cerr.ErrAvailabilityNotFound)
+		return nil, wrapError(err, entity.ErrAvailabilityNotFound)
 	}
 
 	if r.cache != nil {
@@ -546,7 +545,7 @@ func (r *vehicleRepoImpl) GetAvailability(ctx context.Context, driverID uuid.UUI
 		Where(driveravailability.DriverIDEQ(driverID)).
 		Only(ctx)
 	if err != nil {
-		return nil, wrapError(err, cerr.ErrAvailabilityNotFound)
+		return nil, wrapError(err, entity.ErrAvailabilityNotFound)
 	}
 	e := r.mapper.EntAvailabilityToEntity(dao)
 	return &e, nil
@@ -562,7 +561,7 @@ func (r *vehicleRepoImpl) GetAvailabilitiesByVehicleIDs(ctx context.Context, ids
 		Where(driveravailability.VehicleIDIn(ids...)).
 		All(ctx)
 	if err != nil {
-		return nil, wrapError(err, cerr.ErrAvailabilityNotFound)
+		return nil, wrapError(err, entity.ErrAvailabilityNotFound)
 	}
 
 	for _, e := range r.mapper.EntAvailabilityListToEntityList(daos) {
@@ -576,7 +575,7 @@ func (r *vehicleRepoImpl) CountOnlineDrivers(ctx context.Context) (int64, error)
 		Where(driveravailability.IsOnlineEQ(true)).
 		Count(ctx)
 	if err != nil {
-		return 0, wrapError(err, cerr.ErrAvailabilityNotFound)
+		return 0, wrapError(err, entity.ErrAvailabilityNotFound)
 	}
 	return int64(n), nil
 }
@@ -689,7 +688,7 @@ func (r *vehicleRepoImpl) searchNearbyFallback(ctx context.Context, param *entit
 
 	daos, err := q.Limit(param.Limit * 5).All(ctx)
 	if err != nil {
-		return nil, wrapError(err, cerr.ErrAvailabilityNotFound)
+		return nil, wrapError(err, entity.ErrAvailabilityNotFound)
 	}
 
 	availabilities := r.mapper.EntAvailabilityListToEntityList(daos)
