@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
+	"gateway_service/internal/adapter/httpserver"
 	"gateway_service/internal/conf"
-	"gateway_service/internal/delivery/http"
 	"gateway_service/internal/middleware"
 
 	pbauth "github.com/logistic/api/logistic/auth_service/v1"
@@ -100,7 +100,7 @@ func Injection(ginEngine *gin.Engine, cfg *conf.Config) (*Container, error) {
 		container.conns = append(container.conns, conn)
 	}
 
-	http.RegisterGatewayRoutes(ginEngine, http.Clients{
+	httpserver.RegisterGatewayRoutes(ginEngine, httpserver.Clients{
 		Auth:         pbauth.NewAuthServiceClient(conns[0]),
 		Media:        pbmedia.NewMediaServiceClient(conns[1]),
 		Matching:     pbmatching.NewMatchingEngineServiceClient(conns[2]),

@@ -1,10 +1,9 @@
-package http
+package httpserver
 
 import (
 	"net/http"
 
 	"gateway_service/internal/conf"
-	"gateway_service/internal/controller"
 	"gateway_service/internal/middleware"
 
 	pbauth "github.com/logistic/api/logistic/auth_service/v1"
@@ -49,13 +48,13 @@ func RegisterGatewayRoutes(
 		middleware.ErrorGuard(),
 	)
 
-	authController := controller.NewAuthController(clients.Auth, clients.User, cfg.Server.IsProduction)
-	mediaController := controller.NewMediaController(clients.Media)
-	matchingController := controller.NewMatchingController(clients.Matching, clients.Vehicle)
-	userController := controller.NewUserController(clients.User)
-	kycController := controller.NewKycController(clients.Kyc)
-	vehicleController := controller.NewVehicleController(clients.Vehicle, clients.User, clients.Kyc)
-	notifController := controller.NewNotificationController(clients.Notification)
+	authController := NewAuthController(clients.Auth, clients.User, cfg.Server.IsProduction)
+	mediaController := NewMediaController(clients.Media)
+	matchingController := NewMatchingController(clients.Matching, clients.Vehicle)
+	userController := NewUserController(clients.User)
+	kycController := NewKycController(clients.Kyc)
+	vehicleController := NewVehicleController(clients.Vehicle, clients.User, clients.Kyc)
+	notifController := NewNotificationController(clients.Notification)
 
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

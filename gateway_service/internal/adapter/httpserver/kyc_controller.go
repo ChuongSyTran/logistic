@@ -1,4 +1,4 @@
-package controller
+package httpserver
 
 import (
 	"gateway_service/internal/response"

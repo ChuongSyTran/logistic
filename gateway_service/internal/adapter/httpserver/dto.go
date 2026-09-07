@@ -1,4 +1,4 @@
-package controller
+package httpserver
 
 import (
 	"time"

@@ -1056,6 +1056,53 @@
             },
             "description": "Tài xế nộp hồ sơ của chính mình. Việc DUYỆT nằm ở nhóm Admin và cần vai trò admin."
           }
+        },
+        {
+          "name": "Xem hồ sơ KYC",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mã trạng thái là 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                  "    const json = pm.response.json();",
+                  "    if (pm.response.code \u003e= 400) {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "        pm.expect(json.error).to.have.property('code');",
+                  "    } else {",
+                  "        pm.expect(json).to.be.an('object');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                  "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/{{user_id}}/kyc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{user_id}}",
+                "kyc"
+              ]
+            },
+            "description": "Xem hồ sơ KYC của người dùng."
+          }
         }
       ]
     },
@@ -3503,6 +3550,52 @@
                   ]
                 },
                 "description": "reviewer_id lấy từ token của admin đang đăng nhập, không nhận từ body."
+              }
+            },
+            {
+              "name": "Đếm KYC chờ duyệt",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('mã trạng thái là 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('phản hồi là JSON đúng khuôn', function () {",
+                      "    const json = pm.response.json();",
+                      "    if (pm.response.code \u003e= 400) {",
+                      "        pm.expect(json).to.have.property('error');",
+                      "        pm.expect(json.error).to.have.property('code');",
+                      "    } else {",
+                      "        pm.expect(json).to.be.an('object');",
+                      "    }",
+                      "});",
+                      "",
+                      "pm.test('có mã truy vết để tra log và Jaeger', function () {",
+                      "    pm.expect(pm.response.headers.has('X-Request-ID')).to.be.true;",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/admin/kyc/count-pending",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "kyc",
+                    "count-pending"
+                  ]
+                }
               }
             }
           ]

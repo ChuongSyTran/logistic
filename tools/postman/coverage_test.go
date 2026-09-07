@@ -29,7 +29,7 @@ func collectionRoutes(t *testing.T) map[string]bool {
 func gatewayRoutes(t *testing.T) map[string]bool {
 	t.Helper()
 
-	source, err := os.ReadFile("../../gateway_service/internal/delivery/http/gateway_route.go")
+	source, err := os.ReadFile("../../gateway_service/internal/adapter/httpserver/gateway_route.go")
 	if err != nil {
 		t.Fatalf("đọc bảng route: %v", err)
 	}

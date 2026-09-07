@@ -323,7 +323,7 @@ và notification_service, nên cả bốn phải cùng một không gian định
 
 Cùng không gian định danh **không tự nhiên mà có**: `POST /api/v1/auth/register`
 sau khi auth_service cấp id sẽ gọi tiếp `user_service.RegisterUser` với chính id
-đó (`ensureProfile` trong `gateway_service/internal/controller/auth_controller.go`).
+đó (`ensureProfile` trong `gateway_service/internal/adapter/httpserver/auth_controller.go`).
 Hai service tự sinh id riêng thì token mang một id còn hồ sơ nằm dưới id khác, và
 mọi `/api/v1/users/*` trả 404 khi tra bằng id trong token, 403 khi tra bằng id kia.
 
@@ -346,7 +346,7 @@ nhận `VEHICLE_NOT_VERIFIED` khi bật nhận đơn.
 
 ## Những gì được test tự động
 
-`gateway_service/internal/delivery/http/auth_guard_test.go` khoá các bất biến của
+`gateway_service/internal/adapter/httpserver/auth_guard_test.go` khoá các bất biến của
 lớp xác thực:
 
 | Test | Chặn điều gì |
