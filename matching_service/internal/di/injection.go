@@ -6,21 +6,19 @@ import (
 	"strings"
 	"time"
 
-	"matching_service/internal/biz"
-	"matching_service/internal/broker/kafka"
-	"matching_service/internal/broker/nats_jetstream"
-	brokerrabbit "matching_service/internal/broker/rabbitmq"
-	walletclient "matching_service/internal/client/wallet"
+	"matching_service/internal/adapter/broker/kafka"
+	"matching_service/internal/adapter/broker/nats_jetstream"
+	brokerrabbit "matching_service/internal/adapter/broker/rabbitmq"
+	walletclient "matching_service/internal/adapter/client/wallet"
+	"matching_service/internal/adapter/grpcserver"
+	"matching_service/internal/adapter/persistence"
+	"matching_service/internal/app"
 	"matching_service/internal/conf"
-	"matching_service/internal/controller"
 	"matching_service/internal/mapper/generated"
-	"matching_service/internal/repo"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials/insecure"
-
-	entclient "matching_service/internal/common/ent_client"
 
 	pb "github.com/logistic/api/logistic/matching_service/v1"
 	pbwallet "github.com/logistic/api/logistic/wallet_service/v1"
@@ -59,11 +57,11 @@ const walletProbeTimeout = 3 * time.Second
 
 // grpc.NewClient chỉ dựng client chứ chưa nối nên gần như không bao giờ lỗi; phải
 // thăm dò thật mới biết có wallet_service hay không để còn rơi về ví giả lập.
-func newWalletClient(addr string) biz.WalletClient {
+func newWalletClient(addr string) app.WalletClient {
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Printf("[matching_service] CẢNH BÁO: địa chỉ wallet_service không dùng được (%v) — chuyển sang ví giả lập", err)
-		return biz.NewMockWalletClient()
+		return app.NewMockWalletClient()
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), walletProbeTimeout)
@@ -80,7 +78,7 @@ func newWalletClient(addr string) biz.WalletClient {
 			_ = conn.Close()
 			log.Printf("[matching_service] CẢNH BÁO: không nối được wallet_service tại %s sau %s — "+
 				"chuyển sang ví giả lập, mọi lần kiểm tra số dư sẽ luôn đạt", addr, walletProbeTimeout)
-			return biz.NewMockWalletClient()
+			return app.NewMockWalletClient()
 		}
 	}
 }
@@ -90,15 +88,15 @@ func Injection(grpcServer *grpc.Server, cfg *conf.Config) (*Container, error) {
 		log.Fatalf("[SYSTEM] failed to read config")
 	}
 
-	masterClient, salveClient, err := entclient.NewConnection(&cfg.MasterDatabase, &cfg.SlaveDatabase)
+	masterClient, salveClient, err := persistence.NewConnection(&cfg.MasterDatabase, &cfg.SlaveDatabase)
 	if err != nil {
 		return nil, err
 	}
 
 	appMapper := &generated.MatchingMapperImpl{}
 
-	matchingRepo := repo.NewMatchingRepo(masterClient, salveClient, appMapper)
-	engine := biz.NewGeoHashEngine()
+	matchingRepo := persistence.NewMatchingRepo(masterClient, salveClient, appMapper)
+	engine := app.NewGeoHashEngine()
 
 	natsConn, err := nats.Connect("nats://" + cfg.NatConfig.Host + ":" + cfg.NatConfig.Port)
 	if err != nil {
@@ -122,7 +120,7 @@ func Injection(grpcServer *grpc.Server, cfg *conf.Config) (*Container, error) {
 
 	container := &Container{NatsConn: natsConn}
 
-	var notifier biz.Notifier = biz.NoopNotifier{}
+	var notifier app.Notifier = app.NoopNotifier{}
 	if cfg.RabbitMQ.Enabled {
 		mqConn, mqErr := mq.Connect(mq.Config{
 			Host:     cfg.RabbitMQ.Host,
@@ -152,14 +150,14 @@ func Injection(grpcServer *grpc.Server, cfg *conf.Config) (*Container, error) {
 
 	walletClient := newWalletClient(cfg.WalletService.GrpcAddr)
 
-	matchingEngine := biz.NewMatchingEngine(matchingRepo, engine, walletClient, kafkaPub, natsPub, notifier)
+	matchingEngine := app.NewMatchingEngine(matchingRepo, engine, walletClient, kafkaPub, natsPub, notifier)
 
 	if err := nats_jetstream.StartOfferConsumer(context.Background(), natsSub, matchingEngine, appMapper); err != nil {
 		return nil, err
 	}
 
-	matchingController := controller.NewMatchingController(matchingEngine)
-	pb.RegisterMatchingEngineServiceServer(grpcServer, matchingController)
+	matchingServer := grpcserver.NewMatchingServer(matchingEngine)
+	pb.RegisterMatchingEngineServiceServer(grpcServer, matchingServer)
 
 	return container, nil
 }
