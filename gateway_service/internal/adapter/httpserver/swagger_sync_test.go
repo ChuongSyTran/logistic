@@ -1,4 +1,4 @@
-package http
+package httpserver
 
 import (
 	"bufio"
@@ -21,7 +21,7 @@ func TestSwaggerAnnotationsMatchRoutes(t *testing.T) {
 		realRoutes[normalizePath(r.Method, r.Path)] = r.Method + " " + r.Path
 	}
 
-	annotations, err := collectRouterAnnotations("../../controller")
+	annotations, err := collectRouterAnnotations(".")
 	if err != nil {
 		t.Fatalf("không đọc được thư mục controller: %v", err)
 	}
@@ -42,7 +42,7 @@ func TestSwaggerAnnotationsMatchRoutes(t *testing.T) {
 func TestEveryRouteIsDocumented(t *testing.T) {
 	engine := newTestEngine()
 
-	annotations, err := collectRouterAnnotations("../../controller")
+	annotations, err := collectRouterAnnotations(".")
 	if err != nil {
 		t.Fatalf("không đọc được thư mục controller: %v", err)
 	}

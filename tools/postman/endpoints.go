@@ -209,6 +209,12 @@ func userEndpoints() []endpoint {
     "note": "Đã nộp ảnh GPLX hai mặt"
 }`,
 		},
+		{
+			name:        "Xem hồ sơ KYC",
+			method:      "GET",
+			path:        "/api/v1/users/{{user_id}}/kyc",
+			description: "Xem hồ sơ KYC của người dùng.",
+		},
 	}
 }
 
@@ -688,6 +694,11 @@ func adminKycEndpoints() []endpoint {
     "approved": true,
     "note": "Giấy tờ hợp lệ, ảnh rõ nét"
 }`,
+		},
+		{
+			name:   "Đếm KYC chờ duyệt",
+			method: "GET",
+			path:   "/api/v1/admin/kyc/count-pending",
 		},
 	}
 }

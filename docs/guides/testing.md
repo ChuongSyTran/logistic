@@ -33,7 +33,7 @@ Go cho phép hai package trong cùng một thư mục, nếu package thứ hai t
 | Kiểu | Khai báo | Dùng khi | Ví dụ trong repo |
 |---|---|---|---|
 | Black-box | `package foo_test` | Chỉ dùng API công khai — ép test đúng bề mặt mà người khác sẽ dùng | `pkg/uuidx`, `pkg/authn` |
-| White-box | `package foo` | Cần chạm hàm/biến unexported | `gateway_service/.../http` |
+| White-box | `package foo` | Cần chạm hàm/biến unexported | `gateway_service/.../httpserver` |
 
 Mặc định nên chọn black-box. Chỉ dùng white-box khi thật sự cần vào bên trong —
 như bộ test route của gateway, nơi phải dựng engine bằng thành phần nội bộ.
