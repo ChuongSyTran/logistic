@@ -120,7 +120,7 @@ Làm sao máy tính của bạn biết lúc nào thì ném gói tin cho Switch (
 - **Trường hợp 1 (Gửi cho máy tính kế bên `192.168.1.10`):** Máy bạn lấy IP đích `192.168.1.10 [AND] 255.255.255.0 = 192.168.1.0`. Máy bạn so sánh thấy Network ID này **TRÙNG** với Network ID của nó. Thế là nó tra bảng ARP lấy MAC rồi quăng thẳng Frame vào **Switch**.
 - **Trường hợp 2 (Gửi cho Google `8.8.8.8`):** Máy bạn lấy IP đích `8.8.8.8 [AND] 255.255.255.0 = 8.8.8.0`. Máy bạn so sánh thấy **KHÁC** với Network ID của mình (`192.168.1.0`). Nó bọc gói tin lại và ném thẳng cho **Router (Default Gateway)** để Router tự lo liệu tìm đường.
 
-### 3.2. BGP (Border Gateway Protocol) - Bản Đồ Định Tuyến Của Internet
+### 3.3. BGP (Border Gateway Protocol) - Bản Đồ Định Tuyến Của Internet
 Làm sao máy tính ở Việt Nam biết đường bắn gói tin sang tận máy chủ AWS ở Mỹ mà không bị lạc giữa hàng triệu rễ cây cáp quang dưới đáy biển? Câu trả lời là nhờ giao thức **BGP**.
 
 - **Hệ thống tự trị (Autonomous System - AS):** Internet không có một máy chủ trung tâm hay "Giám đốc" nào điều phối cả. Nó là một mạng lưới chắp vá khổng lồ từ hàng vạn hệ thống mạng độc lập của các tập đoàn (Ví dụ: Mạng của Viettel là một AS, mạng của FPT là một AS, mạng của Google/AWS là một AS). Mỗi tổ chức này được tổ chức quản lý mạng thế giới cấp một mã số định danh duy nhất gọi là **ASN**.
@@ -131,7 +131,7 @@ Làm sao máy tính ở Việt Nam biết đường bắn gói tin sang tận m�
   - *Ví dụ thực tiễn:* Kỹ sư mạng VNPT sẽ viết code cấu hình BGP ưu tiên đẩy Traffic qua đường **Peering** (vì nó miễn phí). Chỉ khi cáp Peering đứt, Router mới ngậm ngùi bẻ lái (Failover) đẩy traffic qua đường **Transit** đắt tiền. Sự điều hướng dòng chảy Data trên toàn cầu thực chất được quyết định bởi... Bài toán Kinh tế!
 - *Thảm họa thực tế:* Nhờ BGP mà các Packet luôn tìm được đường tới đích. Nhưng nếu một kỹ sư mạng ở Facebook gõ sai cấu hình, vô tình xóa mất lời "loan báo" BGP của hệ thống Facebook, thì toàn bộ dải IP của Facebook sẽ lập tức "tàng hình" khỏi bản đồ Internet thế giới, khiến mạng lưới sập toàn cầu (Điều này đã từng xảy ra trên thực tế khiến toàn bộ Facebook, Messenger, Instagram sập sạch vào tháng 10/2021).
 
-### 3.3. Ứng dụng Thực tiễn: Quy hoạch VPC trên Cloud (AWS)
+### 3.4. Ứng dụng Thực tiễn: Quy hoạch VPC trên Cloud (AWS)
 Từ mớ lý thuyết khô khan về Subnet Mask và Private IP ở trên, khi áp dụng vào thực tế triển khai Cloud (AWS/GCP), các Kỹ sư Hệ thống sẽ tư duy quy hoạch hạ tầng (Infrastructure as Code) như sau:
 
 **1. Khai báo Mạng ảo (Virtual Private Cloud - VPC):**
@@ -149,7 +149,7 @@ Cách phân lô bằng số nhị phân này giúp giới hạn phạm vi ảnh 
 (Blast Radius). Trong `network.tf` của Terraform, dòng `cidr_block = "10.0.1.0/24"`
 đã đủ để suy ra quy mô dải mạng được cấp.
 
-### 3.4. Ánh xạ Kiến trúc Mạng Cơ bản sang Điện toán Đám mây (AWS)
+### 3.5. Ánh xạ Kiến trúc Mạng Cơ bản sang Điện toán Đám mây (AWS)
 Khi đưa các kiến thức mạng truyền thống lên môi trường Đám mây (Cloud), AWS đã đóng gói chúng thành các khái niệm trực quan. Việc nắm rõ mối liên kết này giúp bạn thiết kế hạ tầng chuẩn mực (Best Practice):
 
 **1. Region và Availability Zone (A-Z) - Nền tảng của sự Bền bỉ (High Availability)**
@@ -159,40 +159,23 @@ Khi đưa các kiến thức mạng truyền thống lên môi trường Đám m
 
 **2. Ranh giới mạng: Subnet**
 - Khác với VPC bao trùm cả Region, **Một Subnet bị khóa chặt trong đúng 1 AZ**.
-- Các Subnet trong cùng 1 VPC (Dù ở khác AZ) mặc định luôn "nhìn thấy nhau" và giao tiếp nội bộ miễn phí thông qua luật `local` mặc định của mạng.
+  - *Vì sao:* nhiệm vụ của subnet chính là **chỉ định chỗ đặt máy**. Khi launch một EC2 vào subnet, AWS phải chọn một host vật lý nằm trong một toà nhà cụ thể — subnet chính là câu lệnh "đặt nó vào toà nhà `1a`". Nếu một subnet trải qua hai AZ, bạn mất cách nói "để bản sao ở toà nhà khác", tức mất luôn khả năng thiết kế H.A ở mục 1 phía trên.
+  - *Vì sao đây là ngoại lệ:* VPC, Route Table, Security Group đều chỉ là cấu hình và không gắn với AZ nào. Subnet cũng chỉ là cấu hình, nhưng lại gắn AZ — vì bản thân nó là cái nhãn dán lên AZ. ENI lấy IP từ subnet nên cũng bị kéo theo AZ đó. Luật chung quyết định resource nào gắn AZ, resource nào không: [aws-architecture.md](aws-architecture.md) mục 2.
+  - *Dấu hiệu trong Terraform:* `aws_subnet` có tham số `availability_zone`, còn `aws_vpc` thì không. Bỏ trống tham số này thì AWS tự chọn AZ — hai subnet được định làm dự phòng cho nhau có thể rơi vào cùng một toà nhà.
+  - *Hệ quả:* muốn H.A thì mỗi tầng (public, private) cần **ít nhất một subnet ở mỗi AZ**.
+- Các Subnet trong cùng 1 VPC (dù ở khác AZ) **luôn** nhìn thấy nhau nhờ dòng `local`: AWS tự thêm dòng `<CIDR của VPC> → local` vào **mọi** route table — main hay tự tạo, trong default VPC hay VPC tự tạo — và không cho xoá. Vì vậy không bao giờ phải tạo route table để các subnet gọi nhau; route table tự tạo chỉ dùng để đi **ra ngoài** VPC. Có đường đi chưa có nghĩa là được phép kết nối — việc đó do Security Group và NACL quyết định (mục 4 bên dưới). Traffic giữa hai AZ khác nhau vẫn tính phí data transfer.
 
 **3. Công tắc hòa mạng Internet: Route Table và Internet Gateway (IGW)**
-- Khi tạo VPC, nó hoàn toàn bị cô lập (Isolated). Để kết nối Internet, bạn phải gắn một cái cửa ngõ gọi là **Internet Gateway (IGW)** vào VPC.
+- Khi mới tạo, VPC bị cô lập **với bên ngoài** (Isolated): bên trong, các subnet vẫn thông nhau nhờ `local`, nhưng không có đường nào ra Internet. Để kết nối Internet, bạn phải gắn một cái cửa ngõ gọi là **Internet Gateway (IGW)** vào VPC, rồi thêm dòng `0.0.0.0/0 → IGW` vào route table.
 - Gói tin từ bên ngoài vào: IGW hoạt động như một cỗ máy NAT khổng lồ, nó biên dịch IP Public sang IP Private của EC2 và ném gói tin thẳng về Subnet chứa EC2.
 - Gói tin từ trong đi ra (Quyết định bởi **Route Table**): Bảng định tuyến (Route Table) là bộ não chỉ đường. Nó định nghĩa ranh giới giữa Public và Private:
   - **Public Subnet (Vùng mặt tiền):** Là Subnet có Route Table chứa luật `0.0.0.0/0 -> IGW`. Luật này nói rằng: *"Nếu gói tin muốn đi tới một IP lạ không nằm trong mạng nội bộ, hãy ném nó ra cổng IGW ra Internet"*. Nơi đây chứa Load Balancer, Web Server.
-  - **Private Subnet (Vùng hầm ngầm):** Là Subnet mà Route Table của nó KHÔNG CÓ luật trỏ ra IGW. Các Server (như Database) đặt ở đây an toàn tuyệt đối, vì Hacker từ Internet không có cách nào chọc vào được (kể cả khi Server có lỗ hổng bảo mật).
-
-**4. Tường lửa 2 lớp: Security Group (SG) vs Network ACL (NACL)**
-Mạng truyền thống thường chỉ có 1 Firewall tổng ở cổng công ty. Cloud AWS thông minh hơn, phân chia Firewall thành 2 lớp:
-- **Security Group (Tường lửa Cấp EC2):** Nó bọc quanh từng cái Card mạng (ENI) của một con máy ảo (EC2) cụ thể. Gắn SG cho con Gateway nào thì nó chỉ bảo vệ đúng con Gateway đó. 
-  - *Tính chất:* Luôn "Mở" (Mặc định khóa chặt, bạn chỉ được phép viết luật CHO PHÉP). Ví dụ: Cho phép Port 80 và 443 từ IP của Cloudflare đi vào.
-- **Network ACL - NACL (Tường lửa Cấp Subnet):** Nó bọc ở cổng ra/vào của toàn bộ 1 Subnet. 
-  - *Tính chất:* Luôn "Chặn" (Mặc định cho phép tất cả, bạn dùng NACL để viết luật CHẶN). Ví dụ: Phát hiện 1 dải IP từ nước ngoài liên tục rà quét mạng, bạn dùng NACL để DROP ngay lập tức từ vòng gửi xe của Subnet, không cho chúng chạm tới Security Group của EC2.
-
-### 3.4. Ánh xạ Kiến trúc Mạng Cơ bản sang Điện toán Đám mây (AWS)
-Khi đưa các kiến thức mạng truyền thống lên môi trường Đám mây (Cloud), AWS đã đóng gói chúng thành các khái niệm trực quan. Việc nắm rõ mối liên kết này giúp bạn thiết kế hạ tầng chuẩn mực (Best Practice):
-
-**1. Region và Availability Zone (A-Z) - Nền tảng của sự Bền bỉ (High Availability)**
-- **Region (Khu vực):** Là một cụm Data Center nằm ở một vị trí địa lý cụ thể (Ví dụ: Singapore - `ap-southeast-1`). Một mạng ảo **VPC luôn bị "khóa chặt" trong 1 Region**. Bạn không thể tạo 1 VPC vắt ngang qua Singapore và Mỹ.
-- **Availability Zone (AZ - Vùng khả thi):** Bên trong 1 Region sẽ có nhiều AZ (Ví dụ: `ap-southeast-1a`, `ap-southeast-1b`). Mỗi AZ là một Data Center biệt lập vật lý hoàn toàn, có hệ thống điện lưới và cáp quang độc lập để phòng chống thiên tai (động đất, cháy nổ).
-- **High Availability (H.A - Khả năng sẵn sàng cao):** Để đảm bảo hệ thống không bao giờ sập, các Kỹ sư (DevOps) luôn thiết kế mô hình H.A: Chạy 2 con EC2 Backend giống hệt nhau, nhưng đặt ở 2 AZ khác nhau. Nếu AZ A sập nguồn điện, hệ thống Load Balancer sẽ tự động dồn toàn bộ khách hàng sang AZ B.
-
-**2. Ranh giới mạng: Subnet**
-- Khác với VPC bao trùm cả Region, **Một Subnet bị khóa chặt trong đúng 1 AZ**.
-- Các Subnet trong cùng 1 VPC (Dù ở khác AZ) mặc định luôn "nhìn thấy nhau" và giao tiếp nội bộ miễn phí thông qua luật `local` mặc định của mạng.
-
-**3. Công tắc hòa mạng Internet: Route Table và Internet Gateway (IGW)**
-- Khi tạo VPC, nó hoàn toàn bị cô lập (Isolated). Để kết nối Internet, bạn phải gắn một cái cửa ngõ gọi là **Internet Gateway (IGW)** vào VPC.
-- Gói tin từ bên ngoài vào: IGW hoạt động như một cỗ máy NAT khổng lồ, nó biên dịch IP Public sang IP Private của EC2 và ném gói tin thẳng về Subnet chứa EC2.
-- Gói tin từ trong đi ra (Quyết định bởi **Route Table**): Bảng định tuyến (Route Table) là bộ não chỉ đường. Nó định nghĩa ranh giới giữa Public và Private:
-  - **Public Subnet (Vùng mặt tiền):** Là Subnet có Route Table chứa luật `0.0.0.0/0 -> IGW`. Luật này nói rằng: *"Nếu gói tin muốn đi tới một IP lạ không nằm trong mạng nội bộ, hãy ném nó ra cổng IGW ra Internet"*. Nơi đây chứa Load Balancer, Web Server.
-  - **Private Subnet (Vùng hầm ngầm):** Là Subnet mà Route Table của nó KHÔNG CÓ luật trỏ ra IGW. Các Server (như Database) đặt ở đây an toàn tuyệt đối, vì Hacker từ Internet không có cách nào chọc vào được (kể cả khi Server có lỗ hổng bảo mật).
+  - **Private Subnet (Vùng hầm ngầm):** Là Subnet mà Route Table của nó KHÔNG CÓ luật trỏ ra IGW, và máy bên trong không có public IP. Private subnet chặn được **đúng một loại** tấn công: kết nối **trực tiếp** từ Internet vào máy. Nó **không** làm máy an toàn tuyệt đối.
+    - *Vì sao Internet không vào thẳng được:* muốn gửi packet tới một máy, phía Internet phải có một địa chỉ để nhắm tới. Máy trong private subnet chỉ có IP private (`10.x`, `192.168.x`), mà router trên Internet vứt mọi packet mang IP private (mục 4). Địa chỉ public duy nhất trỏ được vào VPC là public IP / Elastic IP do IGW ánh xạ 1:1 — máy private không có cái nào. Không có địa chỉ để nhắm, cũng không có đường qua IGW, nên kẻ tấn công ngoài Internet không mở được kết nối nào tới máy đó. NAT Gateway cũng không mở cửa: nó chỉ ghi nhớ kết nối **đi ra**, còn kết nối mới từ ngoài vào không khớp ánh xạ nào.
+    - *Vì sao vẫn có đường vào:* dòng `local` nối mọi subnet trong VPC. Một khi kẻ tấn công chiếm được **bất kỳ** máy nào bên trong — web server ở public subnet dính lỗ hổng RCE, bastion lộ SSH key, một image bị cài mã độc — máy đó có đường tới private subnet. Route table không chặn lây lan ngang (lateral movement).
+    - *Những đường không cần chiếm máy nào:* **SSRF** — lừa web server tự gửi request tới địa chỉ nội bộ thay cho kẻ tấn công. Và **chiều đi ra qua NAT** — mã độc đã lọt vào máy private vẫn gọi ra được server điều khiển (reverse shell, tuồn dữ liệu).
+    - *Thứ thật sự chặn lây lan ngang:* Security Group chỉ mở đúng cổng cho đúng nguồn (DB chỉ nhận 5432 từ SG của backend, nên web server bị chiếm cũng không chạm được DB), NACL, và lớp xác thực của chính ứng dụng (mật khẩu DB, TLS, quyền tối thiểu). Private subnet là **một** lớp trong phòng thủ nhiều lớp (mục 6.3), không phải lớp cuối cùng.
+  - **Route Table gắn vào subnet, không gắn vào EC2.** Subnet chưa associate bảng nào sẽ dùng *main route table*; với VPC tự tạo, bảng này chỉ có dòng `local`. Cơ chế hai tầng routing và chiều về của gói tin: [aws-architecture.md](aws-architecture.md) mục 4.3.
 
 **4. Tường lửa 2 lớp: Security Group (SG) vs Network ACL (NACL)**
 Mạng truyền thống thường chỉ có 1 Firewall tổng ở cổng công ty. Cloud AWS thông minh hơn, phân chia Firewall thành 2 lớp:
@@ -225,9 +208,9 @@ Làm sao 1 con Router với 1 IP Public có thể gánh cho 10 người cùng l�
   - Router bóc lớp vỏ `14.22.33.44:33333` vứt đi, dán đè nhãn `192.168.1.5:51000` vào và bơm ngược gói tin vào mạng LAN thẳng tới máy tính của bạn. Gói tin đi xuyên suốt mà Trình duyệt không hề hay biết đã bị tráo nhãn!
 
 - **3. NAT Gateway trên Cloud (AWS/GCP):**
-  - Trên AWS, các máy chủ Backend/Database luôn được đặt ở **Private Subnet** (chỉ có IP Private để bảo mật tuyệt đối, chống Hacker từ Internet rà quét).
+  - Trên AWS, các máy chủ Backend/Database thường được đặt ở **Private Subnet**: chỉ có IP Private nên Internet không mở được kết nối trực tiếp tới chúng và không rà quét được từ bên ngoài. Đây là một lớp giảm bề mặt tấn công, không phải bảo mật tuyệt đối — giới hạn của nó nằm ở mục 3.5.
   - Nhưng nếu không có IP Public, làm sao Server ra ngoài tải được bản cập nhật Linux (apt update)?
-  - Lúc này DevOps phải tạo một con **NAT Gateway** (hoặc NAT Instance) đặt ở Public Subnet. Con NAT Gateway này hoạt động y chang cục Router ở nhà bạn: Nó gom tất cả request mồ côi từ các Server nội bộ, lấy danh nghĩa IP Public của nó đi tải bản cập nhật về, rồi bóc nhãn chuyển trả vào lại cho từng Server nội bộ tương ứng một cách an toàn.
+  - Lúc này DevOps phải tạo một con **NAT Gateway** (hoặc NAT Instance) đặt ở Public Subnet — với chế độ mặc định *zonal*; chế độ *regional* thì không cần public subnet, xem [aws-architecture.md](aws-architecture.md) mục 4.5. Con NAT Gateway này hoạt động y chang cục Router ở nhà bạn: Nó gom tất cả request mồ côi từ các Server nội bộ, lấy danh nghĩa IP Public của nó đi tải bản cập nhật về, rồi bóc nhãn chuyển trả vào lại cho từng Server nội bộ tương ứng một cách an toàn.
 
 ---
 
@@ -255,11 +238,67 @@ Nếu chỉ dùng 1 loại mã hóa thì mạng Internet sẽ hoặc là "Quá c
    - **Cơ chế hoạt động:** Chỉ tồn tại **một Khóa duy nhất (Symmetric Key)** cho cả hai quá trình Mã hóa và Giải mã. Nếu Plaintext ⊕ Key = Ciphertext, thì Ciphertext ⊕ Key = Plaintext (Bản chất của phép XOR).
    - **Đặc điểm:** Các phép toán dịch bit và XOR được các dòng CPU hiện đại hỗ trợ thẳng ở cấp độ phần cứng (như tập lệnh AES-NI). Do đó, **Tốc độ xử lý cực kỳ nhanh**, đáp ứng được băng thông khổng lồ của Streaming Video hay truyền File lớn. Nhược điểm chí mạng là: Làm sao để Client gửi được chiếc Khóa duy nhất này sang cho Server an toàn?
 
--> **Giải pháp thiên tài của TLS (Hybrid Encryption - Mã hóa Lai):**
-Thay vì đắn đo chọn 1 trong 2, TLS đã kết hợp cả hai để tạo ra một kịch bản hoàn hảo:
-- **Bước 1 (Dùng Bất đối xứng để bọc khóa):** Trong vài mili-giây đầu tiên, máy tính của bạn (Client) tự ngẫu nhiên sinh ra một cái "Khóa đối xứng" (Session Key). Sau đó, Client lấy Public Key của Server để mã hóa chính cái Session Key này rồi gửi qua cáp quang biển. 
-- **Bước 2 (Giải mã an toàn):** Nhờ cơ chế hàm một chiều RSA, Hacker đứng giữa mạng bắt được gói tin này cũng phải khóc ròng. Chỉ duy nhất Server cầm Private Key mới giải mã ra và thu thập được cái Session Key nguyên vẹn. Vậy là bài toán "Phân phối Khóa đối xứng an toàn qua Internet" đã được giải quyết triệt để!
-- **Bước 3 (Chuyển sang Đối xứng tốc độ cao):** Lúc này, cả Client và Server đã cùng nắm giữ một Session Key bí mật chung. Chúng lập tức vứt bỏ bộ khóa Bất đối xứng nặng nề. Kể từ giây phút này, toàn bộ hình ảnh, video, dữ liệu Web sẽ được mã hóa bằng Session Key (AES) với tốc độ ánh sáng!
+-> **Giải pháp của TLS: Mã hóa Lai (Hybrid Encryption)**
+
+Thay vì chọn một trong hai, TLS dùng mỗi loại cho đúng việc nó giỏi: **bất đối xứng chỉ dùng một lần, để hai bên có chung một khóa bí mật**, rồi **đối xứng gánh toàn bộ dữ liệu**. Các con số dưới đây lấy từ demo ở cuối mục (RSA 2048 bit, AES-256-GCM).
+
+- **Bước 0 — Client nhận Public Key của Server, và phải kiểm tra nó trước khi dùng.** Public Key không bay trần: nó nằm trong chứng thư số do CA ký (mục 5.3, bước 6–7). Client kiểm tra chữ ký CA và tên miền trước. Bỏ qua bước này thì mọi bước sau vô nghĩa: kẻ đứng giữa tráo Public Key của hắn vào, và client sẽ bọc khóa bằng khóa của hắn (mục 5.6).
+
+- **Bước 1 — Client sinh khóa rồi bọc lại (bất đối xứng).**
+  - Client lấy **32 byte ngẫu nhiên** từ bộ sinh số ngẫu nhiên an toàn của hệ điều hành (`getrandom` trên Linux). 32 byte = 256 bit, đúng bằng một khóa AES-256. Đây là **Session Key**.
+  - Client mã hóa 32 byte đó bằng **Public Key của Server** theo chuẩn RSA-OAEP. Kết quả luôn dài đúng **256 byte** — bằng độ dài khóa RSA 2048 bit — bất kể bên trong là gì. OAEP trộn thêm số ngẫu nhiên, nên bọc cùng một khóa hai lần vẫn ra hai khối khác nhau.
+  - Trên dây chỉ có khối 256 byte đó. Phép toán dùng Public Key **nhanh**, nên phía client hầu như không tốn gì.
+  - *TLS 1.2 thật khác demo một chút:* client sinh **Pre-Master Secret** 48 byte chứ không sinh thẳng khóa AES; hai bên trộn nó với `Client Random` và `Server Random` để ra bộ khóa, và mỗi chiều truyền dùng một khóa riêng (mục 5.3, bước 8–9). Demo gộp lại thành một khóa cho dễ theo dõi.
+
+- **Bước 2 — Server mở gói (bất đối xứng).**
+  - Server dùng **Private Key** giải khối 256 byte, thu lại đúng 32 byte Session Key client đã sinh. Từ lúc này hai bên có chung một bí mật, và bí mật đó chưa từng đi trên dây ở dạng rõ.
+  - Kẻ nghe lén bắt được cả Public Key lẫn khối 256 byte nhưng không mở được: muốn mở phải có Private Key, mà muốn suy ra Private Key từ Public Key thì phải phân tích thừa số một số 2048 bit (phần "Giải phẫu Toán học" ngay bên dưới).
+  - Phép toán dùng Private Key **chậm hơn hàng chục lần** phép dùng Public Key, và nó rơi vào **phía server**. Mỗi kết nối HTTPS mới tốn server một lần như vậy — lý do bắt tay TLS đè lên CPU của nginx chứ không phải của trình duyệt.
+
+- **Bước 3 — Hai bên chuyển sang đối xứng (AES-256-GCM).**
+  - Mỗi bản tin được mã hóa thành: **nonce 12 byte** + **ciphertext dài đúng bằng plaintext** + **tag 16 byte**. Request `GET /don-hang/123` (17 byte) thành 45 byte trên dây; response JSON 41 byte thành 69 byte.
+  - **Nonce** là số dùng một lần: không bao giờ được lặp lại với cùng một khóa, nếu không kẻ nghe lén suy ra được quan hệ giữa hai bản tin.
+  - **Tag** là mã kiểm tra: sửa dù chỉ 1 bit ciphertext trên đường đi, bên nhận giải mã sẽ báo lỗi `message authentication failed` thay vì ra dữ liệu sai. GCM vì thế vừa giấu nội dung, vừa chống sửa.
+  - Cặp khóa RSA của server **không bị vứt đi** — các kết nối sau vẫn cần nó. Chỉ là từ đây không dùng nó cho dữ liệu nữa.
+
+**Tự đo "chậm" và "nhanh" là bao nhiêu.** Dự đoán trước: mỗi giây máy bạn làm được bao nhiêu phép RSA bằng Private Key, và mã hóa được bao nhiêu byte bằng AES?
+
+```bash
+openssl speed -seconds 1 rsa2048
+openssl speed -seconds 1 -evp aes-256-gcm
+```
+
+Máy dùng để viết tài liệu này cho ra: RSA 2048 khoảng **2.300 phép/giây** với Private Key (cột `sign/s`) và **75.000 phép/giây** với Public Key (cột `verify/s`); AES-256-GCM khoảng **6,7 GB/giây** với khối 16 KB. Mỗi phép RSA-OAEP chỉ chở được tối đa 190 byte, nên nếu dùng RSA mã hóa cả dữ liệu thì chậm hơn AES cỡ **hơn mười nghìn lần**. Đó là toàn bộ lý do phải "lai".
+
+**Vì sao TLS 1.3 bỏ cách bọc khóa bằng RSA**
+
+Cách trên có một điểm chết: **không có forward secrecy**. Kẻ nghe lén không cần mở gói ngay; hắn chỉ việc **ghi lại** toàn bộ traffic hôm nay. Nếu nhiều năm sau Private Key của server bị lộ (server bị hack, backup rò rỉ, người cũ mang đi), hắn mở được khối 256 byte của **mọi phiên đã ghi**, lấy lại Session Key và đọc toàn bộ dữ liệu cũ. Xoá Session Key khỏi RAM không cứu được, vì bản bọc của nó vẫn nằm trong file ghi.
+
+TLS 1.3 thay Bước 1–2 bằng **ECDHE** (trao đổi khóa Diffie-Hellman trên đường cong elliptic, dùng khóa tạm):
+
+1. Mỗi phiên, client và server **mỗi bên sinh một cặp khóa tạm mới**, rồi gửi phần công khai cho nhau.
+2. Mỗi bên ghép **khóa bí mật tạm của mình** với **khóa công khai tạm của bên kia**; toán học đảm bảo cả hai tính ra **cùng một bí mật chung**. Bí mật này **không bao giờ đi trên dây**, kể cả ở dạng bọc.
+3. Hai bên đưa bí mật chung qua hàm dẫn xuất khóa (HKDF) để ra khóa AES, rồi **xoá khóa tạm**.
+4. Private Key trong chứng thư của server giờ chỉ dùng để **ký** vào bản tin bắt tay, chứng minh đúng là server thật đang nói chuyện — không còn dùng để bọc khóa.
+
+Hệ quả: lộ Private Key của server về sau chỉ giúp kẻ tấn công **giả mạo server trong tương lai**, không mở được các phiên đã ghi — khóa tạm của từng phiên đã bị xoá, và trên dây chưa từng có thứ gì mở ra được bí mật chung. TLS 1.2 cũng có sẵn các bộ thuật toán ECDHE và phần lớn server đời mới đã dùng chúng; TLS 1.3 chỉ là cấm hẳn cách bọc khóa bằng RSA.
+
+**Demo — một luồng nhỏ từ đầu tới cuối**
+
+```text
+máy 1 (client)                                              server
+   │                                                          │ sinh cặp khóa RSA 2048
+   │ ◄──────────── Public Key (294 byte) ──────────────────── │ Bước 0
+ sinh Session Key 32 byte                                      │
+ bọc bằng Public Key (RSA-OAEP)                                │
+   │ ───────────── khối bọc khóa (256 byte) ────────────────► │ Bước 1
+   │                                                          │ mở bằng Private Key → cùng Session Key (Bước 2)
+   │ ───── AES-GCM("GET /don-hang/123")      45 byte ───────► │ Bước 3: server giải mã request
+   │ ◄──── AES-GCM({"don_hang":123,…})       69 byte ──────── │ Bước 3: server mã hóa response
+ giải mã response                                              │
+```
+
+Chạy tận tay bằng Go, bắt gói trên dây, thử phá, và tự nâng lên ECDHE: [tls-hybrid-lab.md](tls-hybrid-lab.md).
 
 > 💡 **Giải phẫu Toán học: Sự thật đằng sau Public Key và Dữ liệu là gì?**
 > Sự thật: Trong máy tính không hề có khái niệm "Ổ khóa" hay "Chìa khóa" vật lý, tất cả chỉ là những **con số nguyên khổng lồ**.
@@ -381,6 +420,8 @@ Trước khi bàn chuyện bảo mật, Client phải thiết lập một Socket
 **GIAI ĐOẠN 2: THỎA THUẬN BẢO MẬT (TLS Handshake - Lớp 7)**
 Sử dụng ống TCP vừa mở, hai bên bắt đầu một cuộc đàm phán cực kỳ phức tạp để thiết lập mã hóa. (Lưu ý: Trước khi quá trình này diễn ra, Server đã phải tự sinh ra một cặp khóa Bất đối xứng **RSA Keypair (Public Key & Private Key)** và nộp Public Key cho một tổ chức ủy quyền để xin cấp Chứng thư số).
 
+> **Phạm vi:** các bước 4–10 dưới đây tả **TLS 1.2 với trao đổi khóa RSA** — cách dễ hình dung nhất, nhưng đã bị TLS 1.3 loại bỏ vì không có forward secrecy. TLS 1.3 thay bước 8–9 bằng ECDHE; xem cuối phần "Mã hóa Lai" ở mục 5.2.
+
 4. **ClientHello** `[Client -> Server]:` Client khởi tạo luồng kết nối bảo mật, gửi bản tin bao gồm: Phiên bản giao thức (TLS 1.2/1.3), danh sách các bộ thuật toán mã hóa (Cipher Suites) được hỗ trợ, và một chuỗi ngẫu nhiên gọi là `Client Random`.
 5. **ServerHello** `[Server -> Client]:` Server phản hồi, chọn một bộ Cipher Suite chung, kèm theo chuỗi ngẫu nhiên `Server Random` của riêng mình.
 6. **Certificate Exchange (Truyền tải Chứng thư số)** `[Server -> Client]:` Server gửi cho Client một **Chứng thư số (Digital Certificate chuẩn X.509)**. 
@@ -391,18 +432,18 @@ Sử dụng ống TCP vừa mở, hai bên bắt đầu một cuộc đàm phán
 8. **Key Exchange (Trao đổi Khóa bí mật - Sự ra đời của Client Secret):** 
    - *Tại sao lại đẻ ra cái này?* Vì mã hóa Bất đối xứng (RSA) tính toán quá cồng kềnh, tốc độ như rùa bò, không thể dùng để mã hóa cả bộ phim Netflix hay luồng Livestream. Ta bắt buộc phải chuyển sang xài Mã hóa Đối xứng (AES) có tốc độ ánh sáng. Nhưng Mã hóa Đối xứng lại yêu cầu cả hai bên phải có chung 1 cái "Chìa khóa Đối xứng" (Session Key). Làm sao gửi cái chìa khóa này qua mạng Internet đầy rẫy Hacker?
    - *Cách giải quyết:* Trình duyệt tự random sinh ra một chuỗi bit cực kỳ bảo mật gọi là **Pre-Master Secret (hay Client Secret)**. Sau đó, nó bọc cái `Client Secret` này lại, khóa chặt bằng cái **Public Key** của Server (vừa nhận ở bước 6) rồi ném qua mạng. 
-   - *Kết quả:* Nhờ tính chất Hàm một chiều của RSA, gói tin chứa `Client Secret` bay qua Internet an toàn tuyệt đối. Hacker dù có chộp được cũng chỉ nhìn thấy một đống rác nhiễu loạn.
+   - *Kết quả:* Nhờ tính chất hàm một chiều của RSA, kẻ nghe lén chộp được gói tin cũng chỉ thấy một khối byte ngẫu nhiên. Điều này đúng với **hai điều kiện**: Public Key đã được xác thực qua CA ở bước 7 (nếu không, kẻ đứng giữa tráo khóa — mục 5.6), và Private Key của server **không bao giờ bị lộ**, kể cả nhiều năm sau (xem "Vì sao TLS 1.3 bỏ cách bọc khóa bằng RSA" ở mục 5.2).
 9. **Session Key Generation (Sinh Khóa Phiên Đối xứng):** 
    - Server nhận gói tin, lập tức móc **Private Key** (đang giấu sâu trong két sắt ổ cứng) ra để giải mã, và bóc tách thành công `Client Secret` nguyên vẹn. 
    - Lúc này, phép màu hoàn tất: Cả Client và Server đều độc lập nắm trong tay 3 nguyên liệu: (`Client Random` + `Server Random` + `Client Secret`). Cả hai nhét 3 nguyên liệu này vào một hàm băm (Hash Function) để nhào nặn ra chung một cái chìa khóa duy nhất: **Master Secret (Khóa Phiên/Session Key)**.
    - *(Giải ngố kỹ thuật: Tại sao lại rườm rà trộn thêm `Client Random` và `Server Random`? Mục đích là để chống **Tấn công phát lại (Replay Attack)**. Nếu Hacker nghe lén hôm nay, copy y chang gói tin mã hóa rồi ngày mai phát lại gửi cho Server, thì do chuỗi `Server Random` của ngày mai đã bị đổi, cái Session Key sinh ra sẽ hoàn toàn khác. Gói tin cũ hôm qua vĩnh viễn không thể xài lại ở phiên hôm nay!)*
-10. **Secure Payload (Thiết lập kênh truyền):** Cả hai bên gửi bản tin `ChangeCipherSpec` và `Finished`, cam kết từ giây phút này sẽ vứt bỏ bộ khóa Bất đối xứng nặng nề (RSA) vào sọt rác. Toàn bộ hình ảnh, tin nhắn, dữ liệu từ đây về sau sẽ được băm nát và mã hóa bằng cái **Session Key** (thuật toán AES) với tốc độ ánh sáng.
+10. **Secure Payload (Thiết lập kênh truyền):** Cả hai bên gửi bản tin `ChangeCipherSpec` và `Finished`. `Finished` chứa một mã kiểm tra tính trên toàn bộ các bản tin bắt tay trước đó, nên kẻ đứng giữa sửa bất kỳ bản tin nào (ví dụ ép dùng thuật toán yếu) đều bị phát hiện. Từ đây về sau, dữ liệu được mã hóa bằng khóa đối xứng (AES). Cặp khóa RSA của server **không bị vứt đi** — nó vẫn nằm trong chứng thư để phục vụ các phiên sau — chỉ là không dùng để mã hóa dữ liệu nữa.
 
 **GIAI ĐOẠN 3: BƠM DỮ LIỆU THỰC TẾ (HTTPS Traffic)**
 
 11. `[Client -> Server]:` **HTTP GET /** *(Toàn bộ Payload HTTP lúc này đã bị băm nát và mã hóa bằng Khóa phiên Đối xứng, đóng vào TCP Segment ném qua mạng).*
 12. `[Server -> Client]:` **HTTP 200 OK** *(Server giải mã bằng Khóa phiên, xử lý logic Web, và trả về HTML/JSON cũng được mã hóa bằng Khóa phiên).*
--> *Kết quả: Khóa phiên đối xứng chỉ tồn tại tạm thời trong RAM và sẽ bị HĐH xóa sổ vĩnh viễn khi tắt tab trình duyệt (Cơ chế Perfect Forward Secrecy).*
+-> *Kết quả:* Khóa phiên chỉ tồn tại trong RAM và bị xoá khi phiên kết thúc. Nhưng **đó không phải Perfect Forward Secrecy**. Với kiểu trao đổi khóa RSA ở giai đoạn 2, kẻ nào ghi lại toàn bộ traffic hôm nay rồi nhiều năm sau lấy được Private Key của server sẽ giải được `Client Secret` của mọi phiên cũ; `Client Random` và `Server Random` vốn đi trên dây ở dạng rõ, nên từ đó dựng lại được mọi khóa phiên. Forward secrecy chỉ có khi trao đổi khóa bằng ECDHE — xem mục 5.2.
 
 ### 5.4. Quy trình Server "Xin" Chứng thư số (CSR - Certificate Signing Request)
 Trước khi Giai đoạn 2 (TLS Handshake) ở trên có thể diễn ra, Server (ví dụ: `facebook.com`) phải có Chứng thư số. Quy trình lấy Chứng thư diễn ra như sau:

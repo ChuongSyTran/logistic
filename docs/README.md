@@ -86,7 +86,9 @@ Không riêng cho repo này. Là tài liệu học, giữ lại để tra cứu.
 | [nats-jetstream.md](reference/nats-jetstream.md) | NATS JetStream |
 | [networking.md](reference/networking.md) | Mạng, TCP/IP, HTTP |
 | [network-to-vpc.md](reference/network-to-vpc.md) | Lộ trình sâu: mạng trần → chia subnet → VPC → xếp EC2 |
-| [aws-architecture.md](reference/aws-architecture.md) | Khái niệm kiến trúc AWS |
+| [aws-architecture.md](reference/aws-architecture.md) | Khái niệm kiến trúc AWS: scope của resource, route table, NAT, SG/NACL, kiến trúc mục tiêu |
+| [vpc-routing-lab.md](reference/vpc-routing-lab.md) | Thực hành route table, NAT, NACL bằng network namespace trên máy local |
+| [tls-hybrid-lab.md](reference/tls-hybrid-lab.md) | Thực hành mã hóa lai của TLS bằng Go: bọc khóa RSA, AES-GCM, bắt gói trên dây, nâng lên ECDHE |
 | [notes/go-tooling.md](reference/notes/go-tooling.md) | Ghi chú lặt vặt về Go tooling |
 
 ## `diagrams/` — Sơ đồ
@@ -159,6 +161,7 @@ Không do tool sinh, chỉnh trực tiếp bằng diagrams.net:
 | `backend-overview.drawio` | Tổng quan backend |
 | `logistic-domain.drawio` | Mô hình miền nghiệp vụ logistics |
 | `aws-architecture.drawio` | Sơ đồ đi kèm [aws-architecture.md](reference/aws-architecture.md) |
+| `aws-resource-scope.drawio` | Vì sao mỗi resource AWS gắn với AZ hay Region — đi kèm [aws-architecture.md](reference/aws-architecture.md) mục 2 |
 
 ## `rendered/` — Bản HTML đọc offline
 
@@ -168,7 +171,7 @@ Mở thẳng bằng trình duyệt, không cần công cụ gì.
 |---|---|
 | `diagrams.html` | **Toàn bộ 16 sơ đồ trong một trang**, có mục lục — do `make diagrams` sinh |
 | `elasticsearch.html` | Bản render của [reference/elasticsearch.md](reference/elasticsearch.md) |
-| `aws-architecture.html` | Bản render của [reference/aws-architecture.md](reference/aws-architecture.md) |
+| `aws-architecture.html` | Bản render **cũ** của [reference/aws-architecture.md](reference/aws-architecture.md), chưa cập nhật theo bản md hiện tại |
 
 ---
 

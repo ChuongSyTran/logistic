@@ -305,6 +305,13 @@ Ba nguyên tắc:
    (Default VPC), `192.168.0.0/16` (router gia đình → hỏng VPN), `10.88.0.0/16`
    (mạng mặc định của Podman — repo này chạy Podman nên đây là va chạm có thật).
 
+> [!NOTE]
+> Bản vẽ mục tiêu [aws-architecture.drawio](../diagrams/aws-architecture.drawio) đang dùng
+> `192.168.0.0/20`, trái với khuyến nghị ở trên. Trùng dải chỉ gây lỗi khi hai mạng bị **nối
+> routing** với nhau (client VPN, peering). SSH tunnel `-L` không bị ảnh hưởng, vì traffic
+> nằm gọn trong một phiên SSH tới một máy. Quyết định đang chờ chốt:
+> [aws-architecture.md](aws-architecture.md) mục 5.3.
+
 ## 2.8. Bài tập (có đáp án)
 
 | # | Đề | Đáp án |
@@ -332,7 +339,7 @@ python -c "import ipaddress as i; n=i.ip_network('10.0.20.0/22'); print(n.broadc
 | Sợi cáp + switch | VPC | Là phần mềm (SDN), không có dây nào cả |
 | VLAN | Subnet | Không giới hạn 4094; nhưng bị khoá trong **1 AZ** |
 | Router vật lý | Implicit router (IP `.1`) | Không thấy, không cấu hình được, không bao giờ chết |
-| Bảng định tuyến của router | Route Table gắn theo **subnet** | Mỗi subnet có thể có bảng riêng |
+| Bảng định tuyến của router | Route Table gắn theo **subnet** | Mỗi subnet có đúng một bảng; chưa gắn thì dùng *main route table* |
 | Firewall ở cổng công ty | NACL (mức subnet) | Stateless, có thứ tự |
 | Firewall trên từng máy | Security Group (mức ENI) | Stateful, chỉ allow, tham chiếu được SG khác |
 | NAT của router nhà | NAT Gateway / IGW | IGW là NAT 1:1, NAT GW là PAT nhiều-về-một |
@@ -387,6 +394,24 @@ Luật `local` luôn tồn tại và không xoá được — đó là lý do **
 VPC luôn nói chuyện được với nhau, kể cả khác AZ**, và cũng là lý do việc cách ly giữa
 các tầng phải làm bằng Security Group chứ không phải bằng Route Table.
 
+### Subnet chưa gắn bảng nào — main route table
+
+Mỗi VPC sinh ra kèm một *main route table*. Subnet không được associate tường minh sẽ dùng
+bảng này. Với VPC tự tạo, main route table **chỉ có dòng `local`**: subnet rơi vào đó nói
+chuyện được trong VPC nhưng không ra được Internet. Default VPC thì khác — main route table
+của nó có sẵn `0.0.0.0/0 → igw`.
+
+Nguyên tắc: để main route table chỉ có `local`. Subnet nào lỡ quên associate sẽ bị cô lập —
+lỗi theo hướng an toàn — thay vì âm thầm thành public.
+
+### Chiều về tra bảng nào
+
+Mỗi chiều được tra bằng route table của subnet nơi packet **đang rời đi**. Gói trả lời từ B
+về A có đích là IP của A, nằm trong CIDR của VPC, nên khớp `local` — dòng `/16` dài hơn
+`0.0.0.0/0` nên thắng. Chiều về trong nội bộ VPC **không bao giờ đi qua NAT**, kể cả khi
+subnet của B có `0.0.0.0/0 → nat`. Chiều về bị chặn thì thủ phạm là NACL (mục 3.6), không
+phải Route Table. Phân tích đầy đủ: [aws-architecture.md](aws-architecture.md) mục 4.3.
+
 ### IGW là NAT 1:1 — hệ quả gây bối rối
 
 Gán Elastic IP `52.x.x.x` cho EC2 rồi SSH vào chạy `ip addr`, bạn sẽ **chỉ thấy
@@ -406,11 +431,19 @@ API bên thứ ba. NAT Gateway giải bài này, hoạt động y hệt PAT ở 
 
 | Đặc điểm | Con số / hệ quả |
 |---|---|
-| Vị trí | Đặt trong **public subnet**, cần 1 Elastic IP |
-| Phạm vi | **Gắn chặt 1 AZ**. AZ đó chết là private subnet của AZ đó mất đường ra |
+| Vị trí | Zonal: đặt trong **public subnet**, cần 1 Elastic IP. Regional: không đặt vào subnet, gắn vào VPC |
+| Phạm vi | Zonal: **gắn chặt 1 AZ**, AZ đó chết là private subnet của AZ đó mất đường ra. Regional: một ID, tự mở rộng theo AZ có workload |
 | Chiều | Chỉ outbound. Không ai từ Internet chủ động vào được |
 | Giới hạn | ~55 000 kết nối đồng thời tới **mỗi** đích duy nhất; băng thông tự co giãn 5→100 Gbps |
-| Chi phí | ~0,045 USD/giờ **+** ~0,045 USD/GB xử lý (tuỳ region) → **~33 USD/tháng chỉ để đứng yên** |
+| Chi phí | ~0,045 USD/giờ **+** ~0,045 USD/GB xử lý (tuỳ region) → **~33 USD/tháng chỉ để đứng yên**. Cộng thêm Elastic IP: mỗi NAT public một IP riêng, tính phí như mọi IPv4 public (mục 3.8) |
+
+**Số NAT Gateway quyết định số route table.** Route table private trỏ `0.0.0.0/0` vào một
+NAT Gateway cụ thể, và mỗi bảng chỉ có một dòng `0.0.0.0/0`. Một NAT dùng chung → mọi private
+subnet chung một bảng. Mỗi AZ một NAT → mỗi AZ một bảng private riêng. Bảng public vẫn chỉ cần
+một, vì IGW không gắn với AZ. Vì sao NAT gắn AZ mà IGW thì không:
+[aws-architecture.md](aws-architecture.md) mục 2.5. Quy tắc này chỉ đúng với NAT Gateway **zonal**;
+Regional NAT Gateway dùng một ID cho mọi AZ nên một bảng private là đủ
+([aws-architecture.md](aws-architecture.md) mục 4.5).
 
 Ba lựa chọn thay thế, theo thứ tự nên cân nhắc:
 
@@ -582,8 +615,10 @@ data   10.0.32.0/22   ── node-data (t3.large)   : MySQL, Postgres ×4, Redis
                                                   NATS, Kafka, Elasticsearch, Jaeger
 ```
 
-Giá trị thu được: một lỗ hổng ở gateway **không còn** chạm được vào DB, vì `node-data`
-không có route ra Internet và SG của nó chỉ nhận traffic từ SG của app.
+Giá trị thu được: một lỗ hổng ở nginx (tầng edge) **không còn** chạm thẳng được vào DB, vì SG
+của `node-data` chỉ nhận traffic từ SG của app — không phải nhờ route, vì dòng `local` vẫn nối
+mọi subnet. Lỗ hổng ở gateway thì khác: gateway nằm ở tầng app, vẫn được phép gọi DB, nên mật
+khẩu DB và quyền tối thiểu vẫn là lớp chặn cuối cùng.
 
 ### Giai đoạn 2 — production HA, 2-3 AZ
 
@@ -628,8 +663,9 @@ graph LR
     NAT --> IGW[Internet Gateway]
 ```
 
-Đọc sơ đồ theo chiều mũi tên: **không có đường nào từ Internet chạm tới `sg-data`**, kể
-cả gián tiếp. Đó là toàn bộ mục đích của việc chia tầng.
+Đọc sơ đồ theo chiều mũi tên: **không có luật nào cho Internet hay tầng edge chạm thẳng tới
+`sg-data`**. Muốn tới dữ liệu, kẻ tấn công phải chiếm được một máy ở tầng app trước. Chia tầng
+không làm database bất khả xâm phạm; nó buộc kẻ tấn công phải vượt thêm một lớp nữa.
 
 ## 4.5. Terraform: cấu trúc mục tiêu và cách migrate không phá state
 
@@ -747,6 +783,11 @@ Instance **chủ động gọi ra** SSM, nên không cần bất kỳ port inbou
 phiên đều được ghi log vào CloudTrail/S3, và phân quyền bằng IAM thay vì bằng việc ai
 đang giữ file `logistic-key.pem`.
 
+> [!NOTE]
+> Bản vẽ mục tiêu chọn **bastion host có ghi audit log** thay vì SSM. Hai cách cùng trả lời
+> một câu hỏi — *ai được vào máy, và để lại dấu vết gì* — với đánh đổi khác nhau. So sánh:
+> [aws-architecture.md](aws-architecture.md) mục 5.3.
+
 ## 4.7. Kiểm chứng sau khi apply
 
 ```bash
@@ -781,7 +822,8 @@ timeout 2 bash -c 'echo > /dev/tcp/10.0.32.11/5432' && echo OPEN || echo BLOCKED
 | Chọn `/24` cho cả VPC "cho gọn" | Hết IP, không mở rộng được, phải xây lại | Luôn `/16` cho VPC |
 | Dùng `172.17.x.x` hoặc `10.88.x.x` | Đụng Docker / Podman bridge, lỗi cực khó lần | Tránh, xem 2.7 |
 | Hai môi trường trùng CIDR | Không bao giờ peering được | Mỗi env một `/16` |
-| Đặt NAT GW trong private subnet | Không hoạt động, không báo lỗi rõ ràng | NAT GW luôn ở public subnet |
+| Đặt NAT GW zonal trong private subnet | Không hoạt động, không báo lỗi rõ ràng | NAT GW zonal luôn ở public subnet |
+| Associate private subnet vào route table **public** | Subnet thành public: máy không có public IP mất Internet, máy có public IP bị lộ ra ngoài. `validate` và `plan` đều không báo | Mỗi AZ một route table private, trỏ `0.0.0.0/0` về NAT cùng AZ |
 | Viết SG bằng CIDR thay vì tham chiếu SG | Sai mỗi lần đổi subnet / scale | `source_security_group_id` |
 | Dùng NACL làm hàng rào chính | Quên ephemeral port → lỗi ngắt quãng khó tả | SG là chính, NACL để chặn thô |
 | Chặn sạch ICMP | PMTUD chết → "ping được, tải file treo" | Cho qua ICMP type 3 |
